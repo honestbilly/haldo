@@ -443,6 +443,13 @@ body {
   justify-content: space-between;
   align-items: flex-start;
   margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+
+/* Help/note boxes break to full width below the label row */
+.item-label-row .help-box,
+.item-label-row .inline-note-box {
+  flex-basis: 100%;
 }
 
 .item-label {
