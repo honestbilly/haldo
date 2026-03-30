@@ -28,7 +28,7 @@ export async function initDatabase(): Promise<void> {
       CREATE TABLE IF NOT EXISTS completions (
         id TEXT PRIMARY KEY,
         template_id TEXT NOT NULL,
-        template_type TEXT NOT NULL CHECK (template_type IN ('checklist', 'logbook')),
+        template_type TEXT NOT NULL CHECK (template_type IN ('checklist', 'logbook', 'log')),
         vessel TEXT NOT NULL,
         crew_id TEXT NOT NULL REFERENCES crew(id),
         trip_date TEXT,
@@ -81,6 +81,14 @@ export async function initDatabase(): Promise<void> {
         created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
         updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
       );
+
+      -- Migration: add 'log' to template_type check constraint
+      DO $$ BEGIN
+        ALTER TABLE completions DROP CONSTRAINT IF EXISTS completions_template_type_check;
+        ALTER TABLE completions ADD CONSTRAINT completions_template_type_check
+          CHECK (template_type IN ('checklist', 'logbook', 'log'));
+      EXCEPTION WHEN OTHERS THEN NULL;
+      END $$;
 
       -- Indexes for common queries
       CREATE INDEX IF NOT EXISTS idx_handoff_notes_vessel ON handoff_notes(vessel, resolved);

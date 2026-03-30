@@ -437,6 +437,7 @@ app.get('/report', async (c) => {
       const items = byVessel.get(v)!;
       const checklists = items.filter(co => co.template_type === 'checklist');
       const logbooks = items.filter(co => co.template_type === 'logbook');
+      const freeFormLogs = items.filter(co => co.template_type === 'log');
 
       // Checklists with alerts or notes get full cards
       const checklistsWithDetail = checklists.filter(co => {
@@ -453,6 +454,28 @@ app.get('/report', async (c) => {
       const symbolRow = renderChecklistSymbols(checklists);
       const logbookCards = logbooks.map(renderCompletionCard).join('');
       const detailCards = checklistsWithDetail.map(renderCompletionCard).join('');
+
+      // Free-form log entries — inline in timeline
+      const freeFormHtml = freeFormLogs.map(co => {
+        const vals = co.values_json || {};
+        const title = vals.title || 'Log Entry';
+        const category = vals.category || 'general';
+        const details = vals.details || co.notes || '';
+        const logTime = co.completed_at
+          ? new Date(co.completed_at).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })
+          : '';
+        const catIcons: Record<string, string> = { maintenance: '🔧', safety: '⚠️', equipment: '⚙️', operational: '🚢', general: '📝' };
+        const icon = catIcons[category] || '📝';
+        return `
+          <div class="completion-card" data-searchable="${escapeHtml(JSON.stringify(vals).toLowerCase() + ' ' + (co.crew_name || ''))}" data-vessel="${co.vessel || ''}"
+            style="background:#FFFFFF;border-radius:10px;padding:12px 16px;margin-bottom:8px;border-left:4px solid #70D0EB">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start">
+              <div style="font-weight:600;font-size:0.875rem">${icon} ${escapeHtml(String(title))}</div>
+              <div style="font-size:0.75rem;color:#6e7a74;flex-shrink:0">${logTime} · ${escapeHtml(co.crew_name || '')}</div>
+            </div>
+            ${details ? `<p style="font-size:0.8125rem;color:#1a1c1c;margin-top:4px;line-height:1.5">${escapeHtml(String(details))}</p>` : ''}
+          </div>`;
+      }).join('');
       const count = items.length;
 
       return `
@@ -460,6 +483,7 @@ app.get('/report', async (c) => {
           <h3 style="font-family:'Manrope',-apple-system,sans-serif;font-size:1rem;font-weight:700;color:#006950;padding:8px 0;border-bottom:2px solid #006950;margin-bottom:8px;display:flex;align-items:center;gap:8px">${VESSEL_LABELS[v] || v.toUpperCase()} <span style="font-size:0.75rem;font-weight:500;background:rgba(22,142,110,0.1);color:#006950;padding:2px 8px;border-radius:12px">${count}</span></h3>
           ${symbolRow}
           ${logbookCards}
+          ${freeFormHtml}
           ${detailCards}
         </div>`;
     }).join('');
