@@ -29,98 +29,206 @@ function escapeHtml(str: string): string {
   return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
-// Render a condensed completion card — shows key values inline
+// Render a completion card — logbooks get structured layout, checklists get condensed
 function renderCompletionCard(co: any): string {
   const values = co.values_json || {};
   const hasAlerts = co.alerts_json && (co.alerts_json as any[]).length > 0;
+  const isLogbook = co.template_type === 'logbook';
 
   // Detect incidents
   const incidentValue = values['incident-occurred'];
   const hasIncident = incidentValue && incidentValue !== 'No incidents';
   const incidentDetails = values['incident-details'] || '';
 
-  // Build condensed summary of key values
-  const summaryParts: string[] = [];
-  const checkedItems: string[] = [];
+  // Detect inline notes from (+) buttons
+  const inlineNotes: string[] = [];
   for (const [key, val] of Object.entries(values)) {
-    if (!val || val === '') continue;
-    if (key === 'incident-occurred' || key === 'incident-details') continue;
-    if (key.startsWith('note_') || key.startsWith('fail_note_')) continue;
-
-    const label = key.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
-
-    // Checkboxes — collect as completed items
-    if (val === 'true') {
-      checkedItems.push(label);
-      continue;
-    }
-    if (val === 'false') continue;
-
-    const strVal = Array.isArray(val) ? (val as string[]).join(', ') : String(val);
-    if (strVal.length > 100) {
-      summaryParts.push(`<span style="display:inline"><strong style="color:#1a1c1c;font-weight:500">${escapeHtml(label)}:</strong> ${escapeHtml(strVal.substring(0, 100))}&hellip;</span>`);
-    } else {
-      summaryParts.push(`<span style="display:inline"><strong style="color:#1a1c1c;font-weight:500">${escapeHtml(label)}:</strong> ${escapeHtml(strVal)}</span>`);
+    if (key.startsWith('note_') && val && String(val).trim()) {
+      inlineNotes.push(String(val));
     }
   }
+  const hasNotes = inlineNotes.length > 0 || (co.notes && co.notes.trim());
 
-  // Show checkbox count as a summary line
-  if (checkedItems.length > 0) {
-    summaryParts.unshift(`<span style="display:inline"><strong style="color:#006950;font-weight:500">✓ ${checkedItems.length} items checked</strong></span>`);
+  // Count checked items for ratio
+  let checkedCount = 0;
+  let totalItems = 0;
+  for (const [key, val] of Object.entries(values)) {
+    if (key.startsWith('note_') || key.startsWith('fail_note_') || key === 'notes' || key === 'sign_off') continue;
+    totalItems++;
+    if (val && val !== '' && val !== 'false') checkedCount++;
   }
-  // Join with dot separators via CSS-like approach
-  const valuesHtml = summaryParts.length > 0
-    ? summaryParts.join('<span style="color:#bdc9c2"> &middot; </span>')
-    : '<span style="color:#6e7a74;font-style:italic">No values recorded</span>';
-
-  const notes = co.notes
-    ? `<div style="margin-top:6px;font-size:0.8125rem;color:#1a1c1c;font-style:italic;padding:6px 10px;background:#d9f5ed;border-radius:8px"><strong>Notes:</strong> ${escapeHtml(co.notes)}</div>`
-    : '';
-
-  const incidentBadge = hasIncident
-    ? `<div style="background:#ba1a1a;color:white;font-weight:600;font-size:0.8125rem;padding:8px 12px;border-radius:8px;margin:6px 0">&#x1F6A8; INCIDENT: ${escapeHtml(String(incidentValue))}${incidentDetails ? ` &mdash; ${escapeHtml(String(incidentDetails)).substring(0, 200)}` : ''}</div>`
-    : '';
-
-  const alertBadge = hasAlerts
-    ? `<span style="display:inline-block;padding:2px 8px;border-radius:12px;font-size:0.75rem;font-weight:600;background:rgba(243,109,79,0.1);color:#F36D4F">&#9888; ${(co.alerts_json as any[]).length} flagged</span>`
-    : '';
 
   const time = co.completed_at
     ? new Date(co.completed_at).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })
-    : '&mdash;';
+    : '—';
 
-  const typeBadgeBg = co.template_type === 'checklist'
-    ? 'background:rgba(22,142,110,0.1);color:#006950'
-    : 'background:rgba(112,208,235,0.15);color:#0891b2';
-
-  // Card border + background for incidents
-  let cardStyle = 'background:#FFFFFF;border-radius:8px;padding:12px 16px;margin-bottom:8px;border-left:4px solid #006950';
+  // Card border + background
+  let cardStyle = 'background:#FFFFFF;border-radius:10px;padding:14px 16px;margin-bottom:10px;border-left:4px solid #006950';
   if (hasIncident) {
-    cardStyle = 'background:#FFF5F5;border-radius:8px;padding:12px 16px;margin-bottom:8px;border-left:4px solid #ba1a1a;border:2px solid #F36D4F;border-left:4px solid #ba1a1a';
+    cardStyle = 'background:#FFF5F5;border-radius:10px;padding:14px 16px;margin-bottom:10px;border-left:4px solid #ba1a1a;border:2px solid #F36D4F;border-left:4px solid #ba1a1a';
   } else if (hasAlerts) {
-    cardStyle = 'background:#FFFFFF;border-radius:8px;padding:12px 16px;margin-bottom:8px;border-left:4px solid #F36D4F';
+    cardStyle = 'background:#FFFFFF;border-radius:10px;padding:14px 16px;margin-bottom:10px;border-left:4px solid #F36D4F';
   }
 
   const searchableData = `${JSON.stringify(values).toLowerCase()} ${co.template_id} ${co.crew_name?.toLowerCase() || ''} ${co.notes?.toLowerCase() || ''} ${co.vessel || ''}`;
 
+  if (isLogbook) {
+    return renderLogbookCard(co, values, hasIncident, incidentDetails, hasNotes, inlineNotes, checkedCount, totalItems, time, cardStyle, searchableData);
+  } else {
+    return renderChecklistCard(co, values, hasAlerts, hasNotes, inlineNotes, checkedCount, totalItems, time, cardStyle, searchableData);
+  }
+}
+
+// ── Logbook card: structured readable layout ──
+function renderLogbookCard(
+  co: any, values: any, hasIncident: boolean, incidentDetails: string,
+  hasNotes: boolean, inlineNotes: string[], checkedCount: number, totalItems: number,
+  time: string, cardStyle: string, searchableData: string
+): string {
+  const v = (key: string) => {
+    const val = values[key];
+    if (!val || val === '' || val === 'false') return '';
+    return Array.isArray(val) ? val.join(', ') : String(val);
+  };
+
+  const vessel = VESSEL_LABELS[co.vessel] || co.vessel?.toUpperCase() || '';
+  const slot = co.trip_slot || v('trip-slot') || '';
+  const title = `${slot} Trip — ${vessel}`;
+
+  // Crew line: captain first, then mate — no role labels
+  const crewParts: string[] = [];
+  if (co.crew_name) crewParts.push(escapeHtml(co.crew_name));
+  const mateName = v('mate-name');
+  if (mateName && mateName !== co.crew_name) crewParts.push(escapeHtml(mateName));
+  const crewOnBoard = v('crew-on-board');
+  if (crewOnBoard) {
+    const names = crewOnBoard.split(',').map((n: string) => n.trim()).filter((n: string) => n && n !== co.crew_name && n !== mateName);
+    crewParts.push(...names.map((n: string) => escapeHtml(n)));
+  }
+  const crewStr = crewParts.join(', ');
+
+  const pax = v('guests-attended') || v('total-guests') || v('guest-count') || '';
+
+  // Locations
+  const snorkel = v('snorkel-location') || v('snorkel-site') || '';
+  const dolphins = v('dolphin-location') || v('dolphin-sighting-location') || '';
+  const otherLoc = v('other-location') || '';
+  const locParts: string[] = [];
+  if (snorkel) locParts.push(`Snorkel: ${escapeHtml(snorkel)}`);
+  if (dolphins) locParts.push(`Dolphins: ${escapeHtml(dolphins)}`);
+  if (otherLoc) locParts.push(`Other: ${escapeHtml(otherLoc)}`);
+  const locStr = locParts.length > 0 ? locParts.join(' · ') : '';
+
+  const weather = v('weather-conditions') || v('weather') || '';
+
+  // Engine hours
+  const ehPortStart = v('engine-hours-port-start') || v('engine-hours-start');
+  const ehPortEnd = v('engine-hours-end') || v('engine-hours-port-end');
+  const ehStbdStart = v('engine-hours-stbd-start');
+  const ehStbdEnd = v('engine-hours-stbd-end');
+  let engineStr = '';
+  if (ehPortStart || ehPortEnd) {
+    engineStr = `Engine Hours: ${ehPortStart || '?'} → ${ehPortEnd || '?'} (Port)`;
+    if (ehStbdStart || ehStbdEnd) engineStr += ` · ${ehStbdStart || '?'} → ${ehStbdEnd || '?'} (Stbd)`;
+  }
+
+  // Merch
+  const merchParts: string[] = [];
+  const hat = v('merch-hat'); if (hat && hat !== '0') merchParts.push(`${hat} hat${hat === '1' ? '' : 's'}`);
+  const tshirt = v('merch-tshirt'); if (tshirt && tshirt !== '0') merchParts.push(`${tshirt} t-shirt${tshirt === '1' ? '' : 's'}`);
+  const sunshirt = v('merch-sunshirt'); if (sunshirt && sunshirt !== '0') merchParts.push(`${sunshirt} sun shirt${sunshirt === '1' ? '' : 's'}`);
+  const sweatshirt = v('merch-sweatshirt'); if (sweatshirt && sweatshirt !== '0') merchParts.push(`${sweatshirt} sweatshirt${sweatshirt === '1' ? '' : 's'}`);
+  const payment = v('merch-payment');
+  let merchStr = '';
+  if (merchParts.length > 0) {
+    merchStr = `Merch: ${merchParts.join(', ')}${payment ? ` — ${escapeHtml(payment)}` : ''}`;
+  } else if (payment === 'No sales today') {
+    merchStr = 'Merch: No sales today';
+  }
+
+  // Notes
+  const notes = co.notes ? escapeHtml(co.notes) : '';
+  const merchNotes = v('merch-notes');
+
+  // Notes icon for upper right
+  const notesIcon = hasNotes
+    ? `<span title="${escapeHtml(inlineNotes.join(' | '))}" style="cursor:help;font-size:1rem">📎</span>`
+    : '';
+
+  // Line styles
+  const lineStyle = 'font-size:0.8125rem;color:#1a1c1c;line-height:1.6;margin:0;';
+  const mutedStyle = 'font-size:0.8125rem;color:#6e7a74;line-height:1.6;margin:0;';
+
   return `
     <div class="completion-card" data-searchable="${escapeHtml(searchableData)}" data-vessel="${co.vessel || ''}" style="${cardStyle}">
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:6px">
-        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
-          ${hasIncident ? '<span style="font-size:1.1rem" title="Incident reported">&#x26A0;&#xFE0F;</span>' : ''}
-          <span style="font-weight:600;font-size:0.875rem;color:#1a1c1c">${co.template_id.replace(/-/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase())}</span>
-          <span style="font-size:0.6875rem;font-weight:500;padding:1px 6px;border-radius:4px;text-transform:uppercase;letter-spacing:0.03em;${typeBadgeBg}">${co.template_type}</span>
-          ${alertBadge}
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
+        <div>
+          ${hasIncident ? '<div style="font-size:0.6875rem;font-weight:700;color:#ba1a1a;text-transform:uppercase;letter-spacing:0.03em;margin-bottom:2px">⚠️ INCIDENT REPORTED</div>' : ''}
+          <div style="font-weight:700;font-size:1rem;color:#1a1c1c">${escapeHtml(title)}</div>
         </div>
-        <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
-          <span style="font-size:0.8125rem;font-weight:500">${co.crew_name || '&mdash;'}</span>
-          <span style="font-size:0.75rem;color:#6e7a74">${time}</span>
-          ${co.trip_slot ? `<span style="font-size:0.6875rem;background:#d9f5ed;padding:1px 6px;border-radius:4px">${co.trip_slot}</span>` : ''}
+        <div style="text-align:right;flex-shrink:0">
+          <div style="font-size:0.75rem;color:#6e7a74">${time} · ${escapeHtml(co.crew_name || '')} ${notesIcon}</div>
+          <div style="font-size:0.6875rem;color:#006950;font-weight:500">${checkedCount}/${totalItems} items ✓</div>
         </div>
       </div>
-      ${incidentBadge}
-      <div style="font-size:0.8125rem;color:#6e7a74;line-height:1.5">${valuesHtml}</div>
-      ${notes}
+
+      ${crewStr || pax ? `<p style="${lineStyle}">Crew: ${crewStr}${pax ? ` · Pax: ${escapeHtml(pax)}` : ''}</p>` : ''}
+      ${locStr ? `<p style="${lineStyle}">${locStr}</p>` : ''}
+      ${weather ? `<p style="${mutedStyle}">Weather: ${escapeHtml(weather)}</p>` : ''}
+      ${notes ? `<p style="${lineStyle};margin-top:4px">Notes: ${notes}</p>` : ''}
+      ${engineStr ? `<p style="${mutedStyle};margin-top:4px">${engineStr}</p>` : ''}
+      ${merchStr ? `<p style="${mutedStyle}">${merchStr}</p>` : ''}
+      ${merchNotes ? `<p style="${mutedStyle}">Merch note: ${escapeHtml(merchNotes)}</p>` : ''}
+
+      ${hasIncident ? `
+        <div style="margin-top:8px;padding:8px 12px;background:#ba1a1a;color:white;font-weight:600;font-size:0.8125rem;border-radius:8px">
+          ⚠️ ${escapeHtml(String(values['incident-occurred'] || ''))}${incidentDetails ? ` — ${escapeHtml(String(incidentDetails)).substring(0, 200)}` : ''}
+        </div>` : ''}
+    </div>`;
+}
+
+// ── Checklist card: condensed with item count ──
+function renderChecklistCard(
+  co: any, values: any, hasAlerts: boolean, hasNotes: boolean, inlineNotes: string[],
+  checkedCount: number, totalItems: number, time: string, cardStyle: string, searchableData: string
+): string {
+  // Build condensed non-checkbox values
+  const summaryParts: string[] = [];
+  for (const [key, val] of Object.entries(values)) {
+    if (!val || val === '' || val === 'true' || val === 'false') continue;
+    if (key.startsWith('note_') || key.startsWith('fail_note_')) continue;
+    const label = key.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+    const strVal = Array.isArray(val) ? (val as string[]).join(', ') : String(val);
+    summaryParts.push(`<strong style="color:#1a1c1c;font-weight:500">${escapeHtml(label)}:</strong> ${escapeHtml(strVal.substring(0, 80))}`);
+  }
+  const valuesHtml = summaryParts.length > 0
+    ? summaryParts.join('<span style="color:#bdc9c2"> · </span>')
+    : '';
+
+  const templateName = co.template_id.replace(/-/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase());
+
+  const notesIcon = hasNotes
+    ? `<span title="${escapeHtml(inlineNotes.join(' | '))}" style="cursor:help;font-size:1rem">📎</span>`
+    : '';
+
+  const alertBadge = hasAlerts
+    ? `<span style="display:inline-block;padding:2px 8px;border-radius:12px;font-size:0.6875rem;font-weight:600;background:rgba(243,109,79,0.1);color:#F36D4F">⚠ ${(co.alerts_json as any[]).length} flagged</span>`
+    : '';
+
+  return `
+    <div class="completion-card" data-searchable="${escapeHtml(searchableData)}" data-vessel="${co.vessel || ''}" style="${cardStyle}">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start">
+        <div>
+          <span style="font-weight:600;font-size:0.875rem;color:#1a1c1c">${escapeHtml(templateName)}</span>
+          ${alertBadge}
+        </div>
+        <div style="text-align:right;flex-shrink:0">
+          <div style="font-size:0.75rem;color:#6e7a74">${time} · ${escapeHtml(co.crew_name || '')} ${notesIcon}</div>
+          <div style="font-size:0.6875rem;color:#006950;font-weight:500">${checkedCount}/${totalItems} ✓</div>
+        </div>
+      </div>
+      ${valuesHtml ? `<div style="font-size:0.8125rem;color:#6e7a74;line-height:1.5;margin-top:4px">${valuesHtml}</div>` : ''}
+      ${co.notes ? `<div style="font-size:0.8125rem;color:#1a1c1c;margin-top:4px">Notes: ${escapeHtml(co.notes)}</div>` : ''}
     </div>`;
 }
 
