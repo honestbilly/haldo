@@ -45,6 +45,20 @@
           "type": "checkbox"
         },
         {
+          "id": "engine-hours-port-start",
+          "label": "Engine hours — Port (start of day)",
+          "type": "number",
+          "unit": "hours",
+          "info": "Record the port engine hour meter reading before departure."
+        },
+        {
+          "id": "engine-hours-stbd-start",
+          "label": "Engine hours — Starboard (start of day)",
+          "type": "number",
+          "unit": "hours",
+          "info": "Record the starboard engine hour meter reading before departure."
+        },
+        {
           "id": "maintenance-calendar",
           "label": "Refer to Maintenance Calendar for today's required daily maintenance",
           "type": "checkbox"

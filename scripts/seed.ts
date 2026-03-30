@@ -26,11 +26,18 @@ async function seed() {
   ];
 
   for (const c of crew) {
+    // Check if crew member already exists (by name + role)
+    const existing = await pool.query(
+      'SELECT id FROM crew WHERE name = $1 AND role = $2',
+      [c.name, c.role]
+    );
+    if (existing.rows.length > 0) {
+      console.log(`  ~ ${c.role}: ${c.name} (already exists)`);
+      continue;
+    }
     const id = nanoid();
     await pool.query(
-      `INSERT INTO crew (id, name, role, vessel)
-       VALUES ($1, $2, $3, $4)
-       ON CONFLICT DO NOTHING`,
+      'INSERT INTO crew (id, name, role, vessel) VALUES ($1, $2, $3, $4)',
       [id, c.name, c.role, c.vessel]
     );
     console.log(`  + ${c.role}: ${c.name} (${c.vessel})`);
