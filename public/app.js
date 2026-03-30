@@ -11,7 +11,7 @@ function step(btn, delta) {
   const current = parseInt(input.value) || 0;
   const newVal = Math.max(0, current + delta);
   input.value = newVal;
-  input.dispatchEvent(new Event('input'));
+  input.dispatchEvent(new Event('input', { bubbles: true }));
 }
 
 // --- Threshold coloring ---

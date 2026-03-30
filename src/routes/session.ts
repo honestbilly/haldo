@@ -1,12 +1,12 @@
 import { Hono } from 'hono';
 import { getCookie, setCookie, deleteCookie } from 'hono/cookie';
 import pool from '../db.js';
-import type { CrewRow } from '../types.js';
+import type { CrewRow, SessionData } from '../types.js';
 
 const app = new Hono();
 
 // Parse session from cookie
-export function getSession(c: any): { vessel: string; role: string; crew_id: string; crew_name: string; trip_date: string; trip_slot: string } | null {
+export function getSession(c: any): SessionData | null {
   const raw = getCookie(c, 'haldo_session');
   if (!raw) return null;
   try {

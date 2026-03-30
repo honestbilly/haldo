@@ -25,7 +25,7 @@ export async function loadTemplates(): Promise<Template[]> {
       }
 
       if (parsed.type !== 'checklist' && parsed.type !== 'logbook') {
-        console.warn(`[templates] Invalid template ${file}: unknown type "${parsed.type}"`);
+        console.warn(`[templates] Invalid template ${file}: unknown type "${(parsed as any).type}"`);
         continue;
       }
 

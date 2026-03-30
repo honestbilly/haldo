@@ -4,36 +4,41 @@ import pool from '../db.js';
 import { getSession } from './session.js';
 import { getTemplatesForContext, getTemplateById } from '../services/templates.js';
 import { evaluateAlerts, processAlerts } from '../services/alerts.js';
-import type { Template, ChecklistTemplate, LogbookTemplate, Item, Section, LogbookStep } from '../types.js';
+import type { Template, ChecklistTemplate, LogbookTemplate, Item, Section, LogbookStep, SessionData } from '../types.js';
 
-const app = new Hono();
+type Env = { Variables: { session: SessionData } };
+
+const app = new Hono<Env>();
 
 // Middleware: require session
 app.use('/today', async (c, next) => {
-  const session = getSession(c);
+  const session = getSession(c as any);
   if (!session) return c.redirect('/');
-  c.set('session' as any, session);
+  c.set('session', session);
   await next();
 });
 
 app.use('/c/*', async (c, next) => {
-  const session = getSession(c);
+  const session = getSession(c as any);
   if (!session) return c.redirect('/');
-  c.set('session' as any, session);
+  c.set('session', session);
   await next();
 });
 
 app.use('/complete/*', async (c, next) => {
-  const session = getSession(c);
+  const session = getSession(c as any);
   if (!session) return c.redirect('/');
-  c.set('session' as any, session);
+  c.set('session', session);
   await next();
 });
 
 // Today's list
 app.get('/today', async (c) => {
-  const session = (c as any).get('session');
-  const templates = getTemplatesForContext(session.vessel, session.role, new Date(session.trip_date));
+  const session = c.get('session');
+  // Parse date as local (not UTC) to avoid timezone shift
+  const [y, m, d] = session.trip_date.split('-').map(Number);
+  const tripDate = new Date(y, m - 1, d);
+  const templates = getTemplatesForContext(session.vessel, session.role, tripDate);
 
   // Get today's completions for this crew member
   const completions = await pool.query(
@@ -54,7 +59,7 @@ app.get('/today', async (c) => {
 
 // Render a checklist or logbook form
 app.get('/c/:templateId', (c) => {
-  const session = (c as any).get('session');
+  const session = c.get('session');
   const template = getTemplateById(c.req.param('templateId'));
   if (!template) return c.notFound();
 
@@ -67,7 +72,7 @@ app.get('/c/:templateId', (c) => {
 
 // Submit a completion
 app.post('/c/:templateId', async (c) => {
-  const session = (c as any).get('session');
+  const session = c.get('session');
   const template = getTemplateById(c.req.param('templateId'));
   if (!template) return c.notFound();
 
@@ -129,7 +134,7 @@ app.post('/c/:templateId', async (c) => {
 
 // Success screen
 app.get('/complete/:id', (c) => {
-  const session = (c as any).get('session');
+  const session = c.get('session');
   const alertCount = Number(c.req.query('alerts') || 0);
   return c.html(renderSuccess(session, alertCount));
 });
@@ -178,7 +183,7 @@ function renderTodayList(
   <div class="today-page">
     <header class="today-header">
       <h1>${session.crew_name} — ${session.vessel.toUpperCase()}</h1>
-      <p>${session.trip_slot} Trip | ${new Date(session.trip_date).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}</p>
+      <p>${session.trip_slot} Trip | ${(() => { const [y,m,d] = session.trip_date.split('-').map(Number); return new Date(y, m-1, d).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }); })()}</p>
     </header>
     <div class="today-list">
       ${items || '<p class="empty-state">No checklists scheduled for today.</p>'}

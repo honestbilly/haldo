@@ -10,6 +10,7 @@
  * Configure in Claude Code's MCP settings (see INSTRUCTIONS.md)
  */
 
+import 'dotenv/config';
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import {
@@ -223,7 +224,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
 // ============================================================
 
 server.setRequestHandler(CallToolRequestSchema, async (request) => {
-  const { name, arguments: args } = request.params;
+  const { name, arguments: args } = request.params as { name: string; arguments?: Record<string, any> };
 
   try {
     switch (name) {
