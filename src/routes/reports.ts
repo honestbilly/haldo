@@ -39,18 +39,34 @@ function renderCompletionCard(co: any): string {
   const hasIncident = incidentValue && incidentValue !== 'No incidents';
   const incidentDetails = values['incident-details'] || '';
 
-  // Build condensed summary of key values (skip empty, skip checkbox "true" clutter)
+  // Build condensed summary of key values
   const summaryParts: string[] = [];
+  const checkedItems: string[] = [];
   for (const [key, val] of Object.entries(values)) {
-    if (!val || val === '' || val === 'true' || val === 'false') continue;
+    if (!val || val === '') continue;
     if (key === 'incident-occurred' || key === 'incident-details') continue;
+    if (key.startsWith('note_') || key.startsWith('fail_note_')) continue;
+
     const label = key.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+
+    // Checkboxes — collect as completed items
+    if (val === 'true') {
+      checkedItems.push(label);
+      continue;
+    }
+    if (val === 'false') continue;
+
     const strVal = Array.isArray(val) ? (val as string[]).join(', ') : String(val);
     if (strVal.length > 100) {
       summaryParts.push(`<span style="display:inline"><strong style="color:#1a1c1c;font-weight:500">${escapeHtml(label)}:</strong> ${escapeHtml(strVal.substring(0, 100))}&hellip;</span>`);
     } else {
       summaryParts.push(`<span style="display:inline"><strong style="color:#1a1c1c;font-weight:500">${escapeHtml(label)}:</strong> ${escapeHtml(strVal)}</span>`);
     }
+  }
+
+  // Show checkbox count as a summary line
+  if (checkedItems.length > 0) {
+    summaryParts.unshift(`<span style="display:inline"><strong style="color:#006950;font-weight:500">✓ ${checkedItems.length} items checked</strong></span>`);
   }
   // Join with dot separators via CSS-like approach
   const valuesHtml = summaryParts.length > 0
