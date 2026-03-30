@@ -52,18 +52,6 @@
           "type": "multi_select",
           "options": ["Jess", "Chase", "Kristen", "Alexa", "Libbie", "Dan", "Andrew", "Hadden", "Bryan", "Jackie", "Charlie"],
           "required": true
-        },
-        {
-          "id": "captain-name",
-          "label": "Captain",
-          "type": "text",
-          "required": true
-        },
-        {
-          "id": "mate-name",
-          "label": "Mate",
-          "type": "text",
-          "required": true
         }
       ]
     },
@@ -140,12 +128,6 @@
       "title": "Operations",
       "items": [
         {
-          "id": "engine-hours-start",
-          "label": "Engine hours at departure",
-          "type": "number",
-          "unit": "hours"
-        },
-        {
           "id": "engine-hours-end",
           "label": "Engine hours at return",
           "type": "number",
@@ -196,22 +178,55 @@
     },
     {
       "step": 7,
-      "title": "Merchandise",
+      "title": "Merch for Non-Profit Sold",
       "items": [
         {
-          "id": "merch-sold",
-          "label": "Merchandise sold (items and quantities)",
-          "type": "text",
-          "help": {
-            "title": "Merch tracking",
-            "body": "Crew earn a commission for selling merch. Log any t-shirts, hats, or other items sold on this trip."
-          }
+          "id": "merch-any-sold",
+          "label": "Any merch sold this trip?",
+          "type": "select",
+          "options": ["Yes — items sold", "No funds raised for local kids today"]
         },
         {
-          "id": "merch-total",
-          "label": "Merch sales total ($)",
+          "id": "merch-hats",
+          "label": "Hats",
           "type": "number",
-          "unit": "dollars"
+          "unit": "qty",
+          "requires": "merch-any-sold"
+        },
+        {
+          "id": "merch-tshirts",
+          "label": "T-Shirts",
+          "type": "number",
+          "unit": "qty",
+          "requires": "merch-any-sold"
+        },
+        {
+          "id": "merch-sunshirts",
+          "label": "Sun Shirts",
+          "type": "number",
+          "unit": "qty",
+          "requires": "merch-any-sold"
+        },
+        {
+          "id": "merch-sweatshirts",
+          "label": "Sweat Shirts",
+          "type": "number",
+          "unit": "qty",
+          "requires": "merch-any-sold"
+        },
+        {
+          "id": "merch-payment",
+          "label": "How was payment collected?",
+          "type": "select",
+          "options": ["Cash", "Card", "Venmo/Zelle", "Mixed"],
+          "requires": "merch-any-sold"
+        },
+        {
+          "id": "merch-notes",
+          "label": "Merch notes",
+          "type": "text",
+          "placeholder": "Any notes about the sale...",
+          "requires": "merch-any-sold"
         }
       ]
     }

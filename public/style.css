@@ -214,6 +214,21 @@ body {
 .status-done { color: var(--primary); font-weight: 600; font-size: 0.8125rem; }
 .status-pending { color: var(--text-muted); font-size: 0.8125rem; }
 
+/* Review summary (logbook Review & Submit step) */
+.review-summary { margin: 16px 0; }
+.review-list { background: var(--surface); border-radius: var(--radius); overflow: hidden; }
+.review-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--surface-container);
+  gap: 12px;
+}
+.review-row:last-child { border-bottom: none; }
+.review-label { font-size: 0.8125rem; color: var(--text-muted); flex-shrink: 0; }
+.review-value { font-size: 0.875rem; font-weight: 500; color: var(--text); text-align: right; word-break: break-word; }
+
 /* On-demand checklists section */
 .on-demand-section { margin-top: 24px; }
 .on-demand-header {
@@ -381,20 +396,22 @@ body {
 .required-mark { color: var(--danger); margin-left: 2px; }
 
 /* Stepper — Stitch layout: buttons + value circle on left, threshold info on right */
+/* Number input: tap-to-type field with optional +/- fine-tune buttons */
 .stepper {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
   margin: 8px 0;
 }
 
 .stepper-btn {
-  width: 56px;
-  height: 56px;
-  border: 2px solid var(--primary);
-  border-radius: 50%;
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  border: 2px solid var(--border);
+  border-radius: var(--radius);
   background: var(--surface);
-  font-size: 1.5rem;
+  font-size: 1.25rem;
   font-weight: 600;
   color: var(--primary);
   cursor: pointer;
@@ -405,22 +422,28 @@ body {
   -webkit-tap-highlight-color: transparent;
 }
 
-.stepper-btn:active { background: rgba(22, 142, 110, 0.1); }
+.stepper-btn:active { background: rgba(22, 142, 110, 0.1); border-color: var(--primary); }
 
-.stepper-value-wrap { text-align: center; }
+.stepper-value-wrap { flex: 1; text-align: center; }
 
 .stepper-input {
-  width: 64px;
-  height: 64px;
-  border: 3px solid var(--primary);
-  border-radius: 50%;
+  width: 100%;
+  height: 48px;
+  border: 2px solid var(--border);
+  border-radius: var(--radius);
   background: var(--surface);
   font-family: var(--font-heading);
-  font-size: 1.5rem;
+  font-size: 16px; /* 16px prevents iOS zoom */
   font-weight: 700;
   text-align: center;
   color: var(--text);
   -moz-appearance: textfield;
+  padding: 0 8px;
+}
+
+.stepper-input:focus {
+  outline: none;
+  border-color: var(--primary);
 }
 
 .stepper-input::-webkit-outer-spin-button,
@@ -524,7 +547,7 @@ body {
 .multi-option input { width: 20px; height: 20px; margin-right: 12px; accent-color: var(--primary); }
 .multi-option-text { font-size: 0.9375rem; }
 
-/* Text input */
+/* Text input — 16px min prevents iOS zoom on focus */
 .text-input, .notes-textarea {
   width: 100%;
   min-height: 48px;
@@ -532,7 +555,7 @@ body {
   border: 2px solid var(--border);
   border-radius: var(--radius);
   font-family: var(--font-body);
-  font-size: 0.9375rem;
+  font-size: 16px;
   resize: vertical;
 }
 

@@ -193,6 +193,10 @@ function renderTodayList(
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <title>Today — Haldo</title>
   <link rel="stylesheet" href="/public/style.css">
+  <link rel="manifest" href="/public/manifest.json">
+  <meta name="theme-color" content="#006950">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 </head>
 <body>
   <div class="today-page">
@@ -395,6 +399,10 @@ function renderChecklist(session: any, template: ChecklistTemplate): string {
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <title>${template.name} — Haldo</title>
   <link rel="stylesheet" href="/public/style.css">
+  <link rel="manifest" href="/public/manifest.json">
+  <meta name="theme-color" content="#006950">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 </head>
 <body>
   <div class="checklist-page">
@@ -465,6 +473,10 @@ function renderLogbook(session: any, template: LogbookTemplate): string {
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <title>${template.name} — Haldo</title>
   <link rel="stylesheet" href="/public/style.css">
+  <link rel="manifest" href="/public/manifest.json">
+  <meta name="theme-color" content="#006950">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 </head>
 <body>
   <div class="logbook-page">
@@ -483,7 +495,8 @@ function renderLogbook(session: any, template: LogbookTemplate): string {
       ${template.completion.sign_off ? `
         <div class="wizard-step" data-step="${totalSteps}" style="display:none">
           <h2 class="step-title">Review & Submit</h2>
-          <p>Review your entries, then submit.</p>
+          <p>Check your entries below, then confirm and submit.</p>
+          <div id="review-summary" class="review-summary"></div>
           <label class="sign-off">
             <input type="checkbox" name="sign_off">
             <span>I, ${session.role === 'captain' ? 'Captain' : 'Mate'} ${session.crew_name}, confirm this is accurate</span>
@@ -501,6 +514,24 @@ function renderLogbook(session: any, template: LogbookTemplate): string {
     const totalSteps = ${totalSteps + (template.completion.sign_off ? 1 : 0)};
   </script>
   <script src="/public/app.js"></script>
+  <script>
+    // Pre-fill known values from session
+    document.addEventListener('DOMContentLoaded', () => {
+      const tripDateInput = document.querySelector('[name="item_trip-date"]');
+      if (tripDateInput && !tripDateInput.value) tripDateInput.value = '${session.trip_date}';
+
+      const captainInput = document.querySelector('[name="item_captain-name"]');
+      if (captainInput && !captainInput.value) captainInput.value = '${session.crew_name}';
+
+      // Auto-select trip slot
+      const slotBtns = document.querySelectorAll('[data-value="AM (9-1)"], [data-value="PM (2-6)"]');
+      slotBtns.forEach(btn => {
+        if (btn.dataset.value.startsWith('${session.trip_slot}')) {
+          btn.click();
+        }
+      });
+    });
+  </script>
 </body>
 </html>`;
 }
@@ -513,6 +544,10 @@ function renderSuccess(session: any, alertCount: number): string {
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <title>Done! — Haldo</title>
   <link rel="stylesheet" href="/public/style.css">
+  <link rel="manifest" href="/public/manifest.json">
+  <meta name="theme-color" content="#006950">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 </head>
 <body>
   <div class="success-page">

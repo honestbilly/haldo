@@ -122,6 +122,10 @@ function renderLanding(
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <title>Haldo — Honest Eco</title>
   <link rel="stylesheet" href="/public/style.css">
+  <link rel="manifest" href="/public/manifest.json">
+  <meta name="theme-color" content="#006950">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 </head>
 <body>
   <div class="landing">

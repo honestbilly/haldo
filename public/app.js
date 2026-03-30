@@ -155,6 +155,67 @@ function wizardNav(delta) {
 
   // Scroll to top of step
   window.scrollTo({ top: 0, behavior: 'smooth' });
+
+  // Build review summary when reaching the last step
+  const reviewEl = document.getElementById('review-summary');
+  if (reviewEl && steps[currentStep]?.querySelector('#review-summary')) {
+    buildReviewSummary(reviewEl);
+  }
+}
+
+function buildReviewSummary(container) {
+  container.innerHTML = '';
+  const form = document.getElementById('logbook-form') || document.getElementById('checklist-form');
+  if (!form) return;
+
+  const items = form.querySelectorAll('.form-item');
+  let html = '<div class="review-list">';
+
+  items.forEach(item => {
+    if (item.style.display === 'none') return;
+
+    const label = item.querySelector('.item-label, .checkbox-text');
+    if (!label) return;
+    const labelText = label.textContent.replace(/\*$/, '').trim();
+
+    let value = '';
+
+    // Checkbox
+    const cb = item.querySelector('.checkbox-input');
+    if (cb) { value = cb.checked ? '✓' : '—'; }
+
+    // Stepper / number
+    const stepper = item.querySelector('.stepper-input');
+    if (stepper) {
+      const unit = item.querySelector('.stepper-unit');
+      value = stepper.value ? stepper.value + (unit ? ' ' + unit.textContent : '') : '—';
+    }
+
+    // Select (hidden input)
+    const hidden = item.querySelector('input[type="hidden"]');
+    if (hidden && hidden.value && !stepper) { value = hidden.value; }
+
+    // Text
+    const textarea = item.querySelector('.text-input');
+    if (textarea) { value = textarea.value.trim() || '—'; }
+
+    // Multi-select
+    if (item.classList.contains('item-multi-select')) {
+      const checked = item.querySelectorAll('.multi-group input:checked');
+      value = checked.length > 0 ? Array.from(checked).map(c => c.value).join(', ') : '—';
+    }
+
+    // Option buttons (select type)
+    const activeOpt = item.querySelector('.option-btn.active');
+    if (activeOpt && !hidden?.value) { value = activeOpt.textContent; }
+
+    if (value) {
+      html += '<div class="review-row"><span class="review-label">' + labelText + '</span><span class="review-value">' + value + '</span></div>';
+    }
+  });
+
+  html += '</div>';
+  container.innerHTML = html;
 }
 
 // --- Photo preview ---
@@ -194,5 +255,24 @@ document.addEventListener('DOMContentLoaded', () => {
     if (checkbox && !checkbox.checked) {
       el.style.display = 'none';
     }
+  });
+
+  // Register service worker for PWA + offline support
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/public/sw.js').catch(() => {});
+  }
+
+  // Sync queued submissions when back online
+  window.addEventListener('online', () => {
+    const pending = JSON.parse(localStorage.getItem('haldo_pending') || '[]');
+    if (pending.length === 0) return;
+    pending.forEach(item => {
+      fetch(item.url, {
+        method: 'POST',
+        headers: { 'Content-Type': item.contentType || 'application/x-www-form-urlencoded' },
+        body: item.body,
+      }).catch(() => {});
+    });
+    localStorage.removeItem('haldo_pending');
   });
 });
