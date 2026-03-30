@@ -29,16 +29,6 @@
           "type": "select",
           "options": ["AM (9-1)", "PM (2-6)"],
           "required": true
-        },
-        {
-          "id": "departure-time",
-          "label": "Actual departure time",
-          "type": "text"
-        },
-        {
-          "id": "return-time",
-          "label": "Actual return time",
-          "type": "text"
         }
       ]
     },
@@ -128,25 +118,29 @@
       "title": "Operations",
       "items": [
         {
+          "id": "snorkel-location",
+          "label": "Snorkel location",
+          "type": "text",
+          "placeholder": "Where did you snorkel?"
+        },
+        {
+          "id": "dolphin-location",
+          "label": "Dolphin location",
+          "type": "text",
+          "placeholder": "Where were dolphins spotted?"
+        },
+        {
+          "id": "other-location",
+          "label": "Other location (sandbar, etc.)",
+          "type": "text",
+          "placeholder": "Optional — leave blank if N/A",
+          "info": "Only fill in if you visited a location other than snorkel/dolphin spots"
+        },
+        {
           "id": "engine-hours-end",
           "label": "Engine hours at return",
           "type": "number",
           "unit": "hours"
-        },
-        {
-          "id": "locations-visited",
-          "label": "Locations visited",
-          "type": "text"
-        },
-        {
-          "id": "dolphin-sighting-location",
-          "label": "Dolphin sighting location(s)",
-          "type": "text"
-        },
-        {
-          "id": "snorkel-site",
-          "label": "Snorkel site",
-          "type": "text"
         },
         {
           "id": "weather-conditions",
@@ -182,52 +176,40 @@
       "prompt": "Merch for Non-Profit Sold:",
       "items": [
         {
-          "id": "merch-sold",
-          "label": "Any merchandise sold today?",
-          "type": "select",
-          "options": ["Yes", "No funds raised for local kids today"]
-        },
-        {
           "id": "merch-hat",
           "label": "Hats sold",
           "type": "number",
-          "unit": "qty",
-          "requires": "merch-sold"
+          "unit": "qty"
         },
         {
           "id": "merch-tshirt",
           "label": "T-Shirts sold",
           "type": "number",
-          "unit": "qty",
-          "requires": "merch-sold"
+          "unit": "qty"
         },
         {
           "id": "merch-sunshirt",
           "label": "Sun Shirts sold",
           "type": "number",
-          "unit": "qty",
-          "requires": "merch-sold"
+          "unit": "qty"
         },
         {
           "id": "merch-sweatshirt",
           "label": "Sweatshirts sold",
           "type": "number",
-          "unit": "qty",
-          "requires": "merch-sold"
+          "unit": "qty"
         },
         {
           "id": "merch-payment",
           "label": "How were items paid for?",
           "type": "multi_select",
-          "options": ["Cash", "Card", "Venmo", "Zelle"],
-          "requires": "merch-sold"
+          "options": ["Cash", "Card", "Venmo", "Zelle", "Added to tab", "No sales today"]
         },
         {
           "id": "merch-notes",
           "label": "Merch notes",
           "type": "text",
-          "info": "Any issues, special requests, or inventory concerns",
-          "requires": "merch-sold"
+          "info": "Any issues, special requests, or inventory concerns"
         }
       ]
     }

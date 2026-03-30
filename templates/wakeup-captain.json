@@ -59,6 +59,21 @@
           "info": "Record the starboard engine hour meter reading before departure."
         },
         {
+          "id": "trip-meter-reset",
+          "label": "Reset fuel trip meter / hour meter",
+          "type": "checkbox",
+          "help": {
+            "title": "Trip meter reset",
+            "body": "Reset the fuel trip meter (or hour meter if equipped) at the start of each day. This helps track daily fuel consumption accurately."
+          }
+        },
+        {
+          "id": "engine-hours-check",
+          "label": "Confirm engine hour readings match expected range",
+          "type": "checkbox",
+          "info": "If hours seem off, note it using the (+) button and notify the manager."
+        },
+        {
           "id": "maintenance-calendar",
           "label": "Complete today's Daily Maintenance Task (see DMT checklist for details)",
           "type": "checkbox",
