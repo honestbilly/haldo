@@ -6,33 +6,62 @@
   "role": "captain",
   "recurrence": "on-demand",
   "version": "2026-03-30",
-  "source": "KB: squid-on-board-binder / Engine Maintenance",
+  "source": "KB: squid-yamaha-god-doc, cowfish-god-doc, blu-q-god-doc, squid-on-board-binder",
   "estimated_minutes": 45,
   "display_order": 100,
-  "intro": "Engine oil change procedure. Record engine hours before starting. Follow all steps in order.",
+  "intro": "Engine oil change procedure. All vessels use Quicksilver 25W-40 semi-synthetic oil. Oil change interval: every 100 engine hours.",
+  "help": {
+    "title": "Oil Change Intervals & What Else Is Due",
+    "body": "Every 100 hours: Change engine oil & filter, grease trim/tilt tube, spray Corrosion Block on fuel tank & engine (inside cowling), steering ram & connection.\n\nEvery 200 hours (every other oil change): Also inspect zincs, change fuel filter, change spark plugs, grease trim/tilt.\n\nEvery 300 hours: Inspect cooling water flow, change fuel filter.\n\nEvery 1000 hours: Replace timing belt (mechanic required)."
+  },
   "sections": [
     {
-      "title": "Pre-Change",
+      "title": "Pre-Change Setup",
+      "help": {
+        "title": "Vessel-Specific Oil & Filter Reference",
+        "body": "SQUID (Yamaha F115B x2):\n• Oil: Quicksilver 25W-40 semi-synthetic\n• Capacity: 3.8 liters per engine\n• Filter: Sahara 1879111\n• Available at West Marine\n\nCOWFISH (Suzuki DF115B x2):\n• Oil: Quicksilver 25W-40 semi-synthetic\n• Capacity: 5.5 liters per engine\n• Filter: Suzuki 16510-61A31 / Sierra 18-7905-2\n• Grease the shifter with grease gun at every oil change (critical to safety)\n• Available at West Marine\n\nBLU Q (Honda BFP60 x2):\n• Oil: Quicksilver 25W-40 semi-synthetic\n• Capacity: 2.9 quarts per engine (when filter is changed)\n• Filter: Sierra 18-7911-1\n• Available at West Marine"
+      },
       "items": [
         {
           "id": "engine-hours-current",
           "label": "Current engine hours",
           "type": "number",
           "unit": "hours",
-          "info": "Record engine hour meter reading before starting the oil change."
+          "info": "Record engine hour meter reading before starting. Oil changes are due every 100 hours."
         },
         {
           "id": "which-engine",
           "label": "Which engine?",
           "type": "select",
           "options": ["Port", "Starboard", "Both"],
-          "required": true
+          "required": true,
+          "help": {
+            "title": "Engine Serial Numbers",
+            "body": "SQUID:\n• Port: Yamaha F115B, S/N 6EK X 1125102 (left hand rotation)\n• Starboard: Yamaha LF115XB, S/N 6EL X 1004157 (right hand rotation)\n\nCOWFISH:\n• Port: 2024 Suzuki DF115BZG, S/N 11505Z-540012 (counter rotating/left hand)\n• Starboard: 2024 Suzuki DF115BG, S/N 11505F-540252 (right hand)\n\nBLU Q:\n• Port: Honda BFP60, S/N BBFJ-8112855\n• Starboard: Honda BFP60, S/N BBFJ-8112815"
+          }
         },
         {
-          "id": "oil-type",
-          "label": "Oil type and weight",
-          "type": "text",
-          "placeholder": "e.g., Yamalube 10W-30"
+          "id": "is-200hr-service",
+          "label": "Is this a 200-hour service? (every other oil change)",
+          "type": "select",
+          "options": ["No — standard 100hr oil change", "Yes — 200hr extended service"],
+          "info": "At 200 hours, also inspect zincs, change fuel filter, change spark plugs, and grease trim/tilt.",
+          "help": {
+            "title": "200-Hour Service Checklist",
+            "body": "In addition to the standard oil change, a 200-hour service includes:\n\n1. Inspect and replace zincs if needed\n   • SQUID: Bracket 6G5-45251-01, Lower unit 6E5-45371-01-00\n   • COWFISH: Bracket 55320-94900, Lower unit 55321-90J01\n2. Change fuel filter\n   • SQUID: Sierra 18-7866 Extra Capacity, 10 Micron\n   • COWFISH: High pressure fuel filter (mechanic for 1000hr)\n   • BLU Q: Sierra 18-7866 / 18-7945 Spin-on XL\n3. Change spark plugs\n   • SQUID: NGK LKR6E (gap 0.8-0.9mm)\n   • BLU Q: NGK LMAR6C-9 (need 14mm deep socket)\n4. Grease trim/tilt tube"
+          }
+        },
+        {
+          "id": "oil-on-hand",
+          "label": "Confirm: Quicksilver 25W-40 semi-synthetic oil on hand",
+          "type": "checkbox",
+          "info": "All vessels use the same oil. Available at West Marine."
+        },
+        {
+          "id": "filter-on-hand",
+          "label": "Confirm: correct oil filter on hand for this vessel",
+          "type": "checkbox",
+          "info": "SQUID: Sahara 1879111 | COWFISH: Sierra 18-7905-2 | BLU Q: Sierra 18-7911-1"
         },
         {
           "id": "run-engine",
@@ -52,28 +81,43 @@
         {
           "id": "drain-plug",
           "label": "Remove drain plug and drain oil into container",
-          "type": "checkbox"
+          "type": "checkbox",
+          "info": "Use a clean container. Note the color and condition of old oil — dark/gritty may indicate a problem."
         },
         {
           "id": "replace-filter",
           "label": "Replace oil filter",
-          "type": "checkbox"
+          "type": "checkbox",
+          "info": "Pre-fill new filter with clean oil before installing. Lubricate the gasket with a thin coat of oil."
         },
         {
           "id": "replace-plug",
-          "label": "Replace drain plug (hand tight + 1/4 turn)",
-          "type": "checkbox"
+          "label": "Replace drain plug — hand tight + 1/4 turn",
+          "type": "checkbox",
+          "info": "Do not over-tighten. A new crush washer is recommended if available."
         },
         {
           "id": "add-oil",
           "label": "Add new oil to fill line",
-          "type": "checkbox"
+          "type": "checkbox",
+          "info": "SQUID: 3.8L per engine | COWFISH: 5.5L per engine | BLU Q: 2.9qt per engine"
         },
         {
           "id": "quarts-added",
-          "label": "Quarts added",
+          "label": "Amount of oil added",
           "type": "number",
-          "unit": "qt"
+          "unit": "qt",
+          "info": "Record the actual amount added."
+        },
+        {
+          "id": "cowfish-grease-shifter",
+          "label": "COWFISH ONLY: Grease the shifter with grease gun",
+          "type": "checkbox",
+          "info": "Critical to safety. Must be done at every oil change on the Cowfish.",
+          "help": {
+            "title": "Why this matters",
+            "body": "The Cowfish Suzuki DF115B shifters require grease at every oil change. Failure to grease can cause the shifter mechanism to seize, which is a safety hazard. Use a standard grease gun."
+          }
         }
       ]
     },
@@ -88,7 +132,8 @@
         {
           "id": "run-check",
           "label": "Start engine, run for 2 minutes, check for leaks",
-          "type": "checkbox"
+          "type": "checkbox",
+          "info": "Watch around the drain plug and filter for any drips."
         },
         {
           "id": "recheck-level",
@@ -96,8 +141,16 @@
           "type": "checkbox"
         },
         {
+          "id": "old-oil-condition",
+          "label": "Old oil condition",
+          "type": "select",
+          "options": ["Clean — normal amber/brown", "Dark but normal", "Very dark/black", "Milky/cloudy (possible water intrusion)", "Metal flakes visible"],
+          "alert_on": ["Milky/cloudy (possible water intrusion)", "Metal flakes visible"],
+          "info": "Milky oil or metal flakes require immediate follow-up. Do NOT run the engine."
+        },
+        {
           "id": "dispose-oil",
-          "label": "Dispose of old oil properly (dock waste station)",
+          "label": "Dispose of old oil properly at dock waste station",
           "type": "checkbox"
         },
         {
@@ -106,14 +159,64 @@
           "type": "photo",
           "placeholder": "Snap a photo of the dipstick",
           "max_photos": 1
+        },
+        {
+          "id": "corrosion-block",
+          "label": "Spray Corrosion Block on fuel tank, engine (inside cowling), steering ram and connection",
+          "type": "checkbox",
+          "info": "Required at every 100-hour service."
+        },
+        {
+          "id": "grease-trim-tilt",
+          "label": "Grease trim/tilt tube",
+          "type": "checkbox",
+          "info": "Required at every 100-hour service."
+        }
+      ]
+    },
+    {
+      "title": "200-Hour Service Items (if applicable)",
+      "conditional": {
+        "depends_on": "is-200hr-service",
+        "show_when": "Yes — 200hr extended service"
+      },
+      "items": [
+        {
+          "id": "inspect-zincs",
+          "label": "Inspect zincs — replace if more than 50% eroded",
+          "type": "select",
+          "options": ["Good — no replacement needed", "Replaced bracket zinc", "Replaced lower unit zinc", "Replaced both zincs"],
+          "help": {
+            "title": "Zinc Part Numbers",
+            "body": "SQUID: Bracket 6G5-45251-01, Lower unit 6E5-45371-01-00\nCOWFISH: Bracket 55320-94900, Lower unit 55321-90J01\nBLU Q: Unknown — check with mechanic"
+          }
+        },
+        {
+          "id": "change-fuel-filter",
+          "label": "Change fuel filter",
+          "type": "checkbox",
+          "info": "SQUID: Sierra 18-7866 Extra Capacity, 10 Micron | BLU Q: Sierra 18-7866 / 18-7945"
+        },
+        {
+          "id": "change-spark-plugs",
+          "label": "Change spark plugs",
+          "type": "checkbox",
+          "info": "SQUID: NGK LKR6E (gap 0.8-0.9mm) | BLU Q: NGK LMAR6C-9 (14mm deep socket)"
+        },
+        {
+          "id": "200hr-photo",
+          "label": "Photo of replaced parts (zincs, filter, plugs)",
+          "type": "photo",
+          "placeholder": "Document the old parts",
+          "max_photos": 3
         }
       ]
     }
   ],
   "completion": {
-    "require_all": true,
+    "require_all": false,
     "sign_off": true,
     "notes_field": true,
-    "notes_prompt": "Any issues with the oil change? Note the old oil condition (color, debris, etc.)"
+    "notes_prompt": "Any issues with the oil change? Note the old oil condition, unusual wear, or parts that need ordering."
   }
 }
