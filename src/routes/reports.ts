@@ -4,17 +4,16 @@ import pool from '../db.js';
 
 const app = new Hono();
 
-// Basic auth for all report routes
-const authMiddleware = async (c: any, next: any) => {
-  const user = process.env.REPORT_USER || 'billy';
-  const pass = process.env.REPORT_PASS;
-  if (!pass) return next(); // Dev mode — no auth
-  const auth = basicAuth({ username: user, password: pass });
-  return auth(c, next);
-};
-
-app.use('/report/*', authMiddleware);
-app.use('/report', authMiddleware);
+// Auth disabled temporarily — PIN login coming in v1
+// const authMiddleware = async (c: any, next: any) => {
+//   const user = process.env.REPORT_USER || 'billy';
+//   const pass = process.env.REPORT_PASS;
+//   if (!pass) return next();
+//   const auth = basicAuth({ username: user, password: pass });
+//   return auth(c, next);
+// };
+// app.use('/report/*', authMiddleware);
+// app.use('/report', authMiddleware);
 
 const VESSELS = ['squid', 'blu-q', 'cowfish', 'scout', 'java-cat'];
 
