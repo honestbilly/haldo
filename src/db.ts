@@ -1,4 +1,5 @@
 import pg from 'pg';
+import { nanoid } from 'nanoid';
 
 const { Pool } = pg;
 
@@ -79,6 +80,54 @@ export async function initDatabase(): Promise<void> {
       CREATE INDEX IF NOT EXISTS idx_crew_active ON crew(active);
     `);
     console.log('[db] Database initialized');
+
+    // Auto-seed if crew table is empty
+    const crewCount = await client.query('SELECT COUNT(*) FROM crew');
+    if (parseInt(crewCount.rows[0].count) === 0) {
+      console.log('[db] Empty database detected — seeding crew and settings...');
+      const crew = [
+        { name: 'Jess', role: 'captain', vessel: 'squid' },
+        { name: 'Chase', role: 'captain', vessel: 'squid' },
+        { name: 'Kristen', role: 'captain', vessel: 'squid' },
+        { name: 'Alexa', role: 'captain', vessel: 'squid' },
+        { name: 'Libbie', role: 'captain', vessel: 'squid' },
+        { name: 'Dan', role: 'captain', vessel: 'squid' },
+        { name: 'Andrew', role: 'captain', vessel: 'squid' },
+        { name: 'Hadden', role: 'mate', vessel: 'squid' },
+        { name: 'Bryan', role: 'mate', vessel: 'squid' },
+        { name: 'Jackie', role: 'mate', vessel: 'squid' },
+        { name: 'Charlie', role: 'mate', vessel: 'squid' },
+      ];
+      for (const c of crew) {
+        await client.query(
+          'INSERT INTO crew (id, name, role, vessel) VALUES ($1, $2, $3, $4)',
+          [nanoid(), c.name, c.role, c.vessel]
+        );
+      }
+      // Trip config for all vessels
+      for (const vessel of ['squid', 'blu-q', 'cowfish', 'scout', 'java-cat']) {
+        await client.query(
+          `INSERT INTO trip_config (id, vessel, default_slots) VALUES ($1, $2, $3)
+           ON CONFLICT (vessel) DO NOTHING`,
+          [nanoid(), vessel, JSON.stringify(['AM', 'PM'])]
+        );
+      }
+      // Default settings
+      const settings = [
+        ['manager_email', process.env.MANAGER_EMAIL || 'billy@honesteco.com'],
+        ['alert_email_from', process.env.ALERT_EMAIL_FROM || 'haldo@honesteco.com'],
+        ['app_name', process.env.APP_NAME || 'Haldo'],
+        ['app_url', process.env.APP_URL || 'http://localhost:3000'],
+      ];
+      for (const [key, value] of settings) {
+        await client.query(
+          `INSERT INTO settings (key, value) VALUES ($1, $2)
+           ON CONFLICT (key) DO UPDATE SET value = $2, updated_at = NOW()`,
+          [key, value]
+        );
+      }
+      console.log('[db] Seed complete — 11 crew, 5 vessels, settings');
+    }
   } finally {
     client.release();
   }
