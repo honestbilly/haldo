@@ -28,7 +28,8 @@ app.get('/', async (c) => {
     [session.vessel]
   );
 
-  return c.html(renderHandoff(session, notes.rows));
+  const saved = c.req.query('saved') === '1';
+  return c.html(renderHandoff(session, notes.rows, saved));
 });
 
 // POST /handoff — add a new note
@@ -62,7 +63,7 @@ app.post('/:id/update', async (c) => {
     );
   }
 
-  return c.redirect('/handoff');
+  return c.redirect('/handoff?saved=1');
 });
 
 // POST /handoff/:id/resolve — mark note as resolved
@@ -75,7 +76,7 @@ app.post('/:id/resolve', async (c) => {
   return c.redirect('/handoff');
 });
 
-function renderHandoff(session: SessionData, notes: any[]): string {
+function renderHandoff(session: SessionData, notes: any[], saved: boolean = false): string {
   const myNotes = notes.filter(n => n.crew_id === session.crew_id);
   const otherNotes = notes.filter(n => n.crew_id !== session.crew_id);
 
@@ -170,9 +171,12 @@ function renderHandoff(session: SessionData, notes: any[]): string {
 <body>
   <div class="handoff-page">
     <header class="handoff-header">
+      <a href="/today" style="display:block;color:var(--primary);text-decoration:none;font-size:0.875rem;margin-bottom:8px;">← Home</a>
       <h1>Handoff Notes</h1>
       <p>${session.vessel.toUpperCase()} — ${session.crew_name}</p>
     </header>
+
+    ${saved ? `<div style="padding:10px 16px;background:rgba(0,105,80,0.08);border-radius:var(--radius);margin-bottom:12px;font-size:0.875rem;color:var(--primary);text-align:center;">✓ Note saved</div>` : ''}
 
     ${otherNotes.length > 0 ? `
       <h2 class="handoff-section-title">Notes from other crew</h2>

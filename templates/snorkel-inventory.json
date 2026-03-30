@@ -1,6 +1,6 @@
 {
   "id": "snorkel-inventory",
-  "name": "Snorkel Gear Inventory",
+  "name": "Snorkel Gear Inventory & Maintenance",
   "type": "checklist",
   "vessel": "squid",
   "role": "mate",

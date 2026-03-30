@@ -464,15 +464,11 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 8px;
-  flex-wrap: wrap;
+  margin-bottom: 4px;
+  gap: 8px;
 }
 
-/* Help/note boxes break to full width below the label row */
-.item-label-row .help-box,
-.item-label-row .inline-note-box {
-  flex-basis: 100%;
-}
+/* Buttons in the label row never shift — content expands below */
 
 .item-label {
   font-weight: 500;

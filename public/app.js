@@ -53,15 +53,15 @@ function showExpandOnFail(item, show) {
   }
 }
 
-// --- Inline notes (+) toggle ---
-function toggleInlineNote(btn) {
-  const noteBox = btn.nextElementSibling;
-  if (noteBox) {
-    noteBox.classList.toggle('expanded');
-    if (noteBox.classList.contains('expanded')) {
-      btn.classList.add('has-note');
-      noteBox.querySelector('textarea')?.focus();
-    }
+// --- Expand/collapse for help boxes and inline notes ---
+// Content is OUTSIDE the label row so buttons don't shift.
+function toggleExpand(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const isOpen = el.classList.toggle('expanded');
+  if (isOpen) {
+    const textarea = el.querySelector('textarea');
+    if (textarea) textarea.focus();
   }
 }
 

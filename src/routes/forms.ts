@@ -67,13 +67,29 @@ app.get('/today', async (c) => {
 });
 
 // Render a checklist or logbook form
-app.get('/c/:templateId', (c) => {
+app.get('/c/:templateId', async (c) => {
   const session = c.get('session');
   const template = getTemplateById(c.req.param('templateId'));
   if (!template) return c.notFound();
 
+  // For wake-up checklists, pre-fill engine hours from last completion
+  let lastEngineHours: Record<string, string> = {};
+  if (template.id.startsWith('wakeup-')) {
+    const lastCompletion = await pool.query(
+      `SELECT values_json FROM completions
+       WHERE template_id = $1 AND vessel = $2 AND completed_at IS NOT NULL
+       ORDER BY completed_at DESC LIMIT 1`,
+      [template.id, session.vessel]
+    );
+    if (lastCompletion.rows.length > 0) {
+      const vals = lastCompletion.rows[0].values_json;
+      if (vals?.['engine-hours-port-start']) lastEngineHours['engine-hours-port-start'] = String(vals['engine-hours-port-start']);
+      if (vals?.['engine-hours-stbd-start']) lastEngineHours['engine-hours-stbd-start'] = String(vals['engine-hours-stbd-start']);
+    }
+  }
+
   if (template.type === 'checklist') {
-    return c.html(renderChecklist(session, template as ChecklistTemplate));
+    return c.html(renderChecklist(session, template as ChecklistTemplate, lastEngineHours));
   } else {
     return c.html(renderLogbook(session, template as LogbookTemplate));
   }
@@ -170,15 +186,25 @@ function renderTodayList(
       : (t as LogbookTemplate).estimated_minutes;
 
     if (pinned) {
-      // DMT pinned card — different styling
+      // DMT pinned card — extract today's task name from section titles
       const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
       const [y, m, d] = session.trip_date.split('-').map(Number);
       const todayDay = dayNames[new Date(y, m - 1, d).getDay()];
+      // Find today's section and extract the task name (after the dash)
+      let taskName = 'Daily Maintenance';
+      if (t.type === 'checklist') {
+        const ct = t as ChecklistTemplate;
+        const todaySection = ct.sections?.find(s => s.title.toLowerCase().startsWith(todayDay.toLowerCase()));
+        if (todaySection) {
+          const dashIdx = todaySection.title.indexOf('—');
+          taskName = dashIdx > -1 ? todaySection.title.substring(dashIdx + 1).trim() : todaySection.title;
+        }
+      }
       return `
         <a href="/c/${t.id}" class="today-card dmt-pinned ${isDone ? 'done' : ''}">
-          <div class="dmt-pinned-label">⚡ TODAY'S MAINTENANCE</div>
+          <div class="dmt-pinned-label">⚡ TODAY'S DMT</div>
           <div class="today-card-info">
-            <span class="today-card-name">${todayDay}'s Task</span>
+            <span class="today-card-name">${taskName}</span>
             ${est ? `<span class="today-card-time">~${est} min</span>` : ''}
           </div>
           <span class="today-card-status ${isDone ? 'status-done' : 'status-pending'}">
@@ -272,11 +298,14 @@ function renderItemHtml(item: Item, prefix: string = 'item_'): string {
     }).join('') + (item.description_media[0]?.caption ? `<p class="media-caption">${item.description_media[0].caption}</p>` : '');
   }
 
-  let helpHtml = '';
+  // Help and note buttons go in the label row; their expanded content goes BELOW
+  // the label row so buttons don't shift position. Standard accordion pattern.
+  let helpBtnHtml = '';
+  let helpContentHtml = '';
   if (item.help) {
-    helpHtml = `
-      <button type="button" class="help-toggle" onclick="this.nextElementSibling.classList.toggle('expanded')">?</button>
-      <div class="help-box">
+    helpBtnHtml = `<button type="button" class="help-toggle" onclick="toggleExpand('help-${item.id}')">?</button>`;
+    helpContentHtml = `
+      <div class="help-box" id="help-${item.id}">
         <strong>${item.help.title}</strong>
         <p>${item.help.body}</p>
       </div>`;
@@ -299,10 +328,10 @@ function renderItemHtml(item: Item, prefix: string = 'item_'): string {
   let infoHtml = item.info ? `<p class="item-info">${item.info}</p>` : '';
   let requiredMark = item.required ? '<span class="required-mark">*</span>' : '';
 
-  // Inline note (+) button — crew can add a note/flag on any item
-  const noteHtml = `
-    <button type="button" class="inline-note-toggle" onclick="toggleInlineNote(this)" title="Add a note">+</button>
-    <div class="inline-note-box">
+  // Note button in label row; content expands BELOW the row
+  const noteBtnHtml = `<button type="button" class="inline-note-toggle" onclick="toggleExpand('note-${item.id}')" title="Add a note">+</button>`;
+  const noteContentHtml = `
+    <div class="inline-note-box" id="note-${item.id}">
       <textarea name="note_${item.id}" class="inline-note-input" placeholder="Add a note about this item..."></textarea>
       <div class="inline-note-photo">
         <label class="photo-btn photo-btn-sm"><span>📷</span><input type="file" accept="image/*" capture="environment" name="note_photo_${item.id}" style="display:none"></label>
@@ -322,8 +351,9 @@ function renderItemHtml(item: Item, prefix: string = 'item_'): string {
               <span class="checkbox-custom"></span>
               <span class="checkbox-text">${item.label}${requiredMark}</span>
             </label>
-            ${helpHtml}${noteHtml}
+            ${helpBtnHtml}${noteBtnHtml}
           </div>
+          ${helpContentHtml}${noteContentHtml}
           ${sopHtml}${infoHtml}${mediaHtml}
         </div>`;
 
@@ -358,8 +388,9 @@ function renderItemHtml(item: Item, prefix: string = 'item_'): string {
           data-min="${item.min ?? ''}" data-max="${item.max ?? ''}">
           <div class="item-label-row">
             <span class="item-label">${item.label}${requiredMark}</span>
-            ${helpHtml}${noteHtml}
+            ${helpBtnHtml}${noteBtnHtml}
           </div>
+          ${helpContentHtml}${noteContentHtml}
           ${mediaHtml}
           ${stepperHtml}
           ${item.min !== undefined ? `<p class="threshold-info">Min: ${item.min}${item.max !== undefined ? ` | Max: ${item.max}` : ''} ${item.unit || ''}</p>` : ''}
@@ -378,8 +409,9 @@ function renderItemHtml(item: Item, prefix: string = 'item_'): string {
         <div class="form-item item-select" ${requiresAttr}>
           <div class="item-label-row">
             <span class="item-label">${item.label}${requiredMark}</span>
-            ${helpHtml}${noteHtml}
+            ${helpBtnHtml}${noteBtnHtml}
           </div>
+          ${helpContentHtml}${noteContentHtml}
           ${mediaHtml}
           <div class="option-group">${optButtons}</div>
           <input type="hidden" name="${prefix}${item.id}" data-item-id="${item.id}">
@@ -397,8 +429,9 @@ function renderItemHtml(item: Item, prefix: string = 'item_'): string {
         <div class="form-item item-multi-select" ${requiresAttr}>
           <div class="item-label-row">
             <span class="item-label">${item.label}${requiredMark}</span>
-            ${helpHtml}
+            ${helpBtnHtml}
           </div>
+          ${helpContentHtml}
           ${mediaHtml}
           <div class="multi-group">${checkboxes}</div>
           ${sopHtml}${infoHtml}
@@ -409,8 +442,9 @@ function renderItemHtml(item: Item, prefix: string = 'item_'): string {
         <div class="form-item item-text" ${requiresAttr}>
           <div class="item-label-row">
             <span class="item-label">${item.label}${requiredMark}</span>
-            ${helpHtml}
+            ${helpBtnHtml}
           </div>
+          ${helpContentHtml}
           ${mediaHtml}
           <textarea name="${prefix}${item.id}" class="text-input"
             placeholder="${item.placeholder || ''}" data-item-id="${item.id}"></textarea>
@@ -422,8 +456,9 @@ function renderItemHtml(item: Item, prefix: string = 'item_'): string {
         <div class="form-item item-photo" ${requiresAttr}>
           <div class="item-label-row">
             <span class="item-label">${item.label}${requiredMark}</span>
-            ${helpHtml}
+            ${helpBtnHtml}
           </div>
+          ${helpContentHtml}
           ${mediaHtml}
           <label class="photo-capture-btn">
             <span>📷 ${item.placeholder || 'Take photo'}</span>
@@ -438,7 +473,7 @@ function renderItemHtml(item: Item, prefix: string = 'item_'): string {
   }
 }
 
-function renderChecklist(session: any, template: ChecklistTemplate): string {
+function renderChecklist(session: any, template: ChecklistTemplate, lastEngineHours: Record<string, string> = {}): string {
   const totalItems = template.sections.reduce((sum, s) => sum + s.items.length, 0);
 
   // Day-of-week detection for DMT templates
@@ -545,6 +580,18 @@ function renderChecklist(session: any, template: ChecklistTemplate): string {
   </div>
   ${bottomNav('home')}
   <script src="/public/app.js"></script>
+  ${Object.keys(lastEngineHours).length > 0 ? `<script>
+    // Pre-fill engine hours from last completion
+    document.addEventListener('DOMContentLoaded', () => {
+      ${Object.entries(lastEngineHours).map(([id, val]) => `
+        const input_${id.replace(/-/g, '_')} = document.querySelector('[name="item_${id}"]');
+        if (input_${id.replace(/-/g, '_')}) {
+          input_${id.replace(/-/g, '_')}.value = '${val}';
+          input_${id.replace(/-/g, '_')}.placeholder = 'Last: ${val}';
+        }
+      `).join('')}
+    });
+  </script>` : ''}
 </body>
 </html>`;
 }
