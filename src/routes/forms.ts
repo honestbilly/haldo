@@ -5,6 +5,7 @@ import { getSession } from './session.js';
 import { getTemplatesForContext, getTemplateById, getOnDemandTemplates } from '../services/templates.js';
 import { evaluateAlerts, processAlerts } from '../services/alerts.js';
 import type { Template, ChecklistTemplate, LogbookTemplate, Item, Section, LogbookStep, SessionData } from '../types.js';
+import { bottomNav, htmlHead } from '../ui.js';
 
 type Env = { Variables: { session: SessionData } };
 
@@ -226,10 +227,12 @@ function renderTodayList(
     </div>
     ${onDemandHtml}
     <div class="today-actions">
-      <a href="/handoff" class="action-link">Handoff Notes</a>
+      <a href="/report" class="action-link mgmt-link">MGMT Dashboard</a>
       <a href="/logout" class="switch-link">Switch crew member</a>
     </div>
   </div>
+  ${bottomNav('tasks', handoffCount)}
+  <script src="/public/app.js"></script>
 </body>
 </html>`;
 }
@@ -516,6 +519,7 @@ function renderChecklist(session: any, template: ChecklistTemplate): string {
       </button>
     </form>
   </div>
+  ${bottomNav('tasks')}
   <script src="/public/app.js"></script>
 </body>
 </html>`;
@@ -614,6 +618,7 @@ function renderLogbook(session: any, template: LogbookTemplate): string {
       });
     });
   </script>
+  ${bottomNav('tasks')}
 </body>
 </html>`;
 }

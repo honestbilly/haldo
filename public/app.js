@@ -274,8 +274,114 @@ document.addEventListener('change', (e) => {
   }
 });
 
+// --- Auto-save form data to localStorage ---
+// Saves all form inputs so nothing is lost if crew pockets their phone
+let autoSaveTimer = null;
+
+function getFormKey() {
+  // Key based on the page URL (which includes the template ID)
+  return 'haldo_form_' + window.location.pathname;
+}
+
+function autoSave() {
+  const form = document.getElementById('checklist-form') || document.getElementById('logbook-form');
+  if (!form) return;
+
+  const data = {};
+  const inputs = form.querySelectorAll('input, textarea, select');
+  inputs.forEach(el => {
+    if (!el.name || el.type === 'file') return;
+    if (el.type === 'checkbox') {
+      data[el.name] = el.checked;
+    } else if (el.type === 'radio') {
+      if (el.checked) data[el.name] = el.value;
+    } else {
+      data[el.name] = el.value;
+    }
+  });
+
+  // Also save active option buttons
+  form.querySelectorAll('.option-btn.active').forEach(btn => {
+    const input = btn.closest('.form-item')?.querySelector('input[type="hidden"]');
+    if (input?.name) data[input.name] = input.value;
+  });
+
+  data._savedAt = Date.now();
+  data._step = typeof currentStep !== 'undefined' ? currentStep : 0;
+
+  try {
+    localStorage.setItem(getFormKey(), JSON.stringify(data));
+  } catch(e) { /* localStorage full or unavailable */ }
+}
+
+function restoreForm() {
+  const key = getFormKey();
+  const raw = localStorage.getItem(key);
+  if (!raw) return;
+
+  try {
+    const data = JSON.parse(raw);
+    // Check staleness — 24 hours
+    if (data._savedAt && (Date.now() - data._savedAt) > 86400000) {
+      localStorage.removeItem(key);
+      return;
+    }
+
+    const form = document.getElementById('checklist-form') || document.getElementById('logbook-form');
+    if (!form) return;
+
+    let restored = false;
+    Object.entries(data).forEach(([name, value]) => {
+      if (name.startsWith('_')) return;
+      const el = form.querySelector(`[name="${name}"]`);
+      if (!el) return;
+
+      if (el.type === 'checkbox') {
+        el.checked = !!value;
+        restored = true;
+      } else if (el.type === 'hidden') {
+        el.value = value;
+        // Also highlight the matching option button
+        const optBtn = el.closest('.form-item')?.querySelector(`[data-value="${value}"]`);
+        if (optBtn) optBtn.classList.add('active');
+        restored = true;
+      } else if (value) {
+        el.value = value;
+        restored = true;
+      }
+    });
+
+    // Restore wizard step
+    if (data._step && typeof wizardNav === 'function' && data._step > 0) {
+      for (let i = 0; i < data._step; i++) wizardNav(1);
+    }
+
+    if (restored) {
+      // Show "resuming" banner
+      const banner = document.createElement('div');
+      banner.className = 'resume-banner';
+      banner.innerHTML = 'Resuming where you left off <button onclick="this.parentElement.remove()">×</button>';
+      const header = document.querySelector('.checklist-header, .logbook-header');
+      if (header) header.after(banner);
+    }
+  } catch(e) { /* bad data, ignore */ }
+}
+
+function scheduleAutoSave() {
+  clearTimeout(autoSaveTimer);
+  autoSaveTimer = setTimeout(autoSave, 500);
+}
+
+// Clear saved data after successful submission
+function clearAutoSave() {
+  localStorage.removeItem(getFormKey());
+}
+
 // --- Initialize on load ---
 document.addEventListener('DOMContentLoaded', () => {
+  // Restore saved form data
+  restoreForm();
+
   updateProgress();
 
   // Initialize all threshold colors
@@ -289,6 +395,21 @@ document.addEventListener('DOMContentLoaded', () => {
       el.style.display = 'none';
     }
   });
+
+  // Auto-save on any input change
+  const form = document.getElementById('checklist-form') || document.getElementById('logbook-form');
+  if (form) {
+    form.addEventListener('input', scheduleAutoSave);
+    form.addEventListener('change', scheduleAutoSave);
+    // Save immediately when page loses visibility (phone pocketed)
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'hidden') autoSave();
+    });
+    // Save on page unload
+    window.addEventListener('beforeunload', autoSave);
+    // Clear saved data on successful form submission
+    form.addEventListener('submit', clearAutoSave);
+  }
 
   // Register service worker for PWA + offline support
   if ('serviceWorker' in navigator) {

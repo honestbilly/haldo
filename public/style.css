@@ -1332,3 +1332,136 @@ body {
 }
 
 .photo-btn input[type="file"] { display: none; }
+
+/* ============================================================
+   Bottom Navigation — persistent on all crew pages
+   ============================================================ */
+
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  height: 64px;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  z-index: 1000;
+  padding-bottom: env(safe-area-inset-bottom, 0);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.nav-tab {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  height: 100%;
+  text-decoration: none;
+  color: var(--text-muted);
+  font-size: 0.625rem;
+  font-weight: 500;
+  gap: 2px;
+  transition: color 0.15s;
+}
+
+.nav-tab.nav-active { color: var(--primary); }
+.nav-tab:hover { color: var(--primary); }
+
+.nav-icon {
+  font-size: 1.25rem;
+  line-height: 1;
+  position: relative;
+}
+
+.nav-badge {
+  position: absolute;
+  top: -6px;
+  right: -10px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 0.5625rem;
+  font-weight: 700;
+  min-width: 16px;
+  height: 16px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+}
+
+.nav-label {
+  font-family: var(--font-body);
+  letter-spacing: 0.02em;
+}
+
+/* Add padding to page content so it doesn't hide behind bottom nav */
+.today-page,
+.checklist-page,
+.logbook-page,
+.handoff-page {
+  padding-bottom: 80px;
+}
+
+/* Resume banner (when restoring auto-saved form data) */
+.resume-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  background: rgba(112, 208, 235, 0.15);
+  border: 1px solid rgba(112, 208, 235, 0.4);
+  border-radius: var(--radius);
+  font-size: 0.8125rem;
+  color: var(--primary);
+  margin-bottom: 12px;
+}
+
+.resume-banner button {
+  background: none;
+  border: none;
+  font-size: 1rem;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 0 4px;
+}
+
+/* Page header with back button */
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 0;
+  margin-bottom: 8px;
+}
+
+.back-link {
+  color: var(--primary);
+  text-decoration: none;
+  font-size: 0.875rem;
+  font-weight: 500;
+  min-width: 60px;
+}
+
+.page-title {
+  font-family: var(--font-heading);
+  font-size: 1.125rem;
+  font-weight: 700;
+  text-align: center;
+  flex: 1;
+}
+
+.vessel-badge {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--primary);
+  background: rgba(0, 105, 80, 0.08);
+  padding: 2px 8px;
+  border-radius: 10px;
+  min-width: 60px;
+  text-align: center;
+}

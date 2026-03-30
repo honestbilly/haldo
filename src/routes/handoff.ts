@@ -3,6 +3,7 @@ import { nanoid } from 'nanoid';
 import pool from '../db.js';
 import { getSession } from './session.js';
 import type { SessionData } from '../types.js';
+import { bottomNav } from '../ui.js';
 
 type Env = { Variables: { session: SessionData } };
 
@@ -191,6 +192,7 @@ function renderHandoff(session: SessionData, notes: any[]): string {
       <button type="submit">Add Note</button>
     </form>
   </div>
+  ${bottomNav('notes', notes.length)}
 </body>
 </html>`;
 }
