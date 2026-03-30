@@ -1,0 +1,114 @@
+{
+  "id": "daily-maintenance-mate",
+  "name": "Daily Maintenance — Mate",
+  "type": "checklist",
+  "vessel": "squid",
+  "role": "mate",
+  "recurrence": "daily",
+  "version": "2026-03-30",
+  "source": "KB: squid-on-board-binder / §7 Mate SQUID Daily and Monthly Maintenance — Mate's DMT",
+  "estimated_minutes": 15,
+  "intro": "One task per day, about 15 minutes. Check today's day and complete the matching task. Tuesday snorkel repair may take longer — clock in for dock time if needed.",
+  "sections": [
+    {
+      "title": "Monday — Deep Clean Coolers",
+      "items": [
+        {
+          "id": "mon-coolers",
+          "label": "Monday: Deep clean coolers",
+          "type": "checkbox"
+        },
+        {
+          "id": "mon-cooler-photo",
+          "label": "Photo of coolers after cleaning (optional)",
+          "type": "photo",
+          "placeholder": "Document cooler condition",
+          "max_photos": 1
+        }
+      ]
+    },
+    {
+      "title": "Tuesday — Snorkel Inventory & Repair",
+      "items": [
+        {
+          "id": "tue-snorkel",
+          "label": "Tuesday: Snorkel inventory and repair — restock from dockbox if low",
+          "type": "checkbox",
+          "help": {
+            "title": "Snorkel inventory",
+            "body": "This overlaps with the weekly Snorkel Gear Inventory checklist. Complete the full inventory there. If anything is low, restock from the dockbox. Repair damaged bite tabs, buckles, etc. This task may take longer than 15 minutes — clock in for dock time."
+          }
+        }
+      ]
+    },
+    {
+      "title": "Wednesday — Cushion Scrub",
+      "items": [
+        {
+          "id": "wed-cushions",
+          "label": "Wednesday: Cushion scrub, hang to dry so they don't stink. Spot clean",
+          "type": "checkbox"
+        }
+      ]
+    },
+    {
+      "title": "Thursday — Overhead Wipe Down",
+      "items": [
+        {
+          "id": "thu-overhead",
+          "label": "Thursday: Overhead wipe down — clean under roof area in wetdeck area",
+          "type": "checkbox"
+        }
+      ]
+    },
+    {
+      "title": "Friday — Mate's Cabinet Tidy",
+      "items": [
+        {
+          "id": "fri-cabinet",
+          "label": "Friday: Tidy up and clean mate's cabinet",
+          "type": "checkbox"
+        }
+      ]
+    },
+    {
+      "title": "Saturday — Deep Clean Head",
+      "items": [
+        {
+          "id": "sat-head",
+          "label": "Saturday: Deep clean head (behind toilet too!)",
+          "type": "checkbox"
+        },
+        {
+          "id": "sat-head-photo",
+          "label": "Photo of head after deep clean (optional)",
+          "type": "photo",
+          "placeholder": "Document deep-cleaned head including behind toilet",
+          "max_photos": 1
+        }
+      ]
+    },
+    {
+      "title": "Sunday — Towels + Monthly Task",
+      "items": [
+        {
+          "id": "sun-towels",
+          "label": "Sunday: Clean boat towels — wring them on roof stanchion",
+          "type": "checkbox"
+        },
+        {
+          "id": "sun-monthly",
+          "label": "Sunday: Complete monthly task (if applicable — see monthly maintenance checklist)",
+          "type": "checkbox",
+          "info": "On the first Sunday of the month, there is an additional monthly maintenance checklist to complete."
+        }
+      ]
+    }
+  ],
+  "completion": {
+    "require_all": false,
+    "sign_off": true,
+    "notes_field": true,
+    "notes_prompt": "Only check today's task. Any supplies needed? Gear repairs outstanding?"
+  }
+}

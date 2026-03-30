@@ -1,0 +1,120 @@
+{
+  "id": "put-to-bed-captain",
+  "name": "Put SQUID to Bed — Captain",
+  "type": "checklist",
+  "vessel": "squid",
+  "role": "captain",
+  "recurrence": "daily",
+  "version": "2026-03-30",
+  "source": "KB: squid-on-board-binder / §4 Captain Boat Checklist — PUTTING SQUID TO BED",
+  "estimated_minutes": 15,
+  "intro": "End-of-day shutdown. Captain handles helm/foredeck/engines; mate handles wetdeck/head. Coordinate the dock hose handoff.",
+  "sections": [
+    {
+      "title": "Secure & Log",
+      "items": [
+        {
+          "id": "spring-lines",
+          "label": "Adjust spring lines to return boat to overnight position",
+          "type": "checkbox"
+        },
+        {
+          "id": "log-trip",
+          "label": "Log trip in logbook — engine hours, guest counts, locations, sightings",
+          "type": "checkbox",
+          "help": {
+            "title": "Logbook entries",
+            "body": "Record: final engine hours, trip guest counts, locations visited, sighting location(s), maintenance completed, and any notes for the next captain."
+          }
+        },
+        {
+          "id": "daily-maintenance",
+          "label": "Complete daily maintenance if it wasn't done between trips",
+          "type": "checkbox"
+        }
+      ]
+    },
+    {
+      "title": "Scrub & Rinse (dock hose)",
+      "description": "Captain is responsible for scrubbing and rinsing these areas with the dock hose.",
+      "items": [
+        {
+          "id": "scrub-helm-foredeck",
+          "label": "Scrub and rinse helm area, foredeck, and stainless steel railings",
+          "type": "checkbox"
+        },
+        {
+          "id": "scrub-house-gunwale",
+          "label": "Scrub and rinse house and gunwale back to snorkel door exits",
+          "type": "checkbox"
+        },
+        {
+          "id": "rinse-hulls",
+          "label": "Rinse hulls LAST — soapy water drips down and leaves film on paint",
+          "type": "checkbox",
+          "help": {
+            "title": "Why hulls last?",
+            "body": "Soapy water from the foredeck will drip down and leave a film over time, ruining the paint job. Always rinse hulls after everything above is done."
+          }
+        },
+        {
+          "id": "deck-condition-photo",
+          "label": "Photo of deck/hull condition after rinse (optional)",
+          "type": "photo",
+          "placeholder": "Document any staining, damage, or paint issues",
+          "max_photos": 2
+        }
+      ]
+    },
+    {
+      "title": "Engines & Electrical",
+      "items": [
+        {
+          "id": "flush-engines",
+          "label": "Flush engines for 2 minutes each",
+          "type": "checkbox"
+        },
+        {
+          "id": "rinse-steering",
+          "label": "Rinse the bejeezus out of steering rams, tanks, motors",
+          "type": "checkbox"
+        },
+        {
+          "id": "hose-to-mate",
+          "label": "Hand dock hose over to mate (ensure mate completes their duties efficiently)",
+          "type": "checkbox"
+        },
+        {
+          "id": "plug-shorepower",
+          "label": "Plug shorepower in, flip switch on tower",
+          "type": "checkbox"
+        },
+        {
+          "id": "turn-off-12v",
+          "label": "Turn off all 12v switches except bilge pumps",
+          "type": "checkbox"
+        },
+        {
+          "id": "confirm-charging",
+          "label": "Confirm shorepower is charging",
+          "type": "checkbox",
+          "help": {
+            "title": "How to verify charging",
+            "body": "The multimeter on the 12v rocker panel should be at or above 13v. Visually confirm the Victron inverter has 2 lights on under the left side that says Charger: Mains on and either Bulk, Absorption, or Float."
+          }
+        },
+        {
+          "id": "pass-info",
+          "label": "Pass relevant information onto the next captain via text",
+          "type": "checkbox"
+        }
+      ]
+    }
+  ],
+  "completion": {
+    "require_all": true,
+    "sign_off": true,
+    "notes_field": true,
+    "notes_prompt": "Anything the next captain needs to know? Maintenance issues, engine concerns, guest feedback?"
+  }
+}

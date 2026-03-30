@@ -1,0 +1,130 @@
+{
+  "id": "wakeup-captain",
+  "name": "Wake Up SQUID — Captain",
+  "type": "checklist",
+  "vessel": "squid",
+  "role": "captain",
+  "recurrence": "daily",
+  "version": "2026-03-30",
+  "source": "KB: squid-on-board-binder / §4 Captain Boat Checklist — WAKING UP SQUID",
+  "estimated_minutes": 15,
+  "intro": "Morning startup checklist. Check weather and tide on apps first. Communicate with crew if you need to get gas so they can adjust.",
+  "sections": [
+    {
+      "title": "Dock & Fuel",
+      "items": [
+        {
+          "id": "rack-cards",
+          "label": "Check rack cards on sign posts (SQUID and Cowfish), refill from Machine Room if needed",
+          "type": "checkbox"
+        },
+        {
+          "id": "check-gas",
+          "label": "Check gas level of both tanks",
+          "type": "checkbox",
+          "help": {
+            "title": "Fuel details",
+            "body": "Tanks are 45 gallons each (90 total). Estimate 12-20 gallons per trip (winter vs. summer). When dipping the yardstick, 1 inch = 1.5 gallons. Need 10 inches to leave. Fuel before or after AM trip, preferably at Conch Harbor. CC is on file."
+          }
+        }
+      ]
+    },
+    {
+      "title": "Electrical & Systems",
+      "items": [
+        {
+          "id": "12v-panel",
+          "label": "Turn on all 12v panel switches (except anchor light)",
+          "type": "checkbox"
+        },
+        {
+          "id": "bilge-pumps",
+          "label": "Check that bilge pumps are set to AUTO",
+          "type": "checkbox"
+        },
+        {
+          "id": "maintenance-calendar",
+          "label": "Refer to Maintenance Calendar for today's required daily maintenance",
+          "type": "checkbox"
+        },
+        {
+          "id": "logbook",
+          "label": "Check logbook for notes from prior captain",
+          "type": "checkbox"
+        }
+      ]
+    },
+    {
+      "title": "Steering & Navigation",
+      "items": [
+        {
+          "id": "steering-check",
+          "label": "Check steering — responsive full stop to stop, no sponginess or skips",
+          "type": "checkbox",
+          "help": {
+            "title": "Steering inspection",
+            "body": "Steering wheel should feel responsive full stop to full stop. No sponginess or skips in wheel motion. If spongy, add fluid. Make sure motors are aligned. If not, refer to troubleshooting guide for how to re-align."
+          }
+        },
+        {
+          "id": "unplug-shorepower",
+          "label": "Unplug shorepower (flip pedestal breakers first, then disconnect)",
+          "type": "checkbox"
+        },
+        {
+          "id": "gps-radio",
+          "label": "Turn on GPS and radio, listen to 67 for early dolphin reports",
+          "type": "checkbox"
+        }
+      ]
+    },
+    {
+      "title": "Boat Condition & Guest Prep",
+      "items": [
+        {
+          "id": "clean-head",
+          "label": "Ensure head is sparkling clean — plenty of TP and hand soap",
+          "type": "checkbox"
+        },
+        {
+          "id": "head-condition-photo",
+          "label": "Photo of head condition (optional)",
+          "type": "photo",
+          "placeholder": "Snap a photo showing head is clean and stocked",
+          "max_photos": 1
+        },
+        {
+          "id": "boarding-lines",
+          "label": "Set boarding lines and discuss trip plan with mate",
+          "type": "checkbox"
+        },
+        {
+          "id": "rez-software",
+          "label": "Check rez software for roster, waivers, trip notes and specifics",
+          "type": "checkbox"
+        },
+        {
+          "id": "music",
+          "label": "Music: Honest Eco Endless Summer playlist on Spotify — NO commercials",
+          "type": "checkbox"
+        },
+        {
+          "id": "greet-guests",
+          "label": "As guests arrive, say hello, relay boarding time, offer shore head",
+          "type": "checkbox"
+        },
+        {
+          "id": "welcome-aboard",
+          "label": "Welcome guests aboard 15 min prior to departure, begin safety speech, physically help guests onto the boat",
+          "type": "checkbox"
+        }
+      ]
+    }
+  ],
+  "completion": {
+    "require_all": true,
+    "sign_off": true,
+    "notes_field": true,
+    "notes_prompt": "Any issues found during startup? Anything to flag for the mate or next captain?"
+  }
+}

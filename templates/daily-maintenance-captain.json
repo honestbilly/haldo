@@ -1,0 +1,124 @@
+{
+  "id": "daily-maintenance-captain",
+  "name": "Daily Maintenance — Captain",
+  "type": "checklist",
+  "vessel": "squid",
+  "role": "captain",
+  "recurrence": "daily",
+  "version": "2026-03-30",
+  "source": "KB: squid-on-board-binder / §6 Captain SQUID Daily and Monthly Maintenance — Captain's DMT",
+  "estimated_minutes": 15,
+  "intro": "One task per day, about 15 minutes. Check today's day and complete the matching task. These daily tasks keep the boat safe and in top condition.",
+  "sections": [
+    {
+      "title": "Monday — Bilge Inspection",
+      "items": [
+        {
+          "id": "mon-bilge",
+          "label": "Monday: Bilge inspection",
+          "type": "checkbox",
+          "help": {
+            "title": "Bilge inspection details",
+            "body": "Inspect bilge pumps and screen. Remove debris, dewater, degrease, degrime, clean gutters. Repair or clean where necessary."
+          }
+        },
+        {
+          "id": "mon-bilge-photo",
+          "label": "Photo of bilge condition (optional)",
+          "type": "photo",
+          "placeholder": "Document bilge condition after inspection",
+          "max_photos": 2
+        }
+      ]
+    },
+    {
+      "title": "Tuesday — Machine Space Inspection",
+      "items": [
+        {
+          "id": "tue-machine-space",
+          "label": "Tuesday: Machine space inspection",
+          "type": "checkbox",
+          "help": {
+            "title": "Machine space inspection details",
+            "body": "Go INTO the machine space and ensure there is nothing wet and gross, or personal items being stored there. This space must stay clean and functional."
+          }
+        },
+        {
+          "id": "tue-machine-photo",
+          "label": "Photo of machine space (optional)",
+          "type": "photo",
+          "placeholder": "Document machine space condition",
+          "max_photos": 1
+        }
+      ]
+    },
+    {
+      "title": "Wednesday — Steering Fluid & Motor Alignment",
+      "items": [
+        {
+          "id": "wed-steering",
+          "label": "Wednesday: Add steering fluid and realign motors",
+          "type": "checkbox",
+          "help": {
+            "title": "Steering maintenance",
+            "body": "Top off steering fluid. Check motor alignment and realign if necessary. If steering felt spongy or skippy during the day, this is especially important."
+          }
+        }
+      ]
+    },
+    {
+      "title": "Thursday — Overhead Wipe Down",
+      "items": [
+        {
+          "id": "thu-overhead",
+          "label": "Thursday: Overhead wipe down — clean under roof area by helm",
+          "type": "checkbox"
+        }
+      ]
+    },
+    {
+      "title": "Friday — Helm Area Tidy",
+      "items": [
+        {
+          "id": "fri-helm-tidy",
+          "label": "Friday: Tidy up/clean helm area, storage space in helm, underbenches",
+          "type": "checkbox"
+        }
+      ]
+    },
+    {
+      "title": "Saturday — Stainless Steel",
+      "items": [
+        {
+          "id": "sat-stainless",
+          "label": "Saturday: Stainless steel wipedown",
+          "type": "checkbox",
+          "help": {
+            "title": "Stainless care",
+            "body": "Use Fitz cleaning solution and terry towel on all stainless steel surfaces."
+          }
+        }
+      ]
+    },
+    {
+      "title": "Sunday — Salt-Away Sunday",
+      "items": [
+        {
+          "id": "sun-salt-away",
+          "label": "Sunday: Salt-Away Sunday — flush and rinse motors/sugar scoop area with salt-away",
+          "type": "checkbox",
+          "help": {
+            "title": "Salt-Away procedure",
+            "body": "Flush and rinse motors and sugar scoop area using salt-away solution. This weekly salt treatment prevents corrosion buildup."
+          }
+        }
+      ]
+    }
+  ],
+  "completion": {
+    "require_all": false,
+    "sign_off": true,
+    "notes_field": true,
+    "notes_prompt": "Only check today's task. Any issues found during maintenance? Parts or supplies needed?"
+  }
+}

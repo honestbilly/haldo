@@ -1,0 +1,84 @@
+{
+  "id": "wakeup-mate",
+  "name": "Wake Up SQUID — Mate",
+  "type": "checklist",
+  "vessel": "squid",
+  "role": "mate",
+  "recurrence": "daily",
+  "version": "2026-03-30",
+  "source": "KB: squid-on-board-binder / §5 Mate Boat Checklist — WAKING SQUID UP",
+  "estimated_minutes": 15,
+  "intro": "Morning mate checklist. Date and Thyme opens at 8am.",
+  "sections": [
+    {
+      "title": "Dock & Cleaning",
+      "items": [
+        {
+          "id": "rack-cards",
+          "label": "Check rack cards on sign posts (SQUID and Cowfish)",
+          "type": "checkbox"
+        },
+        {
+          "id": "clean-overnight",
+          "label": "Clean as necessary (overnight mess, missed spots, leaf litter)",
+          "type": "checkbox"
+        },
+        {
+          "id": "cushions",
+          "label": "Remove cushions from head (or take down from hang drying) and place on benches",
+          "type": "checkbox"
+        }
+      ]
+    },
+    {
+      "title": "Head & Supplies",
+      "items": [
+        {
+          "id": "tp-soap",
+          "label": "TP and hand soap in head, backup TP in mate's cabinet (single ply — won't clog)",
+          "type": "checkbox"
+        },
+        {
+          "id": "daily-maintenance",
+          "label": "Check daily required maintenance task and complete if possible",
+          "type": "checkbox"
+        },
+        {
+          "id": "dry-dew",
+          "label": "Dry any dew in the guest area with a shammy",
+          "type": "checkbox"
+        }
+      ]
+    },
+    {
+      "title": "Guest Prep & Provisions",
+      "items": [
+        {
+          "id": "guest-count",
+          "label": "How many guests expected? Enough water and provisions?",
+          "type": "checkbox",
+          "help": {
+            "title": "Provisions check",
+            "body": "Confirm guest count from rez software. Make sure there is plenty of water (especially in summer), organic fruits/veggies from Date and Thyme, and enough snorkel gear for the number of kids and adults."
+          }
+        },
+        {
+          "id": "sanitizer-buckets",
+          "label": "Prepare sanitizer buckets for snorkel gear",
+          "type": "checkbox"
+        },
+        {
+          "id": "lifejacket-table",
+          "label": "Set up the lifejacket table with props",
+          "type": "checkbox"
+        }
+      ]
+    }
+  ],
+  "completion": {
+    "require_all": true,
+    "sign_off": true,
+    "notes_field": true,
+    "notes_prompt": "Any supplies running low? Anything to flag for the captain?"
+  }
+}

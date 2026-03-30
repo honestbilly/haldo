@@ -1,0 +1,114 @@
+{
+  "id": "put-to-bed-mate",
+  "name": "Put SQUID to Bed — Mate",
+  "type": "checklist",
+  "vessel": "squid",
+  "role": "mate",
+  "recurrence": "daily",
+  "version": "2026-03-30",
+  "source": "KB: squid-on-board-binder / §5 Mate Boat Checklist — PUTTING BOAT TO BED",
+  "estimated_minutes": 15,
+  "intro": "End-of-day mate cleanup. Start with onboard freshwater hose and soft brush, then switch to dock hose and medium brush once captain hands it over.",
+  "sections": [
+    {
+      "title": "Freshwater Hose & Soft Brush",
+      "description": "Use onboard freshwater hose and soft brush for interior areas.",
+      "items": [
+        {
+          "id": "clean-head",
+          "label": "Clean head — squeegee water off ceiling and walls (must be dry for cushion storage)",
+          "type": "checkbox"
+        },
+        {
+          "id": "head-condition-photo",
+          "label": "Photo of head after cleaning (optional)",
+          "type": "photo",
+          "placeholder": "Document head cleanliness — ceiling, walls, toilet area",
+          "max_photos": 1
+        },
+        {
+          "id": "stow-cushions",
+          "label": "Stow cushions in clean, dry head",
+          "type": "checkbox"
+        },
+        {
+          "id": "clean-fruit-area",
+          "label": "Clean fruit/veggie area and rear facing walls",
+          "type": "checkbox"
+        },
+        {
+          "id": "do-dishes",
+          "label": "Do dishes and sanitize cutting board with diluted bleach spray",
+          "type": "checkbox"
+        },
+        {
+          "id": "clean-benches-stainless",
+          "label": "Clean benches and stainless steel",
+          "type": "checkbox"
+        },
+        {
+          "id": "clean-center-table",
+          "label": "Clean center table",
+          "type": "checkbox"
+        },
+        {
+          "id": "remove-snorkel-gear",
+          "label": "Remove snorkel gear from deck, place gently on benches (protect Angela's varnish)",
+          "type": "checkbox"
+        }
+      ]
+    },
+    {
+      "title": "Dock Hose & Medium Brush",
+      "description": "After captain hands over the dock hose, use medium brush for exterior.",
+      "items": [
+        {
+          "id": "scrub-deck",
+          "label": "Scrub and rinse deck with dock hose",
+          "type": "checkbox"
+        },
+        {
+          "id": "remove-hair-scuppers",
+          "label": "Remove any HUMAN HAIR from the nets over the scuppers",
+          "type": "checkbox"
+        },
+        {
+          "id": "refill-water-tanks",
+          "label": "Refill water tanks (use filter for STBD drinking water tank)",
+          "type": "checkbox"
+        }
+      ]
+    },
+    {
+      "title": "Secure & Final Check",
+      "items": [
+        {
+          "id": "stern-lines",
+          "label": "Secure stern lines TIGHTLY to opposite side stern cleats",
+          "type": "checkbox"
+        },
+        {
+          "id": "daily-maintenance",
+          "label": "Complete daily maintenance if it hasn't been done already",
+          "type": "checkbox"
+        },
+        {
+          "id": "final-check",
+          "label": "Final check: boat secure, clean, ready for next crew. Gate closed, boat pulled off dock, hoses stowed nicely",
+          "type": "checkbox"
+        },
+        {
+          "id": "rack-cards",
+          "label": "Check rack cards and refill if needed",
+          "type": "checkbox"
+        }
+      ]
+    }
+  ],
+  "completion": {
+    "require_all": true,
+    "sign_off": true,
+    "notes_field": true,
+    "notes_prompt": "Any supplies running low? Gear issues? Anything the next mate should know?"
+  }
+}

@@ -1,0 +1,98 @@
+{
+  "id": "monthly-maintenance",
+  "name": "Monthly Maintenance",
+  "type": "checklist",
+  "vessel": "squid",
+  "role": "all",
+  "recurrence": "monthly",
+  "trigger_dates": ["2026-04-05", "2026-05-03", "2026-06-07", "2026-07-05", "2026-08-02", "2026-09-06", "2026-10-04", "2026-11-01", "2026-12-06"],
+  "supersedes": ["daily-maintenance-captain", "daily-maintenance-mate"],
+  "version": "2026-03-30",
+  "source": "KB: squid-on-board-binder / §6-7 Captain & Mate Monthly Maintenance + Engine Hour Thresholds",
+  "estimated_minutes": 30,
+  "intro": "First Sunday of the month. This checklist supersedes the normal daily maintenance tasks for both captain and mate. Complete all items below.",
+  "sections": [
+    {
+      "title": "Captain — Monthly Safety & Tool Check",
+      "items": [
+        {
+          "id": "tool-inventory",
+          "label": "Tool inventory — double check toolbox has all required items",
+          "type": "checkbox",
+          "help": {
+            "title": "Tool checklist reference",
+            "body": "Check the toolbox and dock box for: 2x adjustable wrenches, screwdriver (multi), mini screwdriver, pliers, needle nose pliers, vice grips, needle nose vice grips, SS allen keys, scissors, sharp knife, tape measure, steering fluid, brass filler and bypass, strap wrench, funnel, torch lighter, multimeter, wire stripper/crimper, wire cutters. Consumables: CorrosionX, heat shrink, butt connectors, zip ties, hose clamps, safety wire, 4200, teflon tape, electrical tape, duct tape, dielectric grease, lithium grease, small line/twine, oil, steering fluid."
+          }
+        },
+        {
+          "id": "grease-where-needed",
+          "label": "Grease where necessary",
+          "type": "checkbox"
+        }
+      ]
+    },
+    {
+      "title": "Mate — Monthly Consumables Inventory",
+      "items": [
+        {
+          "id": "inventory-consumables",
+          "label": "Inventory consumables and dock box",
+          "type": "checkbox"
+        },
+        {
+          "id": "consumables-restock",
+          "label": "Restock: TP, generic Dawn, baby shampoo, Clorox, paper towels",
+          "type": "checkbox",
+          "info": "If you don't have a vehicle, use Conch Connect for delivery."
+        }
+      ]
+    },
+    {
+      "title": "Engine Hour Thresholds (Reference)",
+      "description": "If an engine hour quota is reached, these tasks take PRIORITY over weekly maintenance items. Check engine hours and complete any that are due.",
+      "items": [
+        {
+          "id": "engine-hours-current",
+          "label": "Current engine hours",
+          "type": "number",
+          "unit": "hours"
+        },
+        {
+          "id": "every-100-hours",
+          "label": "Every 100 hrs: Change engine oil & filter, grease trim/tilt tube, CorrosionBlock all metals inside cowling, steering ram and connection",
+          "type": "checkbox",
+          "help": {
+            "title": "100-hour service",
+            "body": "Change engine oil and filter. Grease trim/tilt tube. Cover all metals with Corrosion Block: fuel tank engine (inside cowling), steering ram and connection."
+          }
+        },
+        {
+          "id": "every-other-oil-change",
+          "label": "Every other oil change: Inspect zincs, change fuel filter, change spark plugs, grease trim/tilt",
+          "type": "checkbox",
+          "help": {
+            "title": "Alternating oil change service",
+            "body": "Inspect zincs. Change engine oil and filter. Change fuel filter. Grease trim/tilt tube. Change spark plugs."
+          }
+        },
+        {
+          "id": "every-300-hours",
+          "label": "Every 300 hrs: Inspect cooling water flow, change fuel filter",
+          "type": "checkbox"
+        },
+        {
+          "id": "every-1000-hours",
+          "label": "Every 1000 hrs: Replace timing belt (probably mechanic)",
+          "type": "checkbox",
+          "info": "This likely requires a mechanic. Schedule in advance."
+        }
+      ]
+    }
+  ],
+  "completion": {
+    "require_all": false,
+    "sign_off": true,
+    "notes_field": true,
+    "notes_prompt": "Engine hour status? Parts ordered? Any issues requiring follow-up?"
+  }
+}

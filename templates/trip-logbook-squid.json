@@ -1,0 +1,205 @@
+{
+  "id": "trip-logbook-squid",
+  "name": "Trip Logbook",
+  "type": "logbook",
+  "vessel": "squid",
+  "role": "captain",
+  "recurrence": "per-trip",
+  "version": "2026-03-30",
+  "source": "KB: squid-on-board-binder / SFR Spec — Trip Logbook",
+  "estimated_minutes": 5,
+  "captain_steps": [1, 2, 3, 4, 5, 6, 7],
+  "mate_steps": [],
+  "steps": [
+    {
+      "step": 1,
+      "title": "Trip Confirmation",
+      "items": [
+        {
+          "id": "trip-date",
+          "label": "Trip date",
+          "type": "text",
+          "required": true
+        },
+        {
+          "id": "trip-slot",
+          "label": "Trip slot",
+          "type": "select",
+          "options": ["AM (9-1)", "PM (2-6)"],
+          "required": true
+        },
+        {
+          "id": "departure-time",
+          "label": "Actual departure time",
+          "type": "text"
+        },
+        {
+          "id": "return-time",
+          "label": "Actual return time",
+          "type": "text"
+        }
+      ]
+    },
+    {
+      "step": 2,
+      "title": "Crew Roster",
+      "items": [
+        {
+          "id": "crew-on-board",
+          "label": "Crew on board",
+          "type": "multi_select",
+          "options": ["Jess", "Chase", "Kristen", "Alexa", "Libbie", "Dan", "Andrew", "Hadden", "Bryan", "Jackie", "Charlie"],
+          "required": true
+        },
+        {
+          "id": "captain-name",
+          "label": "Captain",
+          "type": "text",
+          "required": true
+        },
+        {
+          "id": "mate-name",
+          "label": "Mate",
+          "type": "text",
+          "required": true
+        }
+      ]
+    },
+    {
+      "step": 3,
+      "title": "Passengers",
+      "items": [
+        {
+          "id": "guest-count",
+          "label": "Total guest count",
+          "type": "number",
+          "min": 0,
+          "max": 18,
+          "unit": "guests",
+          "required": true
+        },
+        {
+          "id": "no-shows",
+          "label": "No-shows",
+          "type": "number",
+          "min": 0,
+          "max": 18,
+          "unit": "guests"
+        },
+        {
+          "id": "waivers-confirmed",
+          "label": "All waivers confirmed",
+          "type": "checkbox",
+          "required": true
+        }
+      ]
+    },
+    {
+      "step": 4,
+      "title": "Safety",
+      "items": [
+        {
+          "id": "safety-orientation",
+          "label": "Safety orientation completed (life jackets, fire extinguishers, MOB ring, slips/trips/falls)",
+          "type": "checkbox",
+          "required": true,
+          "help": {
+            "title": "Required USCG safety briefing",
+            "body": "Must cover: life jackets, fire extinguishers, MOB ring and procedure, when to stay seated (takeoff/landing), keep hands/head inside during docking, slips/trips/falls — how to walk safely (hold on, don't run/jump/climb)."
+          }
+        },
+        {
+          "id": "boat-orientation",
+          "label": "Boat orientation completed (head, water, snacks, where to go)",
+          "type": "checkbox"
+        }
+      ]
+    },
+    {
+      "step": 5,
+      "title": "Operations",
+      "items": [
+        {
+          "id": "engine-hours-start",
+          "label": "Engine hours at departure",
+          "type": "number",
+          "unit": "hours"
+        },
+        {
+          "id": "engine-hours-end",
+          "label": "Engine hours at return",
+          "type": "number",
+          "unit": "hours"
+        },
+        {
+          "id": "locations-visited",
+          "label": "Locations visited",
+          "type": "text"
+        },
+        {
+          "id": "dolphin-sighting-location",
+          "label": "Dolphin sighting location(s)",
+          "type": "text"
+        },
+        {
+          "id": "snorkel-site",
+          "label": "Snorkel site",
+          "type": "text"
+        },
+        {
+          "id": "weather-conditions",
+          "label": "Weather / sea conditions",
+          "type": "text"
+        }
+      ]
+    },
+    {
+      "step": 6,
+      "title": "Notes",
+      "items": [
+        {
+          "id": "trip-highlights",
+          "label": "Trip highlights / notable wildlife",
+          "type": "text"
+        },
+        {
+          "id": "maintenance-completed",
+          "label": "Maintenance completed today",
+          "type": "text"
+        },
+        {
+          "id": "issues-notes",
+          "label": "Issues, incidents, or notes for next captain",
+          "type": "text"
+        }
+      ]
+    },
+    {
+      "step": 7,
+      "title": "Merchandise",
+      "items": [
+        {
+          "id": "merch-sold",
+          "label": "Merchandise sold (items and quantities)",
+          "type": "text",
+          "help": {
+            "title": "Merch tracking",
+            "body": "Crew earn a commission for selling merch. Log any t-shirts, hats, or other items sold on this trip."
+          }
+        },
+        {
+          "id": "merch-total",
+          "label": "Merch sales total ($)",
+          "type": "number",
+          "unit": "dollars"
+        }
+      ]
+    }
+  ],
+  "completion": {
+    "require_all": false,
+    "sign_off": true,
+    "notes_field": true,
+    "notes_prompt": "Any additional notes for the record?"
+  }
+}

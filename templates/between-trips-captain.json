@@ -1,0 +1,65 @@
+{
+  "id": "between-trips-captain",
+  "name": "Between Trips — Captain",
+  "type": "checklist",
+  "vessel": "squid",
+  "role": "captain",
+  "recurrence": "per-trip",
+  "version": "2026-03-30",
+  "source": "KB: squid-on-board-binder / §4 Captain Boat Checklist — BETWEEN TRIPS",
+  "estimated_minutes": 10,
+  "intro": "Quick reset between AM and PM trips. Get the boat ready for the afternoon guests.",
+  "sections": [
+    {
+      "title": "Secure & Reset",
+      "items": [
+        {
+          "id": "close-gate",
+          "label": "Close gate so guests don't board without assistance",
+          "type": "checkbox"
+        },
+        {
+          "id": "pull-off-dock",
+          "label": "Pull boat off dock to overnight position (so anchor doesn't beat up boarding steps)",
+          "type": "checkbox"
+        },
+        {
+          "id": "rinse-deck",
+          "label": "Rinse off deck and benches if necessary, dry if needed",
+          "type": "checkbox"
+        },
+        {
+          "id": "discuss-trip",
+          "label": "Discuss trip with mate, give feedback if necessary",
+          "type": "checkbox"
+        }
+      ]
+    },
+    {
+      "title": "Prep for PM Trip",
+      "items": [
+        {
+          "id": "rez-software",
+          "label": "Check rez software for afternoon roster, trip specifics",
+          "type": "checkbox"
+        },
+        {
+          "id": "daily-maintenance",
+          "label": "Complete daily maintenance if able",
+          "type": "checkbox"
+        },
+        {
+          "id": "return-boarding",
+          "label": "Return boat to boarding position and welcome afternoon guests 15 min prior to departure",
+          "type": "checkbox"
+        }
+      ]
+    }
+  ],
+  "completion": {
+    "require_all": true,
+    "sign_off": true,
+    "notes_field": true,
+    "notes_prompt": "Any issues from AM trip to address before PM? Anything to flag?"
+  }
+}
