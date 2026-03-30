@@ -384,54 +384,37 @@ app.get('/report', async (c) => {
     </div>
     <div style="text-align:center;font-size:0.8125rem;color:#6e7a74;margin-bottom:8px">${formatDateDisplay(currentDate)}</div>`;
 
-  // ── Filter Bar ──
-  // Vessel filter buttons (URL-based)
-  const vesselButtonsHtml = VESSELS.map(v => {
-    const isActive = qVessel === v;
-    const activeStyle = isActive
-      ? 'border:2px solid #006950;background:#006950;color:white'
-      : 'border:2px solid #bdc9c2;background:#FFFFFF;color:#1a1c1c';
-    const toggleParams: Record<string, string> = { ...baseParams };
-    if (isActive) {
-      delete toggleParams.vessel;
-    } else {
-      toggleParams.vessel = v;
-    }
-    if (!isRange) toggleParams.date = currentDate;
-    if (qFrom) toggleParams.from = qFrom;
-    if (qTo) toggleParams.to = qTo;
+  // ── Filter Bar — compact dropdowns for mobile ──
+  const vesselOptions = VESSELS.map(v => {
     const count = byVessel.get(v)?.length || 0;
-    return `<a href="${buildReportUrl(toggleParams, {})}" style="padding:8px 14px;border-radius:8px;font-family:'Inter',-apple-system,sans-serif;font-size:0.8125rem;font-weight:600;cursor:pointer;text-decoration:none;${activeStyle}">${VESSEL_LABELS[v] || v.toUpperCase()} <span style="font-weight:400;${isActive ? 'opacity:0.8' : 'color:#6e7a74'};font-size:0.75rem">${count}</span></a>`;
+    return `<option value="${v}" ${qVessel === v ? 'selected' : ''}>${VESSEL_LABELS[v] || v.toUpperCase()} (${count})</option>`;
   }).join('');
 
-  // "All" vessel button
-  const allVesselParams: Record<string, string> = {};
-  if (qCrew) allVesselParams.crew = qCrew;
-  if (!isRange) allVesselParams.date = currentDate;
-  if (qFrom) allVesselParams.from = qFrom;
-  if (qTo) allVesselParams.to = qTo;
-  const allVesselStyle = !qVessel
-    ? 'border:2px solid #006950;background:#006950;color:white'
-    : 'border:2px solid #bdc9c2;background:#FFFFFF;color:#1a1c1c';
+  const dropdownStyle = 'padding:10px 12px;border:1px solid #bdc9c2;border-radius:8px;font-family:"Inter",-apple-system,sans-serif;font-size:16px;background:#FFFFFF;color:#1a1c1c;width:100%;min-height:44px;-webkit-appearance:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'12\' height=\'8\'%3E%3Cpath d=\'M1 1l5 5 5-5\' stroke=\'%236e7a74\' stroke-width=\'1.5\' fill=\'none\'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center';
+  const dateStyle = 'padding:10px 12px;border:1px solid #bdc9c2;border-radius:8px;font-family:"Inter",-apple-system,sans-serif;font-size:16px;background:#FFFFFF;color:#1a1c1c;width:100%;min-height:44px';
 
-  // Crew dropdown, date range inputs
   const filterBarHtml = `
-    <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center">
-      <a href="${buildReportUrl(allVesselParams, {})}" style="padding:8px 14px;border-radius:8px;font-family:'Inter',-apple-system,sans-serif;font-size:0.8125rem;font-weight:600;text-decoration:none;${allVesselStyle}">All <span style="font-weight:400;${!qVessel ? 'opacity:0.8' : 'color:#6e7a74'};font-size:0.75rem">${completions.rows.length}</span></a>
-      ${vesselButtonsHtml}
-    </div>
-    <div style="display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap;align-items:center">
-      <select id="crew-filter" onchange="applyFilters()" style="padding:8px 12px;border:1px solid #bdc9c2;border-radius:8px;font-family:'Inter',-apple-system,sans-serif;font-size:0.875rem;background:#FFFFFF">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
+      <select id="vessel-filter" onchange="applyFilters()" style="${dropdownStyle}">
+        <option value="">All vessels (${completions.rows.length})</option>
+        ${vesselOptions}
+      </select>
+      <select id="crew-filter" onchange="applyFilters()" style="${dropdownStyle}">
         <option value="">All crew</option>
         ${crewList.rows.map(cr => `<option value="${cr.id}" ${qCrew === cr.id ? 'selected' : ''}>${escapeHtml(cr.name)} (${cr.role})</option>`).join('')}
       </select>
-      <span style="font-size:0.8125rem;color:#6e7a74;margin-left:4px">From</span>
-      <input type="date" id="range-from" value="${escapeHtml(qFrom)}" style="padding:8px 12px;border:1px solid #bdc9c2;border-radius:8px;font-family:'Inter',-apple-system,sans-serif;font-size:0.875rem;background:#FFFFFF">
-      <span style="font-size:0.8125rem;color:#6e7a74">To</span>
-      <input type="date" id="range-to" value="${escapeHtml(qTo)}" style="padding:8px 12px;border:1px solid #bdc9c2;border-radius:8px;font-family:'Inter',-apple-system,sans-serif;font-size:0.875rem;background:#FFFFFF">
-      <button type="button" onclick="applyFilters()" style="padding:8px 16px;background:#006950;color:white;border:none;border-radius:8px;font-size:0.8125rem;cursor:pointer">Apply</button>
-      ${(qCrew || qFrom || qTo) ? `<a href="/report${qDate ? '?date=' + encodeURIComponent(qDate) : ''}" style="color:#F36D4F;font-size:0.8125rem;text-decoration:none">Clear filters</a>` : ''}
-    </div>`;
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
+      <div>
+        <label style="font-size:0.6875rem;color:#6e7a74;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:2px;display:block">From</label>
+        <input type="date" id="range-from" value="${escapeHtml(qFrom)}" onchange="applyFilters()" style="${dateStyle}">
+      </div>
+      <div>
+        <label style="font-size:0.6875rem;color:#6e7a74;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:2px;display:block">To</label>
+        <input type="date" id="range-to" value="${escapeHtml(qTo)}" onchange="applyFilters()" style="${dateStyle}">
+      </div>
+    </div>
+    ${(qVessel || qCrew || qFrom || qTo) ? `<div style="text-align:right;margin-bottom:12px"><a href="/report${qDate ? '?date=' + encodeURIComponent(qDate) : ''}" style="color:#F36D4F;font-size:0.8125rem;text-decoration:none;font-weight:500">✕ Clear filters</a></div>` : ''}`;
 
   // ── Alerts ──
   const alertsHtml = alerts.rows.length > 0
@@ -727,10 +710,12 @@ function reportLayout(activeTab: string, content: string): string {
     // Apply crew/date-range filters (navigates server-side)
     function applyFilters() {
       var params = new URLSearchParams(window.location.search);
+      var vessel = document.getElementById('vessel-filter');
       var crew = document.getElementById('crew-filter');
       var rangeFrom = document.getElementById('range-from');
       var rangeTo = document.getElementById('range-to');
 
+      if (vessel && vessel.value) { params.set('vessel', vessel.value); } else { params.delete('vessel'); }
       if (crew && crew.value) { params.set('crew', crew.value); } else { params.delete('crew'); }
       if (rangeFrom && rangeFrom.value) { params.set('from', rangeFrom.value); params.delete('date'); } else { params.delete('from'); }
       if (rangeTo && rangeTo.value) { params.set('to', rangeTo.value); params.delete('date'); } else { params.delete('to'); }
