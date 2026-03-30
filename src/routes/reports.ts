@@ -232,27 +232,126 @@ function renderChecklistCard(
     </div>`;
 }
 
-// Dashboard — today's activity + alerts, grouped by vessel
+// Helper: format a date string (YYYY-MM-DD) for display
+function formatDateDisplay(dateStr: string): string {
+  const [y, m, d] = dateStr.split('-').map(Number);
+  return new Date(y, m - 1, d).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+// Helper: shift a YYYY-MM-DD string by N days
+function shiftDate(dateStr: string, days: number): string {
+  const [y, m, d] = dateStr.split('-').map(Number);
+  const dt = new Date(y, m - 1, d);
+  dt.setDate(dt.getDate() + days);
+  return dt.toISOString().split('T')[0];
+}
+
+// Helper: build URL preserving current filter params
+function buildReportUrl(overrides: Record<string, string>, base: Record<string, string>): string {
+  const params = new URLSearchParams();
+  const merged = { ...base, ...overrides };
+  for (const [k, v] of Object.entries(merged)) {
+    if (v) params.set(k, v);
+  }
+  const qs = params.toString();
+  return `/report${qs ? '?' + qs : ''}`;
+}
+
+// Helper: render checklist summary symbol row for a vessel
+function renderChecklistSymbols(checklists: any[]): string {
+  const CHECKLIST_ORDER = ['wake-up', 'between', 'put-to-bed', 'dmt'];
+  const CHECKLIST_LABELS: Record<string, string> = {
+    'wake-up': 'Wake Up',
+    'between': 'Between',
+    'put-to-bed': 'Put to Bed',
+    'dmt': 'DMT',
+  };
+
+  const completedIds = new Set(checklists.map(co => co.template_id));
+
+  const symbols = CHECKLIST_ORDER.map(id => {
+    const match = checklists.find(co => co.template_id === id);
+    if (match) {
+      const time = match.completed_at
+        ? new Date(match.completed_at).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })
+        : '';
+      return `<span style="color:#006950;font-size:0.8125rem" title="${escapeHtml(CHECKLIST_LABELS[id] || id)} completed${time ? ' at ' + time : ''}">&#9745; ${escapeHtml(CHECKLIST_LABELS[id] || id)}${time ? ' (' + time + ')' : ''}</span>`;
+    } else {
+      return `<span style="color:#ba1a1a;font-size:0.8125rem;opacity:0.6" title="${escapeHtml(CHECKLIST_LABELS[id] || id)} not completed">&#10007; ${escapeHtml(CHECKLIST_LABELS[id] || id)}</span>`;
+    }
+  });
+
+  // Also include any checklists not in the standard order
+  for (const co of checklists) {
+    if (!CHECKLIST_ORDER.includes(co.template_id)) {
+      const label = co.template_id.replace(/-/g, ' ').replace(/\b\w/g, (ch: string) => ch.toUpperCase());
+      const time = co.completed_at
+        ? new Date(co.completed_at).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })
+        : '';
+      symbols.push(`<span style="color:#006950;font-size:0.8125rem">&#9745; ${escapeHtml(label)}${time ? ' (' + time + ')' : ''}</span>`);
+    }
+  }
+
+  return `<div style="display:flex;flex-wrap:wrap;gap:6px 14px;padding:6px 0;font-family:'Inter',-apple-system,sans-serif">${symbols.join('<span style="color:#bdc9c2"> &middot; </span>')}</div>`;
+}
+
+// Dashboard — daily activity + alerts, grouped by vessel
 app.get('/report', async (c) => {
-  const today = new Date().toISOString().split('T')[0];
+  const todayStr = new Date().toISOString().split('T')[0];
 
-  const alerts = await pool.query(
-    `SELECT a.*, c.vessel, cr.name as crew_name
-     FROM alerts a
-     JOIN completions c ON a.completion_id = c.id
-     JOIN crew cr ON c.crew_id = cr.id
-     WHERE a.acknowledged_at IS NULL
-     ORDER BY a.created_at DESC`
-  );
+  // Read query params
+  const qDate = c.req.query('date') || '';
+  const qFrom = c.req.query('from') || '';
+  const qTo = c.req.query('to') || '';
+  const qVessel = c.req.query('vessel') || '';
+  const qCrew = c.req.query('crew') || '';
 
-  const completions = await pool.query(
-    `SELECT co.*, cr.name as crew_name
-     FROM completions co
-     JOIN crew cr ON co.crew_id = cr.id
-     WHERE co.trip_date = $1
-     ORDER BY co.completed_at DESC`,
-    [today]
-  );
+  // Determine if range mode or single-day mode
+  const isRange = !!(qFrom || qTo);
+  const currentDate = qDate || todayStr;
+  const prevDate = shiftDate(currentDate, -1);
+  const nextDate = shiftDate(currentDate, 1);
+
+  // Build base filter params (for link generation)
+  const baseParams: Record<string, string> = {};
+  if (qVessel) baseParams.vessel = qVessel;
+  if (qCrew) baseParams.crew = qCrew;
+
+  // Fetch crew list for the filter dropdown
+  const crewList = await pool.query('SELECT id, name, role FROM crew WHERE active = TRUE ORDER BY name');
+
+  // Build completions query
+  let compQuery = `
+    SELECT co.*, cr.name as crew_name
+    FROM completions co
+    JOIN crew cr ON co.crew_id = cr.id
+    WHERE 1=1`;
+  const compParams: string[] = [];
+  let pIdx = 1;
+
+  if (isRange) {
+    if (qFrom) { compQuery += ` AND co.trip_date >= $${pIdx++}`; compParams.push(qFrom); }
+    if (qTo) { compQuery += ` AND co.trip_date <= $${pIdx++}`; compParams.push(qTo); }
+  } else {
+    compQuery += ` AND co.trip_date = $${pIdx++}`;
+    compParams.push(currentDate);
+  }
+  if (qVessel) { compQuery += ` AND co.vessel = $${pIdx++}`; compParams.push(qVessel); }
+  if (qCrew) { compQuery += ` AND co.crew_id = $${pIdx++}`; compParams.push(qCrew); }
+  compQuery += ' ORDER BY co.completed_at DESC';
+
+  const [alertsResult, completions] = await Promise.all([
+    pool.query(
+      `SELECT a.*, c.vessel, cr.name as crew_name
+       FROM alerts a
+       JOIN completions c ON a.completion_id = c.id
+       JOIN crew cr ON c.crew_id = cr.id
+       WHERE a.acknowledged_at IS NULL
+       ORDER BY a.created_at DESC`
+    ),
+    pool.query(compQuery, compParams),
+  ]);
+  const alerts = alertsResult;
 
   // Attach alerts to completions for badge display
   const alertsByCompletion = new Map<string, any[]>();
@@ -276,6 +375,65 @@ app.get('/report', async (c) => {
     if (vals['incident-occurred'] && vals['incident-occurred'] !== 'No incidents') incidentCount++;
   }
 
+  // ── Day Navigation ──
+  const dayNavHtml = `
+    <div style="display:flex;align-items:center;justify-content:center;gap:16px;margin:16px 0">
+      <a href="${buildReportUrl({ date: prevDate }, baseParams)}" style="text-decoration:none;font-size:1.25rem;color:#006950;font-weight:700;padding:4px 10px;border-radius:6px;border:1px solid #bdc9c2;background:#FFFFFF">&larr;</a>
+      <input type="date" value="${currentDate}" onchange="var p=new URLSearchParams(window.location.search);p.set('date',this.value);p.delete('from');p.delete('to');window.location='/report?'+p.toString()" style="padding:8px 12px;border:1px solid #bdc9c2;border-radius:8px;font-family:'Inter',-apple-system,sans-serif;font-size:0.9375rem;background:#FFFFFF;color:#1a1c1c">
+      <a href="${buildReportUrl({ date: nextDate }, baseParams)}" style="text-decoration:none;font-size:1.25rem;color:#006950;font-weight:700;padding:4px 10px;border-radius:6px;border:1px solid #bdc9c2;background:#FFFFFF">&rarr;</a>
+    </div>
+    <div style="text-align:center;font-size:0.8125rem;color:#6e7a74;margin-bottom:8px">${formatDateDisplay(currentDate)}</div>`;
+
+  // ── Filter Bar ──
+  // Vessel filter buttons (URL-based)
+  const vesselButtonsHtml = VESSELS.map(v => {
+    const isActive = qVessel === v;
+    const activeStyle = isActive
+      ? 'border:2px solid #006950;background:#006950;color:white'
+      : 'border:2px solid #bdc9c2;background:#FFFFFF;color:#1a1c1c';
+    const toggleParams: Record<string, string> = { ...baseParams };
+    if (isActive) {
+      delete toggleParams.vessel;
+    } else {
+      toggleParams.vessel = v;
+    }
+    if (!isRange) toggleParams.date = currentDate;
+    if (qFrom) toggleParams.from = qFrom;
+    if (qTo) toggleParams.to = qTo;
+    const count = byVessel.get(v)?.length || 0;
+    return `<a href="${buildReportUrl(toggleParams, {})}" style="padding:8px 14px;border-radius:8px;font-family:'Inter',-apple-system,sans-serif;font-size:0.8125rem;font-weight:600;cursor:pointer;text-decoration:none;${activeStyle}">${VESSEL_LABELS[v] || v.toUpperCase()} <span style="font-weight:400;${isActive ? 'opacity:0.8' : 'color:#6e7a74'};font-size:0.75rem">${count}</span></a>`;
+  }).join('');
+
+  // "All" vessel button
+  const allVesselParams: Record<string, string> = {};
+  if (qCrew) allVesselParams.crew = qCrew;
+  if (!isRange) allVesselParams.date = currentDate;
+  if (qFrom) allVesselParams.from = qFrom;
+  if (qTo) allVesselParams.to = qTo;
+  const allVesselStyle = !qVessel
+    ? 'border:2px solid #006950;background:#006950;color:white'
+    : 'border:2px solid #bdc9c2;background:#FFFFFF;color:#1a1c1c';
+
+  // Crew dropdown, date range inputs
+  const filterBarHtml = `
+    <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center">
+      <a href="${buildReportUrl(allVesselParams, {})}" style="padding:8px 14px;border-radius:8px;font-family:'Inter',-apple-system,sans-serif;font-size:0.8125rem;font-weight:600;text-decoration:none;${allVesselStyle}">All <span style="font-weight:400;${!qVessel ? 'opacity:0.8' : 'color:#6e7a74'};font-size:0.75rem">${completions.rows.length}</span></a>
+      ${vesselButtonsHtml}
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap;align-items:center">
+      <select id="crew-filter" onchange="applyFilters()" style="padding:8px 12px;border:1px solid #bdc9c2;border-radius:8px;font-family:'Inter',-apple-system,sans-serif;font-size:0.875rem;background:#FFFFFF">
+        <option value="">All crew</option>
+        ${crewList.rows.map(cr => `<option value="${cr.id}" ${qCrew === cr.id ? 'selected' : ''}>${escapeHtml(cr.name)} (${cr.role})</option>`).join('')}
+      </select>
+      <span style="font-size:0.8125rem;color:#6e7a74;margin-left:4px">From</span>
+      <input type="date" id="range-from" value="${escapeHtml(qFrom)}" style="padding:8px 12px;border:1px solid #bdc9c2;border-radius:8px;font-family:'Inter',-apple-system,sans-serif;font-size:0.875rem;background:#FFFFFF">
+      <span style="font-size:0.8125rem;color:#6e7a74">To</span>
+      <input type="date" id="range-to" value="${escapeHtml(qTo)}" style="padding:8px 12px;border:1px solid #bdc9c2;border-radius:8px;font-family:'Inter',-apple-system,sans-serif;font-size:0.875rem;background:#FFFFFF">
+      <button type="button" onclick="applyFilters()" style="padding:8px 16px;background:#006950;color:white;border:none;border-radius:8px;font-size:0.8125rem;cursor:pointer">Apply</button>
+      ${(qCrew || qFrom || qTo) ? `<a href="/report${qDate ? '?date=' + encodeURIComponent(qDate) : ''}" style="color:#F36D4F;font-size:0.8125rem;text-decoration:none">Clear filters</a>` : ''}
+    </div>`;
+
+  // ── Alerts ──
   const alertsHtml = alerts.rows.length > 0
     ? alerts.rows.map(a => `
         <div style="display:flex;justify-content:space-between;align-items:center;padding:16px;background:#FFFFFF;border-left:4px solid #F36D4F;border-radius:8px;margin-bottom:8px">
@@ -289,49 +447,67 @@ app.get('/report', async (c) => {
         </div>`).join('')
     : '<p style="text-align:center;padding:24px;color:#006950;font-weight:500">All clear &mdash; no alerts.</p>';
 
-  // Vessel filter buttons
-  const vesselButtons = VESSELS.map(v => {
-    const count = byVessel.get(v)?.length || 0;
-    return `<button type="button" class="vessel-filter-btn" data-vessel="${v}" style="padding:8px 14px;border:2px solid #bdc9c2;border-radius:8px;background:#FFFFFF;font-family:'Inter',-apple-system,sans-serif;font-size:0.8125rem;font-weight:600;color:#1a1c1c;cursor:pointer;transition:all 0.15s">${VESSEL_LABELS[v] || v.toUpperCase()} <span style="font-weight:400;color:#6e7a74;font-size:0.75rem">${count}</span></button>`;
-  }).join('');
-
-  // Render vessel groups
+  // ── Vessel-Grouped Timeline ──
   const vesselSections = VESSELS
     .filter(v => byVessel.has(v))
     .map(v => {
-      const cards = byVessel.get(v)!.map(renderCompletionCard).join('');
-      const count = byVessel.get(v)!.length;
+      const items = byVessel.get(v)!;
+      const checklists = items.filter(co => co.template_type === 'checklist');
+      const logbooks = items.filter(co => co.template_type === 'logbook');
+
+      // Checklists with alerts or notes get full cards
+      const checklistsWithDetail = checklists.filter(co => {
+        const hasAlerts = co.alerts_json && (co.alerts_json as any[]).length > 0;
+        const hasNotes = co.notes && co.notes.trim();
+        const vals = co.values_json || {};
+        let hasInlineNotes = false;
+        for (const [key, val] of Object.entries(vals)) {
+          if (key.startsWith('note_') && val && String(val).trim()) { hasInlineNotes = true; break; }
+        }
+        return hasAlerts || hasNotes || hasInlineNotes;
+      });
+
+      const symbolRow = renderChecklistSymbols(checklists);
+      const logbookCards = logbooks.map(renderCompletionCard).join('');
+      const detailCards = checklistsWithDetail.map(renderCompletionCard).join('');
+      const count = items.length;
+
       return `
         <div class="vessel-group" data-vessel-group="${v}">
           <h3 style="font-family:'Manrope',-apple-system,sans-serif;font-size:1rem;font-weight:700;color:#006950;padding:8px 0;border-bottom:2px solid #006950;margin-bottom:8px;display:flex;align-items:center;gap:8px">${VESSEL_LABELS[v] || v.toUpperCase()} <span style="font-size:0.75rem;font-weight:500;background:rgba(22,142,110,0.1);color:#006950;padding:2px 8px;border-radius:12px">${count}</span></h3>
-          ${cards}
+          ${symbolRow}
+          ${logbookCards}
+          ${detailCards}
         </div>`;
     }).join('');
 
   const emptyState = completions.rows.length === 0
-    ? '<p style="text-align:center;color:#6e7a74;padding:24px">No completions today yet.</p>'
+    ? `<p style="text-align:center;color:#6e7a74;padding:24px">No completions${isRange ? ' in this range' : ' for this day'} yet.</p>`
     : '';
 
   const incidentSummary = incidentCount > 0
     ? `<span style="display:inline-block;padding:2px 8px;border-radius:12px;font-size:0.75rem;font-weight:600;background:rgba(186,26,26,0.1);color:#ba1a1a;margin-left:8px">&#x26A0;&#xFE0F; ${incidentCount} incident${incidentCount > 1 ? 's' : ''}</span>`
     : '';
 
+  const dateLabel = isRange
+    ? `${qFrom ? formatDateDisplay(qFrom) : 'Start'} &mdash; ${qTo ? formatDateDisplay(qTo) : 'Now'}`
+    : formatDateDisplay(currentDate);
+
   return c.html(reportLayout('Today', `
+    ${dayNavHtml}
+
     <div style="margin-bottom:16px">
       <input type="text" id="report-search" placeholder="Search logs... (e.g., oil, engine hours, incident)" style="width:100%;padding:10px 16px;border:2px solid #bdc9c2;border-radius:8px;font-family:'Inter',-apple-system,sans-serif;font-size:0.9375rem;background:#FFFFFF;box-sizing:border-box" onfocus="this.style.borderColor='#006950'" onblur="this.style.borderColor='#bdc9c2'">
     </div>
 
-    <div style="display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap;align-items:center">
-      <button type="button" class="vessel-filter-btn active" data-vessel="all" style="padding:8px 14px;border:2px solid #006950;border-radius:8px;background:#006950;font-family:'Inter',-apple-system,sans-serif;font-size:0.8125rem;font-weight:600;color:white;cursor:pointer;transition:all 0.15s">All <span style="font-weight:400;opacity:0.8;font-size:0.75rem">${completions.rows.length}</span></button>
-      ${vesselButtons}
-    </div>
+    ${filterBarHtml}
 
     <h2 style="font-family:'Manrope',-apple-system,sans-serif;font-size:1.125rem;font-weight:600;margin:24px 0 12px">Needs Attention ${alerts.rows.length > 0 ? `<span style="display:inline-block;padding:2px 8px;border-radius:12px;font-size:0.75rem;font-weight:600;background:rgba(243,109,79,0.1);color:#F36D4F">${alerts.rows.length}</span>` : ''}</h2>
     <div id="alerts-section">
       ${alertsHtml}
     </div>
 
-    <h2 style="font-family:'Manrope',-apple-system,sans-serif;font-size:1.125rem;font-weight:600;margin:24px 0 12px">Today's Logs ${incidentSummary}</h2>
+    <h2 style="font-family:'Manrope',-apple-system,sans-serif;font-size:1.125rem;font-weight:600;margin:24px 0 12px">${isRange ? 'Logs' : "Today's Logs"} ${incidentSummary}</h2>
     <div id="completion-list">
       ${vesselSections}
       ${emptyState}
@@ -548,43 +724,20 @@ function reportLayout(activeTab: string, content: string): string {
       });
     }
 
-    // Vessel filter buttons (client-side, Today view)
-    var activeVesselFilter = 'all';
-    document.querySelectorAll('.vessel-filter-btn').forEach(function(btn) {
-      btn.addEventListener('click', function() {
-        var vessel = this.getAttribute('data-vessel');
-        activeVesselFilter = vessel;
+    // Apply crew/date-range filters (navigates server-side)
+    function applyFilters() {
+      var params = new URLSearchParams(window.location.search);
+      var crew = document.getElementById('crew-filter');
+      var rangeFrom = document.getElementById('range-from');
+      var rangeTo = document.getElementById('range-to');
 
-        // Update active state styling
-        document.querySelectorAll('.vessel-filter-btn').forEach(function(b) {
-          if (b.getAttribute('data-vessel') === vessel) {
-            b.style.background = '#006950';
-            b.style.borderColor = '#006950';
-            b.style.color = 'white';
-            b.classList.add('active');
-          } else {
-            b.style.background = '#FFFFFF';
-            b.style.borderColor = '#bdc9c2';
-            b.style.color = '#1a1c1c';
-            b.classList.remove('active');
-          }
-        });
+      if (crew && crew.value) { params.set('crew', crew.value); } else { params.delete('crew'); }
+      if (rangeFrom && rangeFrom.value) { params.set('from', rangeFrom.value); params.delete('date'); } else { params.delete('from'); }
+      if (rangeTo && rangeTo.value) { params.set('to', rangeTo.value); params.delete('date'); } else { params.delete('to'); }
 
-        // Filter vessel groups
-        document.querySelectorAll('.vessel-group').forEach(function(group) {
-          if (vessel === 'all') {
-            group.style.display = '';
-          } else {
-            group.style.display = group.getAttribute('data-vessel-group') === vessel ? '' : 'none';
-          }
-        });
-
-        // Re-apply search filter if active
-        if (searchInput && searchInput.value.trim()) {
-          searchInput.dispatchEvent(new Event('input'));
-        }
-      });
-    });
+      var qs = params.toString();
+      window.location = '/report' + (qs ? '?' + qs : '');
+    }
   </script>
 </body>
 </html>`;
