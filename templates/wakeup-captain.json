@@ -60,13 +60,15 @@
         },
         {
           "id": "maintenance-calendar",
-          "label": "Refer to Maintenance Calendar for today's required daily maintenance",
-          "type": "checkbox"
+          "label": "Complete today's Daily Maintenance Task (see DMT checklist for details)",
+          "type": "checkbox",
+          "info": "Your DMT checklist shows today's specific task. Complete it separately — this checkbox confirms you're aware of it."
         },
         {
           "id": "logbook",
-          "label": "Check logbook for notes from prior captain",
-          "type": "checkbox"
+          "label": "Check handoff notes from prior crew",
+          "type": "checkbox",
+          "info": "Tap the Handoff Notes link on the Today page to see any notes left by previous crew."
         }
       ]
     },

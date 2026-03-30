@@ -76,6 +76,15 @@ function selectOption(btn, inputName) {
   const input = document.querySelector(`input[name="${inputName}"]`);
   if (input) input.value = btn.dataset.value;
 
+  // Handle conditional visibility for select items (like merch-sold → show item fields)
+  const itemId = input?.dataset?.itemId;
+  if (itemId) {
+    const isPositive = btn.dataset.value === 'Yes' || btn.dataset.value === 'true';
+    document.querySelectorAll(`[data-requires="${itemId}"]`).forEach(el => {
+      el.style.display = isPositive ? '' : 'none';
+    });
+  }
+
   // Check if below threshold (for select items with alert_below)
   // This is handled server-side, but we can add visual feedback
   updateProgress();
