@@ -126,6 +126,8 @@ function renderHandoff(session: SessionData, notes: any[]): string {
   <link rel="manifest" href="/public/manifest.json">
   <meta name="theme-color" content="#006950">
   <meta name="apple-mobile-web-app-capable" content="yes">
+  <link rel="apple-touch-icon" href="/public/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/public/favicon-32.png">
   <style>
     .handoff-page { max-width: 480px; margin: 0 auto; padding: 16px; padding-bottom: 80px; }
     .handoff-header { text-align: center; margin-bottom: 16px; }

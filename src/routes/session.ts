@@ -126,6 +126,8 @@ function renderLanding(
   <meta name="theme-color" content="#006950">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="apple-touch-icon" href="/public/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/public/favicon-32.png">
 </head>
 <body>
   <div class="landing">
