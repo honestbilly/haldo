@@ -83,6 +83,8 @@ export function getTemplatesForContext(
           return true; // Always available
         case 'one-time':
           return ct.trigger_dates?.includes(isoDate) ?? false;
+        case 'on-demand':
+          return false; // Never auto-scheduled — captain picks manually
         default:
           return true;
       }
@@ -120,6 +122,25 @@ export function getTemplatesForContext(
     if (pb !== pa) return pb - pa;
     return a.name.localeCompare(b.name);
   });
+}
+
+// Get on-demand templates (captain picks manually — not auto-scheduled)
+export function getOnDemandTemplates(vessel: string, role: string): Template[] {
+  return cachedTemplates
+    .filter(t => {
+      if (t.vessel !== 'all' && t.vessel !== vessel) return false;
+      if (t.role !== 'all' && t.role !== role) return false;
+      if (t.type === 'checklist') {
+        return (t as ChecklistTemplate).recurrence === 'on-demand';
+      }
+      return false;
+    })
+    .sort((a, b) => {
+      const da = (a as any).display_order ?? 999;
+      const db = (b as any).display_order ?? 999;
+      if (da !== db) return da - db;
+      return a.name.localeCompare(b.name);
+    });
 }
 
 // Preview schedule for a date range (MCP tool)

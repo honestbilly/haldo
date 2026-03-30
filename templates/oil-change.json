@@ -1,0 +1,119 @@
+{
+  "id": "oil-change",
+  "name": "Oil Change",
+  "type": "checklist",
+  "vessel": "all",
+  "role": "captain",
+  "recurrence": "on-demand",
+  "version": "2026-03-30",
+  "source": "KB: squid-on-board-binder / Engine Maintenance",
+  "estimated_minutes": 45,
+  "display_order": 100,
+  "intro": "Engine oil change procedure. Record engine hours before starting. Follow all steps in order.",
+  "sections": [
+    {
+      "title": "Pre-Change",
+      "items": [
+        {
+          "id": "engine-hours-current",
+          "label": "Current engine hours",
+          "type": "number",
+          "unit": "hours",
+          "info": "Record engine hour meter reading before starting the oil change."
+        },
+        {
+          "id": "which-engine",
+          "label": "Which engine?",
+          "type": "select",
+          "options": ["Port", "Starboard", "Both"],
+          "required": true
+        },
+        {
+          "id": "oil-type",
+          "label": "Oil type and weight",
+          "type": "text",
+          "placeholder": "e.g., Yamalube 10W-30"
+        },
+        {
+          "id": "run-engine",
+          "label": "Run engine for 5 minutes to warm oil",
+          "type": "checkbox"
+        },
+        {
+          "id": "kill-engine",
+          "label": "Kill engine and wait 2 minutes for oil to settle",
+          "type": "checkbox"
+        }
+      ]
+    },
+    {
+      "title": "Drain & Replace",
+      "items": [
+        {
+          "id": "drain-plug",
+          "label": "Remove drain plug and drain oil into container",
+          "type": "checkbox"
+        },
+        {
+          "id": "replace-filter",
+          "label": "Replace oil filter",
+          "type": "checkbox"
+        },
+        {
+          "id": "replace-plug",
+          "label": "Replace drain plug (hand tight + 1/4 turn)",
+          "type": "checkbox"
+        },
+        {
+          "id": "add-oil",
+          "label": "Add new oil to fill line",
+          "type": "checkbox"
+        },
+        {
+          "id": "quarts-added",
+          "label": "Quarts added",
+          "type": "number",
+          "unit": "qt"
+        }
+      ]
+    },
+    {
+      "title": "Post-Change Verification",
+      "items": [
+        {
+          "id": "check-level",
+          "label": "Check oil level on dipstick — between marks",
+          "type": "checkbox"
+        },
+        {
+          "id": "run-check",
+          "label": "Start engine, run for 2 minutes, check for leaks",
+          "type": "checkbox"
+        },
+        {
+          "id": "recheck-level",
+          "label": "Recheck level after running — top off if needed",
+          "type": "checkbox"
+        },
+        {
+          "id": "dispose-oil",
+          "label": "Dispose of old oil properly (dock waste station)",
+          "type": "checkbox"
+        },
+        {
+          "id": "oil-change-photo",
+          "label": "Photo of dipstick showing correct level",
+          "type": "photo",
+          "placeholder": "Snap a photo of the dipstick",
+          "max_photos": 1
+        }
+      ]
+    }
+  ],
+  "completion": {
+    "require_all": true,
+    "sign_off": true,
+    "notes_field": true,
+    "notes_prompt": "Any issues with the oil change? Note the old oil condition (color, debris, etc.)"
+  }
+}

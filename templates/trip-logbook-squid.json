@@ -114,6 +114,24 @@
           "id": "boat-orientation",
           "label": "Boat orientation completed (head, water, snacks, where to go)",
           "type": "checkbox"
+        },
+        {
+          "id": "incident-occurred",
+          "label": "Any incidents on this trip?",
+          "type": "select",
+          "options": ["No incidents", "Minor incident", "Major incident"],
+          "info": "Select 'No incidents' if nothing to report."
+        },
+        {
+          "id": "incident-details",
+          "label": "Incident details",
+          "type": "text",
+          "placeholder": "Describe what happened, who was involved, and actions taken...",
+          "requires": "incident-occurred",
+          "help": {
+            "title": "⚠️ USCG Reporting",
+            "body": "If this incident involves injury, vessel damage, or a person overboard, the captain MUST contact the U.S. Coast Guard immediately. VHF Channel 16 or call (305) 535-4300."
+          }
         }
       ]
     },

@@ -2,7 +2,7 @@ import { Hono } from 'hono';
 import { nanoid } from 'nanoid';
 import pool from '../db.js';
 import { getSession } from './session.js';
-import { getTemplatesForContext, getTemplateById } from '../services/templates.js';
+import { getTemplatesForContext, getTemplateById, getOnDemandTemplates } from '../services/templates.js';
 import { evaluateAlerts, processAlerts } from '../services/alerts.js';
 import type { Template, ChecklistTemplate, LogbookTemplate, Item, Section, LogbookStep, SessionData } from '../types.js';
 
@@ -39,6 +39,7 @@ app.get('/today', async (c) => {
   const [y, m, d] = session.trip_date.split('-').map(Number);
   const tripDate = new Date(y, m - 1, d);
   const templates = getTemplatesForContext(session.vessel, session.role, tripDate);
+  const onDemand = getOnDemandTemplates(session.vessel, session.role);
 
   // Get today's completions for this crew member
   const completions = await pool.query(
@@ -54,7 +55,7 @@ app.get('/today', async (c) => {
     completedMap.get(key)!.push({ trip_slot: row.trip_slot, completed_at: row.completed_at });
   }
 
-  return c.html(renderTodayList(session, templates, completedMap));
+  return c.html(renderTodayList(session, templates, onDemand, completedMap));
 });
 
 // Render a checklist or logbook form
@@ -146,11 +147,11 @@ app.get('/complete/:id', (c) => {
 function renderTodayList(
   session: any,
   templates: Template[],
+  onDemand: Template[],
   completedMap: Map<string, any[]>
 ): string {
-  const items = templates.map(t => {
+  const renderCard = (t: Template) => {
     const comps = completedMap.get(t.id) || [];
-    // For per-trip items, check if this specific trip_slot is done
     const isDone = t.type === 'logbook' || (t.type === 'checklist' && (t as ChecklistTemplate).recurrence === 'per-trip')
       ? comps.some(c => c.trip_slot === session.trip_slot)
       : comps.length > 0;
@@ -169,7 +170,21 @@ function renderTodayList(
           ${isDone ? '✓ Done' : 'Not started'}
         </span>
       </a>`;
-  }).join('');
+  };
+
+  const items = templates.map(renderCard).join('');
+
+  const onDemandHtml = onDemand.length > 0 ? `
+    <div class="on-demand-section">
+      <h3 class="on-demand-header" onclick="this.nextElementSibling.classList.toggle('collapsed')">
+        Other Checklists <span class="on-demand-count">${onDemand.length}</span>
+        <span class="collapse-icon">▼</span>
+      </h3>
+      <div class="on-demand-list collapsed">
+        <p class="on-demand-info">Maintenance and service checklists — not scheduled daily. Start one when needed.</p>
+        ${onDemand.map(renderCard).join('')}
+      </div>
+    </div>` : '';
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -188,6 +203,7 @@ function renderTodayList(
     <div class="today-list">
       ${items || '<p class="empty-state">No checklists scheduled for today.</p>'}
     </div>
+    ${onDemandHtml}
     <a href="/logout" class="switch-link">Switch crew member</a>
   </div>
 </body>
