@@ -192,7 +192,7 @@ function renderHandoff(session: SessionData, notes: any[]): string {
       <button type="submit">Add Note</button>
     </form>
   </div>
-  ${bottomNav('notes', notes.length)}
+  ${bottomNav('submit')}
 </body>
 </html>`;
 }

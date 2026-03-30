@@ -1,25 +1,28 @@
 // Shared UI components for Haldo
-// Reference: docs/modules/gizmo/haldo-navigation.md
+// Reference: docs/modules/gizmo/haldo-navigation.md (rev 2)
 
 /**
  * Persistent bottom navigation bar for all crew pages.
- * @param active - which tab is currently active: 'tasks' | 'notes' | 'feedback' | 'more'
- * @param handoffCount - number of unresolved handoff notes (for badge)
+ * 3 tabs for crew, 4th MGMT tab for managers.
+ * @param active - which tab is currently active: 'home' | 'submit' | 'more' | 'mgmt'
+ * @param isManager - if true, show the MGMT tab
  */
-export function bottomNav(active: string, handoffCount: number = 0): string {
+export function bottomNav(active: string, isManager: boolean = false): string {
   const tabs = [
-    { id: 'tasks', label: 'Tasks', icon: '📋', href: '/today' },
-    { id: 'notes', label: 'Notes', icon: '📝', href: '/handoff', badge: handoffCount },
-    { id: 'feedback', label: 'Feedback', icon: '💬', href: '/feedback' },
+    { id: 'home', label: 'Home', icon: '🏠', href: '/today' },
+    { id: 'submit', label: 'Submit', icon: '✉️', href: '/submit' },
     { id: 'more', label: 'More', icon: '⚙️', href: '/more' },
   ];
 
+  if (isManager) {
+    tabs.push({ id: 'mgmt', label: 'MGMT', icon: '📊', href: '/report' });
+  }
+
   const tabsHtml = tabs.map(t => {
     const isActive = t.id === active;
-    const badge = t.badge && t.badge > 0 ? `<span class="nav-badge">${t.badge}</span>` : '';
     return `
       <a href="${t.href}" class="nav-tab ${isActive ? 'nav-active' : ''}">
-        <span class="nav-icon">${t.icon}${badge}</span>
+        <span class="nav-icon">${t.icon}</span>
         <span class="nav-label">${t.label}</span>
       </a>`;
   }).join('');
@@ -56,7 +59,7 @@ export function htmlHead(title: string): string {
 export function pageHeader(title: string, vessel: string, backHref: string = '/today'): string {
   return `
     <header class="page-header">
-      <a href="${backHref}" class="back-link">← Back</a>
+      <a href="${backHref}" class="back-link">← Home</a>
       <h1 class="page-title">${title}</h1>
       <span class="vessel-badge">${vessel.toUpperCase()}</span>
     </header>`;

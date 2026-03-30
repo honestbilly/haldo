@@ -159,7 +159,7 @@ function renderTodayList(
   completedMap: Map<string, any[]>,
   handoffCount: number = 0
 ): string {
-  const renderCard = (t: Template) => {
+  const renderCard = (t: Template, pinned: boolean = false) => {
     const comps = completedMap.get(t.id) || [];
     const isDone = t.type === 'logbook' || (t.type === 'checklist' && (t as ChecklistTemplate).recurrence === 'per-trip')
       ? comps.some(c => c.trip_slot === session.trip_slot)
@@ -168,6 +168,24 @@ function renderTodayList(
     const est = t.type === 'checklist'
       ? (t as ChecklistTemplate).estimated_minutes
       : (t as LogbookTemplate).estimated_minutes;
+
+    if (pinned) {
+      // DMT pinned card — different styling
+      const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+      const [y, m, d] = session.trip_date.split('-').map(Number);
+      const todayDay = dayNames[new Date(y, m - 1, d).getDay()];
+      return `
+        <a href="/c/${t.id}" class="today-card dmt-pinned ${isDone ? 'done' : ''}">
+          <div class="dmt-pinned-label">⚡ TODAY'S MAINTENANCE</div>
+          <div class="today-card-info">
+            <span class="today-card-name">${todayDay}'s Task</span>
+            ${est ? `<span class="today-card-time">~${est} min</span>` : ''}
+          </div>
+          <span class="today-card-status ${isDone ? 'status-done' : 'status-pending'}">
+            ${isDone ? '✓ Done' : 'Not done'}
+          </span>
+        </a>`;
+    }
 
     return `
       <a href="/c/${t.id}" class="today-card ${isDone ? 'done' : ''}">
@@ -181,17 +199,21 @@ function renderTodayList(
       </a>`;
   };
 
-  const items = templates.map(renderCard).join('');
+  // Separate DMT from regular templates
+  const dmt = templates.find(t => t.id.startsWith('daily-maintenance'));
+  const regularTemplates = templates.filter(t => !t.id.startsWith('daily-maintenance'));
+  const dmtHtml = dmt ? renderCard(dmt, true) : '';
+  const items = regularTemplates.map(t => renderCard(t)).join('');
 
   const onDemandHtml = onDemand.length > 0 ? `
     <div class="on-demand-section">
       <h3 class="on-demand-header" onclick="this.nextElementSibling.classList.toggle('collapsed')">
-        Other Checklists <span class="on-demand-count">${onDemand.length}</span>
+        Assigned Tasks <span class="on-demand-count">${onDemand.length}</span>
         <span class="collapse-icon">▼</span>
       </h3>
       <div class="on-demand-list collapsed">
-        <p class="on-demand-info">Maintenance and service checklists — not scheduled daily. Start one when needed.</p>
-        ${onDemand.map(renderCard).join('')}
+        <p class="on-demand-info">Maintenance and service tasks. Start one when needed.</p>
+        ${onDemand.map(t => renderCard(t)).join('')}
       </div>
     </div>` : '';
 
@@ -222,6 +244,8 @@ function renderTodayList(
       <span class="handoff-arrow">→</span>
     </a>` : ''}
 
+    ${dmtHtml}
+
     <div class="today-list">
       ${items || '<p class="empty-state">No checklists scheduled for today.</p>'}
     </div>
@@ -231,7 +255,7 @@ function renderTodayList(
       <a href="/logout" class="switch-link">Switch crew member</a>
     </div>
   </div>
-  ${bottomNav('tasks', handoffCount)}
+  ${bottomNav('home')}
   <script src="/public/app.js"></script>
 </body>
 </html>`;
@@ -519,7 +543,7 @@ function renderChecklist(session: any, template: ChecklistTemplate): string {
       </button>
     </form>
   </div>
-  ${bottomNav('tasks')}
+  ${bottomNav('home')}
   <script src="/public/app.js"></script>
 </body>
 </html>`;
@@ -618,7 +642,7 @@ function renderLogbook(session: any, template: LogbookTemplate): string {
       });
     });
   </script>
-  ${bottomNav('tasks')}
+  ${bottomNav('home')}
 </body>
 </html>`;
 }

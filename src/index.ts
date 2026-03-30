@@ -9,6 +9,8 @@ import formRoutes from './routes/forms.js';
 import reportRoutes from './routes/reports.js';
 import apiRoutes from './routes/api.js';
 import handoffRoutes from './routes/handoff.js';
+import submitRoutes from './routes/submit.js';
+import moreRoutes from './routes/more.js';
 
 const app = new Hono();
 
@@ -27,6 +29,8 @@ app.route('/', formRoutes);
 app.route('/', reportRoutes);
 app.route('/api', apiRoutes);
 app.route('/handoff', handoffRoutes);
+app.route('/submit', submitRoutes);
+app.route('/more', moreRoutes);
 
 // Startup
 async function start() {

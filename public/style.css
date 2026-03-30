@@ -214,6 +214,28 @@ body {
 .status-done { color: var(--primary); font-weight: 600; font-size: 0.8125rem; }
 .status-pending { color: var(--text-muted); font-size: 0.8125rem; }
 
+/* DMT Pinned Card — accent styling, persists at top */
+.dmt-pinned {
+  background: rgba(0, 105, 80, 0.06) !important;
+  border-left: 4px solid var(--primary) !important;
+  border: 2px solid rgba(0, 105, 80, 0.2);
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  margin-bottom: 16px;
+}
+
+.dmt-pinned-label {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  color: var(--primary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.dmt-pinned .today-card-info { width: 100%; display: flex; justify-content: space-between; }
+.dmt-pinned .today-card-status { align-self: flex-end; }
+
 /* Review summary (logbook Review & Submit step) */
 .review-summary { margin: 16px 0; }
 .review-list { background: var(--surface); border-radius: var(--radius); overflow: hidden; }
