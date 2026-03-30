@@ -590,6 +590,64 @@ body {
 .help-box.expanded { display: block; }
 .help-box strong { display: block; margin-bottom: 4px; color: var(--primary); }
 
+/* SOP reference card */
+.sop-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  padding: 8px 14px;
+  border: 1px solid var(--primary);
+  border-radius: var(--radius);
+  background: rgba(0, 105, 80, 0.06);
+  color: var(--primary);
+  font-family: var(--font-body);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.sop-toggle:hover { background: rgba(0, 105, 80, 0.12); }
+.sop-icon { font-size: 1rem; }
+
+.sop-card {
+  display: none;
+  margin-top: 8px;
+  padding: 16px;
+  background: rgba(0, 105, 80, 0.04);
+  border: 1px solid rgba(0, 105, 80, 0.15);
+  border-left: 3px solid var(--primary);
+  border-radius: var(--radius);
+}
+.sop-card.expanded { display: block; }
+
+.sop-title {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--primary);
+  font-size: 0.9375rem;
+}
+
+.sop-steps {
+  margin: 0;
+  padding-left: 20px;
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: var(--text);
+}
+.sop-steps li { margin-bottom: 4px; }
+.sop-steps li:last-child { margin-bottom: 0; }
+
+.sop-source {
+  display: block;
+  margin-top: 10px;
+  font-size: 0.75rem;
+  font-style: italic;
+  color: var(--text-muted);
+  border-top: 1px solid rgba(0, 105, 80, 0.1);
+  padding-top: 8px;
+}
+
 /* Info callout */
 .item-info {
   font-size: 0.8125rem;

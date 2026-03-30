@@ -215,6 +215,20 @@ function renderItemHtml(item: Item, prefix: string = 'item_'): string {
       </div>`;
   }
 
+  let sopHtml = '';
+  if (item.sop) {
+    const stepsHtml = item.sop.steps.map((s, i) => `<li>${s}</li>`).join('');
+    sopHtml = `
+      <button type="button" class="sop-toggle" onclick="this.nextElementSibling.classList.toggle('expanded')">
+        <span class="sop-icon">&#128214;</span> How to do this
+      </button>
+      <div class="sop-card">
+        <strong class="sop-title">${item.sop.title}</strong>
+        <ol class="sop-steps">${stepsHtml}</ol>
+        <cite class="sop-source">Source: ${item.sop.source}</cite>
+      </div>`;
+  }
+
   let infoHtml = item.info ? `<p class="item-info">${item.info}</p>` : '';
   let requiredMark = item.required ? '<span class="required-mark">*</span>' : '';
 
@@ -230,7 +244,7 @@ function renderItemHtml(item: Item, prefix: string = 'item_'): string {
             <span class="checkbox-custom"></span>
             <span class="checkbox-text">${item.label}${requiredMark}</span>
           </label>
-          ${helpHtml}${infoHtml}${mediaHtml}
+          ${helpHtml}${sopHtml}${infoHtml}${mediaHtml}
         </div>`;
 
     case 'number':
@@ -257,7 +271,7 @@ function renderItemHtml(item: Item, prefix: string = 'item_'): string {
             <input type="text" name="fail_note_${item.id}" placeholder="What's the issue?" class="fail-note">
             <label class="photo-btn"><span>📷 Take photo</span><input type="file" accept="image/*" capture="environment" style="display:none"></label>
           </div>
-          ${infoHtml}
+          ${sopHtml}${infoHtml}
         </div>`;
 
     case 'select':
@@ -273,7 +287,7 @@ function renderItemHtml(item: Item, prefix: string = 'item_'): string {
           ${mediaHtml}
           <div class="option-group">${optButtons}</div>
           <input type="hidden" name="${prefix}${item.id}" data-item-id="${item.id}">
-          ${infoHtml}
+          ${sopHtml}${infoHtml}
         </div>`;
 
     case 'multi_select':
@@ -291,7 +305,7 @@ function renderItemHtml(item: Item, prefix: string = 'item_'): string {
           </div>
           ${mediaHtml}
           <div class="multi-group">${checkboxes}</div>
-          ${infoHtml}
+          ${sopHtml}${infoHtml}
         </div>`;
 
     case 'text':
@@ -304,7 +318,7 @@ function renderItemHtml(item: Item, prefix: string = 'item_'): string {
           ${mediaHtml}
           <textarea name="${prefix}${item.id}" class="text-input"
             placeholder="${item.placeholder || ''}" data-item-id="${item.id}"></textarea>
-          ${infoHtml}
+          ${sopHtml}${infoHtml}
         </div>`;
 
     case 'photo':
@@ -320,7 +334,7 @@ function renderItemHtml(item: Item, prefix: string = 'item_'): string {
             <input type="file" name="${prefix}${item.id}" accept="image/*" capture="environment" multiple>
           </label>
           <div class="photo-previews" id="previews_${item.id}"></div>
-          ${infoHtml}
+          ${sopHtml}${infoHtml}
         </div>`;
 
     default:

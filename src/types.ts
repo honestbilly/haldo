@@ -15,6 +15,12 @@ export interface HelpBox {
   body: string;
 }
 
+export interface SopReference {
+  title: string;
+  steps: string[];
+  source: string; // KB reference, e.g. "squid-on-board-binder / §4.1"
+}
+
 export interface AlertRule {
   message: string;       // '{value}' gets interpolated
   notify: ('manager')[];
@@ -49,6 +55,7 @@ export interface Item {
   // conditional
   info?: string;
   help?: HelpBox;
+  sop?: SopReference;
   requires?: string;
 }
 
