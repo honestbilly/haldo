@@ -9,6 +9,7 @@
   "source": "KB: squid-on-board-binder / §4 Captain Boat Checklist — WAKING UP SQUID",
   "estimated_minutes": 15,
   "priority": 100,
+  "display_order": 10,
   "intro": "Morning startup checklist. Check weather and tide on apps first. Communicate with crew if you need to get gas so they can adjust.",
   "sections": [
     {

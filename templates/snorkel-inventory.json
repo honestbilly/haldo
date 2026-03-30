@@ -10,6 +10,7 @@
   "source": "KB: squid-on-board-binder / §1.1 COI Boats Snorkel Inventory",
   "estimated_minutes": 10,
   "priority": 90,
+  "display_order": 60,
   "intro": "Check all snorkel gear. Replenish from office or foredeck if below minimum. Order more when office runs low.",
   "sections": [
     {

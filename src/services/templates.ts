@@ -110,8 +110,11 @@ export function getTemplatesForContext(
 
   const filtered = candidates.filter(t => !superseded.has(t.id));
 
-  // Step 3: Sort by priority (higher first), then by name
+  // Step 3: Sort by display_order (lower first), then by priority (higher first), then by name
   return filtered.sort((a, b) => {
+    const da = (a as any).display_order ?? 999;
+    const db = (b as any).display_order ?? 999;
+    if (da !== db) return da - db;
     const pa = (a.type === 'checklist' ? (a as ChecklistTemplate).priority : 0) ?? 0;
     const pb = (b.type === 'checklist' ? (b as ChecklistTemplate).priority : 0) ?? 0;
     if (pb !== pa) return pb - pa;

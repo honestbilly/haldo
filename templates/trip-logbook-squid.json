@@ -9,6 +9,7 @@
   "source": "KB: squid-on-board-binder / SFR Spec — Trip Logbook",
   "estimated_minutes": 5,
   "priority": 50,
+  "display_order": 30,
   "captain_steps": [1, 2, 3, 4, 5, 6, 7],
   "mate_steps": [],
   "steps": [

@@ -9,6 +9,7 @@
   "source": "KB: squid-on-board-binder / §4 Captain Boat Checklist — BETWEEN TRIPS",
   "estimated_minutes": 10,
   "priority": 40,
+  "display_order": 20,
   "intro": "Quick reset between AM and PM trips. Get the boat ready for the afternoon guests.",
   "sections": [
     {

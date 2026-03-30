@@ -84,6 +84,7 @@ export interface ChecklistTemplate {
   trigger_day?: string;
   trigger_dates?: string[];
   priority?: number;
+  display_order?: number;
   supersedes?: string[];
   version: string;
   source: string;
@@ -101,6 +102,7 @@ export interface LogbookTemplate {
   vessel: string;
   role: string;
   recurrence: 'per-trip';
+  display_order?: number;
   version: string;
   source: string;
   estimated_minutes?: number;

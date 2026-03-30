@@ -11,6 +11,7 @@
   "source": "KB: squid-on-board-binder / §6-7 Captain & Mate Monthly Maintenance + Engine Hour Thresholds",
   "estimated_minutes": 30,
   "priority": 80,
+  "display_order": 70,
   "intro": "First Sunday of the month. This checklist supersedes the normal daily maintenance tasks for both captain and mate. Complete all items below.",
   "sections": [
     {
