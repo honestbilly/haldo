@@ -70,7 +70,20 @@ export async function initDatabase(): Promise<void> {
         created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
       );
 
+      CREATE TABLE IF NOT EXISTS handoff_notes (
+        id TEXT PRIMARY KEY,
+        vessel TEXT NOT NULL,
+        crew_id TEXT NOT NULL REFERENCES crew(id),
+        crew_name TEXT NOT NULL,
+        role TEXT NOT NULL,
+        note TEXT NOT NULL,
+        resolved BOOLEAN NOT NULL DEFAULT FALSE,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
+
       -- Indexes for common queries
+      CREATE INDEX IF NOT EXISTS idx_handoff_notes_vessel ON handoff_notes(vessel, resolved);
       CREATE INDEX IF NOT EXISTS idx_completions_vessel ON completions(vessel);
       CREATE INDEX IF NOT EXISTS idx_completions_crew_id ON completions(crew_id);
       CREATE INDEX IF NOT EXISTS idx_completions_trip_date ON completions(trip_date);

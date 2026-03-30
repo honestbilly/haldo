@@ -55,7 +55,14 @@ app.get('/today', async (c) => {
     completedMap.get(key)!.push({ trip_slot: row.trip_slot, completed_at: row.completed_at });
   }
 
-  return c.html(renderTodayList(session, templates, onDemand, completedMap));
+  // Count active handoff notes for this vessel
+  const handoffResult = await pool.query(
+    'SELECT COUNT(*) FROM handoff_notes WHERE vessel = $1 AND resolved = FALSE',
+    [session.vessel]
+  );
+  const handoffCount = parseInt(handoffResult.rows[0].count);
+
+  return c.html(renderTodayList(session, templates, onDemand, completedMap, handoffCount));
 });
 
 // Render a checklist or logbook form
@@ -148,7 +155,8 @@ function renderTodayList(
   session: any,
   templates: Template[],
   onDemand: Template[],
-  completedMap: Map<string, any[]>
+  completedMap: Map<string, any[]>,
+  handoffCount: number = 0
 ): string {
   const renderCard = (t: Template) => {
     const comps = completedMap.get(t.id) || [];
@@ -204,11 +212,21 @@ function renderTodayList(
       <h1>${session.crew_name} — ${session.vessel.toUpperCase()}</h1>
       <p>${session.trip_slot} Trip | ${(() => { const [y,m,d] = session.trip_date.split('-').map(Number); return new Date(y, m-1, d).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }); })()}</p>
     </header>
+    ${handoffCount > 0 ? `
+    <a href="/handoff" class="handoff-banner">
+      <span class="handoff-icon">📝</span>
+      <span>${handoffCount} handoff note${handoffCount > 1 ? 's' : ''} from crew</span>
+      <span class="handoff-arrow">→</span>
+    </a>` : ''}
+
     <div class="today-list">
       ${items || '<p class="empty-state">No checklists scheduled for today.</p>'}
     </div>
     ${onDemandHtml}
-    <a href="/logout" class="switch-link">Switch crew member</a>
+    <div class="today-actions">
+      <a href="/handoff" class="action-link">Handoff Notes</a>
+      <a href="/logout" class="switch-link">Switch crew member</a>
+    </div>
   </div>
 </body>
 </html>`;
@@ -252,40 +270,69 @@ function renderItemHtml(item: Item, prefix: string = 'item_'): string {
   let infoHtml = item.info ? `<p class="item-info">${item.info}</p>` : '';
   let requiredMark = item.required ? '<span class="required-mark">*</span>' : '';
 
+  // Inline note (+) button — crew can add a note/flag on any item
+  const noteHtml = `
+    <button type="button" class="inline-note-toggle" onclick="toggleInlineNote(this)" title="Add a note">+</button>
+    <div class="inline-note-box">
+      <textarea name="note_${item.id}" class="inline-note-input" placeholder="Add a note about this item..."></textarea>
+      <div class="inline-note-photo">
+        <label class="photo-btn photo-btn-sm"><span>📷</span><input type="file" accept="image/*" capture="environment" name="note_photo_${item.id}" style="display:none"></label>
+      </div>
+    </div>`;
+
   const requiresAttr = item.requires ? `data-requires="${item.requires}" style="display:none"` : '';
 
   switch (item.type) {
     case 'checkbox':
       return `
         <div class="form-item item-checkbox" ${requiresAttr}>
-          <label class="checkbox-label">
-            <input type="checkbox" name="${prefix}${item.id}" value="true" class="checkbox-input"
-              onchange="handleCheckboxChange(this)" data-item-id="${item.id}">
-            <span class="checkbox-custom"></span>
-            <span class="checkbox-text">${item.label}${requiredMark}</span>
-          </label>
-          ${helpHtml}${sopHtml}${infoHtml}${mediaHtml}
+          <div class="item-label-row">
+            <label class="checkbox-label">
+              <input type="checkbox" name="${prefix}${item.id}" value="true" class="checkbox-input"
+                onchange="handleCheckboxChange(this)" data-item-id="${item.id}">
+              <span class="checkbox-custom"></span>
+              <span class="checkbox-text">${item.label}${requiredMark}</span>
+            </label>
+            ${helpHtml}${noteHtml}
+          </div>
+          ${sopHtml}${infoHtml}${mediaHtml}
         </div>`;
 
     case 'number':
       const colorClass = item.min !== undefined ? 'has-threshold' : '';
+      // Large-value items (engine hours, guest counts) get direct input only.
+      // Small-range items (merch qty, etc.) keep stepper buttons.
+      const isLargeValue = (item.min !== undefined && item.min >= 100) ||
+        (item.max !== undefined && item.max >= 100) ||
+        item.id.includes('engine-hours') || item.id.includes('guests') ||
+        item.id.includes('passengers') || item.id.includes('fuel');
+
+      const stepperHtml = isLargeValue
+        ? `<div class="direct-input-wrap">
+            <input type="number" inputmode="numeric" pattern="[0-9]*" name="${prefix}${item.id}"
+              class="stepper-input direct-number" value="" placeholder="Enter value"
+              data-item-id="${item.id}">
+            ${item.unit ? `<span class="stepper-unit">${item.unit}</span>` : ''}
+          </div>`
+        : `<div class="stepper">
+            <button type="button" class="stepper-btn minus" onclick="step(this, -1)">−</button>
+            <div class="stepper-value-wrap">
+              <input type="number" inputmode="numeric" pattern="[0-9]*" name="${prefix}${item.id}"
+                class="stepper-input" value="" placeholder="—" data-item-id="${item.id}">
+              ${item.unit ? `<span class="stepper-unit">${item.unit}</span>` : ''}
+            </div>
+            <button type="button" class="stepper-btn plus" onclick="step(this, 1)">+</button>
+          </div>`;
+
       return `
         <div class="form-item item-number ${colorClass}" ${requiresAttr}
           data-min="${item.min ?? ''}" data-max="${item.max ?? ''}">
           <div class="item-label-row">
             <span class="item-label">${item.label}${requiredMark}</span>
-            ${helpHtml}
+            ${helpHtml}${noteHtml}
           </div>
           ${mediaHtml}
-          <div class="stepper">
-            <button type="button" class="stepper-btn minus" onclick="step(this, -1)">−</button>
-            <div class="stepper-value-wrap">
-              <input type="number" name="${prefix}${item.id}" class="stepper-input" value=""
-                placeholder="—" data-item-id="${item.id}">
-              ${item.unit ? `<span class="stepper-unit">${item.unit}</span>` : ''}
-            </div>
-            <button type="button" class="stepper-btn plus" onclick="step(this, 1)">+</button>
-          </div>
+          ${stepperHtml}
           ${item.min !== undefined ? `<p class="threshold-info">Min: ${item.min}${item.max !== undefined ? ` | Max: ${item.max}` : ''} ${item.unit || ''}</p>` : ''}
           <div class="expand-on-fail" style="display:none">
             <input type="text" name="fail_note_${item.id}" placeholder="What's the issue?" class="fail-note">
@@ -302,7 +349,7 @@ function renderItemHtml(item: Item, prefix: string = 'item_'): string {
         <div class="form-item item-select" ${requiresAttr}>
           <div class="item-label-row">
             <span class="item-label">${item.label}${requiredMark}</span>
-            ${helpHtml}
+            ${helpHtml}${noteHtml}
           </div>
           ${mediaHtml}
           <div class="option-group">${optButtons}</div>
@@ -365,6 +412,12 @@ function renderItemHtml(item: Item, prefix: string = 'item_'): string {
 function renderChecklist(session: any, template: ChecklistTemplate): string {
   const totalItems = template.sections.reduce((sum, s) => sum + s.items.length, 0);
 
+  // Day-of-week detection for DMT templates
+  const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  const today = new Date(session.trip_date || new Date().toISOString().split('T')[0]);
+  const todayDay = dayNames[today.getDay()];
+  const isDMT = template.id.startsWith('daily-maintenance');
+
   const sectionsHtml = template.sections.map(section => {
     const sectionMedia = (section.description_media || []).map(m => {
       if (m.type === 'image') return `<img src="${m.url}" alt="${m.alt || ''}" class="section-ref-image">`;
@@ -373,10 +426,19 @@ function renderChecklist(session: any, template: ChecklistTemplate): string {
 
     const itemsHtml = section.items.map(item => renderItemHtml(item)).join('');
 
+    // For DMT: detect if this section matches today's day
+    const sectionDay = isDMT ? dayNames.find(d => section.title.toLowerCase().startsWith(d.toLowerCase())) : null;
+    const isToday = isDMT && sectionDay === todayDay;
+    const isOtherDay = isDMT && sectionDay && sectionDay !== todayDay;
+
+    const todayBadge = isToday ? '<span class="today-badge">TODAY</span>' : '';
+    const collapsedClass = isOtherDay ? ' collapsed' : '';
+    const todayClass = isToday ? ' section-today' : '';
+
     return `
-      <div class="checklist-section">
+      <div class="checklist-section${collapsedClass}${todayClass}">
         <div class="section-header" onclick="this.parentElement.classList.toggle('collapsed')">
-          <h3>${section.title} <span class="section-count" data-section></span></h3>
+          <h3>${section.title} ${todayBadge}<span class="section-count" data-section></span></h3>
           <span class="collapse-icon">▼</span>
         </div>
         ${section.description ? `<p class="section-desc">${section.description}</p>` : ''}
@@ -413,7 +475,14 @@ function renderChecklist(session: any, template: ChecklistTemplate): string {
       <p class="progress-text" id="progress-text">0 / ${totalItems} items</p>
     </header>
 
-    ${template.intro ? `<div class="intro-callout">${template.intro}</div>` : ''}
+    ${isDMT ? (() => {
+      const todaySection = template.sections.find(s => s.title.toLowerCase().startsWith(todayDay.toLowerCase()));
+      const taskName = todaySection ? todaySection.title.replace(/^\\w+\\s*—\\s*/, '') : 'Check your task below';
+      return `<div class="intro-callout dmt-intro">
+        <strong>Today is ${todayDay}</strong> — your task: <strong>${taskName}</strong>
+        <br><small>Other days shown collapsed below for reference.</small>
+      </div>`;
+    })() : (template.intro ? `<div class="intro-callout">${template.intro}</div>` : '')}
     ${introMedia}
 
     <form action="/c/${template.id}" method="POST" id="checklist-form">
@@ -424,6 +493,13 @@ function renderChecklist(session: any, template: ChecklistTemplate): string {
           <label>${template.completion.notes_prompt || 'Notes'}</label>
           <textarea name="notes" class="notes-textarea" placeholder="Any notes..."></textarea>
         </div>` : ''}
+
+      <div class="review-section">
+        <button type="button" class="review-toggle" onclick="toggleReviewSummary()">
+          Review your entries before submitting
+        </button>
+        <div id="review-summary" class="review-summary" style="display:none"></div>
+      </div>
 
       ${template.completion.sign_off ? `
         <label class="sign-off">

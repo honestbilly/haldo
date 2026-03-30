@@ -178,55 +178,56 @@
     },
     {
       "step": 7,
-      "title": "Merch for Non-Profit Sold",
+      "title": "Merchandise & Fundraising",
+      "prompt": "Merch for Non-Profit Sold:",
       "items": [
         {
-          "id": "merch-any-sold",
-          "label": "Any merch sold this trip?",
+          "id": "merch-sold",
+          "label": "Any merchandise sold today?",
           "type": "select",
-          "options": ["Yes — items sold", "No funds raised for local kids today"]
+          "options": ["Yes", "No funds raised for local kids today"]
         },
         {
-          "id": "merch-hats",
-          "label": "Hats",
+          "id": "merch-hat",
+          "label": "Hats sold",
           "type": "number",
           "unit": "qty",
-          "requires": "merch-any-sold"
+          "requires": "merch-sold"
         },
         {
-          "id": "merch-tshirts",
-          "label": "T-Shirts",
+          "id": "merch-tshirt",
+          "label": "T-Shirts sold",
           "type": "number",
           "unit": "qty",
-          "requires": "merch-any-sold"
+          "requires": "merch-sold"
         },
         {
-          "id": "merch-sunshirts",
-          "label": "Sun Shirts",
+          "id": "merch-sunshirt",
+          "label": "Sun Shirts sold",
           "type": "number",
           "unit": "qty",
-          "requires": "merch-any-sold"
+          "requires": "merch-sold"
         },
         {
-          "id": "merch-sweatshirts",
-          "label": "Sweat Shirts",
+          "id": "merch-sweatshirt",
+          "label": "Sweatshirts sold",
           "type": "number",
           "unit": "qty",
-          "requires": "merch-any-sold"
+          "requires": "merch-sold"
         },
         {
           "id": "merch-payment",
-          "label": "How was payment collected?",
-          "type": "select",
-          "options": ["Cash", "Card", "Venmo/Zelle", "Mixed"],
-          "requires": "merch-any-sold"
+          "label": "How were items paid for?",
+          "type": "multi_select",
+          "options": ["Cash", "Card", "Venmo", "Zelle"],
+          "requires": "merch-sold"
         },
         {
           "id": "merch-notes",
           "label": "Merch notes",
           "type": "text",
-          "placeholder": "Any notes about the sale...",
-          "requires": "merch-any-sold"
+          "info": "Any issues, special requests, or inventory concerns",
+          "requires": "merch-sold"
         }
       ]
     }

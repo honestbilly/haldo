@@ -53,6 +53,18 @@ function showExpandOnFail(item, show) {
   }
 }
 
+// --- Inline notes (+) toggle ---
+function toggleInlineNote(btn) {
+  const noteBox = btn.nextElementSibling;
+  if (noteBox) {
+    noteBox.classList.toggle('expanded');
+    if (noteBox.classList.contains('expanded')) {
+      btn.classList.add('has-note');
+      noteBox.querySelector('textarea')?.focus();
+    }
+  }
+}
+
 // --- Select option buttons ---
 function selectOption(btn, inputName) {
   const group = btn.closest('.option-group');
@@ -216,6 +228,18 @@ function buildReviewSummary(container) {
 
   html += '</div>';
   container.innerHTML = html;
+}
+
+// --- Review summary toggle (for checklists) ---
+function toggleReviewSummary() {
+  const el = document.getElementById('review-summary');
+  if (!el) return;
+  if (el.style.display === 'none') {
+    buildReviewSummary(el);
+    el.style.display = 'block';
+  } else {
+    el.style.display = 'none';
+  }
 }
 
 // --- Photo preview ---

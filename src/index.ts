@@ -8,6 +8,7 @@ import sessionRoutes from './routes/session.js';
 import formRoutes from './routes/forms.js';
 import reportRoutes from './routes/reports.js';
 import apiRoutes from './routes/api.js';
+import handoffRoutes from './routes/handoff.js';
 
 const app = new Hono();
 
@@ -25,6 +26,7 @@ app.route('/', sessionRoutes);
 app.route('/', formRoutes);
 app.route('/', reportRoutes);
 app.route('/api', apiRoutes);
+app.route('/handoff', handoffRoutes);
 
 // Startup
 async function start() {
