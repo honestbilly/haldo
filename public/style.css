@@ -5,19 +5,25 @@
    ============================================================ */
 
 :root {
-  --primary: #168E6E;
+  /* Stitch-generated palette — Material Design 3 tonal system */
+  --primary: #006950;
+  --primary-container: #008565;
   --primary-light: #99E7D9;
   --secondary: #70D0EB;
   --accent: #F36D4F;
+  --tertiary: #884b3a;
   --warning: #F59E0B;
-  --success: #168E6E;
+  --success: #006950;
   --danger: #F36D4F;
-  --danger-dark: #DC2626;
-  --bg: #F8F9FA;
-  --surface: #FFFFFF;
+  --danger-dark: #ba1a1a;
+  --bg: #e5fff8;              /* Stitch surface — mint-tinted background */
+  --surface: #FFFFFF;          /* Cards sit on the tinted bg */
+  --surface-container: #d9f5ed;
   --text: #1a1c1c;
-  --text-muted: #6B7280;
-  --border: #E5E7EB;
+  --text-muted: #6e7a74;
+  --outline: #6e7a74;
+  --outline-variant: #bdc9c2;
+  --border: #bdc9c2;
   --radius: 8px;
   --radius-lg: 12px;
   --font-heading: 'Manrope', -apple-system, sans-serif;
@@ -279,13 +285,14 @@ body {
 }
 
 .intro-callout {
-  background: rgba(153, 231, 217, 0.1);
+  background: var(--surface);
   border-radius: var(--radius);
-  padding: 12px 16px;
-  font-size: 0.875rem;
+  padding: 16px;
+  font-size: 0.8125rem;
   color: var(--text);
   margin-bottom: 16px;
   line-height: 1.5;
+  border-left: 3px solid var(--primary);
 }
 
 /* Sections */
@@ -302,9 +309,11 @@ body {
 
 .section-header h3 {
   font-family: var(--font-heading);
-  font-size: 0.9375rem;
+  font-size: 0.75rem;
   font-weight: 600;
   color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 .collapse-icon {
@@ -316,10 +325,12 @@ body {
 .collapsed .section-items { display: none; }
 .collapsed .collapse-icon { transform: rotate(-90deg); }
 
-/* Form items */
+/* Form items — white cards on mint background (Stitch tonal layering) */
 .form-item {
-  padding: 16px 0;
-  border-bottom: 1px solid rgba(0,0,0,0.05);
+  padding: 16px;
+  margin-bottom: 8px;
+  background: var(--surface);
+  border-radius: var(--radius);
 }
 
 .item-label-row {
@@ -338,12 +349,11 @@ body {
 
 .required-mark { color: var(--danger); margin-left: 2px; }
 
-/* Stepper */
+/* Stepper — Stitch layout: buttons + value circle on left, threshold info on right */
 .stepper {
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 16px;
+  gap: 12px;
   margin: 8px 0;
 }
 
@@ -398,9 +408,10 @@ body {
 .stepper-input.threshold-bad { border-color: var(--danger); color: var(--danger); }
 
 .threshold-info {
-  text-align: center;
-  font-size: 0.75rem;
+  font-size: 0.6875rem;
   color: var(--text-muted);
+  line-height: 1.3;
+  margin-left: auto;
 }
 
 /* Expand-on-fail */
