@@ -8,6 +8,7 @@
   "version": "2026-03-30",
   "source": "KB: squid-on-board-binder / §7 Mate SQUID Daily and Monthly Maintenance — Mate's DMT",
   "estimated_minutes": 15,
+  "priority": 80,
   "intro": "One task per day, about 15 minutes. Check today's day and complete the matching task. Tuesday snorkel repair may take longer — clock in for dock time if needed.",
   "sections": [
     {

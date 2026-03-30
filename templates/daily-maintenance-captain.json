@@ -8,6 +8,7 @@
   "version": "2026-03-30",
   "source": "KB: squid-on-board-binder / §6 Captain SQUID Daily and Monthly Maintenance — Captain's DMT",
   "estimated_minutes": 15,
+  "priority": 80,
   "intro": "One task per day, about 15 minutes. Check today's day and complete the matching task. These daily tasks keep the boat safe and in top condition.",
   "sections": [
     {
