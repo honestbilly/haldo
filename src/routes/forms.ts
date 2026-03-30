@@ -404,7 +404,7 @@ function renderChecklist(session: any, template: ChecklistTemplate): string {
       ${template.completion.sign_off ? `
         <label class="sign-off">
           <input type="checkbox" name="sign_off">
-          <span>I confirm this is accurate</span>
+          <span>I, ${session.role === 'captain' ? 'Captain' : 'Mate'} ${session.crew_name}, confirm this is accurate</span>
         </label>` : ''}
 
       <button type="submit" class="submit-btn" id="submit-btn">
@@ -470,7 +470,7 @@ function renderLogbook(session: any, template: LogbookTemplate): string {
           <p>Review your entries, then submit.</p>
           <label class="sign-off">
             <input type="checkbox" name="sign_off">
-            <span>I confirm this is accurate</span>
+            <span>I, ${session.role === 'captain' ? 'Captain' : 'Mate'} ${session.crew_name}, confirm this is accurate</span>
           </label>
         </div>` : ''}
 
