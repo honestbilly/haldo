@@ -180,13 +180,18 @@ app.get('/report/crew', async (c) => {
       : '<span style="font-size:0.6875rem;background:rgba(186,26,26,0.1);color:#ba1a1a;padding:2px 6px;border-radius:4px">Inactive</span>';
 
     const tokenSection = cr.token
-      ? `<div style="margin-top:6px">
-          <div style="font-size:0.6875rem;color:#6e7a74;margin-bottom:2px">Login link:</div>
-          <input type="text" value="${appUrl}/login/${cr.token}" readonly onclick="this.select();navigator.clipboard.writeText(this.value)" style="width:100%;padding:6px 8px;border:1px solid #bdc9c2;border-radius:6px;font-family:monospace;font-size:0.75rem;background:#f9fafb;cursor:pointer" title="Click to copy">
-          <div style="font-size:0.625rem;color:#6e7a74;margin-top:2px">${cr.last_used_at ? 'Last used: ' + new Date(cr.last_used_at).toLocaleDateString() : 'Never used'}</div>
+      ? `<div style="margin-top:8px">
+          <div style="font-size:0.6875rem;color:#8E8E93;margin-bottom:4px">Login link (tap to copy):</div>
+          <input type="text" value="${appUrl}/login/${cr.token}" readonly onclick="this.select();navigator.clipboard.writeText(this.value)" style="width:100%;padding:8px 10px;border:1px solid #E5E5EA;border-radius:8px;font-family:monospace;font-size:0.75rem;background:#F2F2F7;cursor:pointer" title="Click to copy">
+          <div style="font-size:0.625rem;color:#8E8E93;margin-top:4px">${cr.last_used_at ? 'Last used: ' + new Date(cr.last_used_at).toLocaleDateString() : 'Never used'}</div>
         </div>`
-      : `<form action="/report/crew/${cr.id}/generate-token" method="POST" style="margin-top:6px">
-          <button type="submit" style="padding:6px 12px;background:#1A6B8A;color:white;border:none;border-radius:6px;font-size:0.75rem;cursor:pointer;min-height:36px">Generate Login Link</button>
+      : `<form action="/report/crew/${cr.id}/generate-token" method="POST" style="margin-top:8px;display:flex;gap:8px;align-items:center">
+          <select name="auth_role" style="height:36px;border:1px solid #E5E5EA;border-radius:8px;padding:0 10px;font-size:0.75rem;background:white;color:#1a1c1e;-webkit-appearance:none">
+            <option value="crew">Crew</option>
+            <option value="manager">Manager</option>
+            <option value="admin">Admin</option>
+          </select>
+          <button type="submit" style="padding:8px 14px;background:#1A6B8A;color:white;border:none;border-radius:8px;font-size:0.75rem;font-weight:600;cursor:pointer;min-height:36px">Generate Login Link</button>
         </form>`;
 
     const highlight = generated === cr.id ? 'border:2px solid #1A6B8A;' : '';
@@ -270,10 +275,15 @@ app.post('/report/crew/create', async (c) => {
   return c.redirect(`/report/crew?created=1&generated=${crewId}`);
 });
 
-// Generate token for a crew member
+// Generate token for a crew member (with role selection)
 app.post('/report/crew/:crewId/generate-token', async (c) => {
   const crewId = c.req.param('crewId');
-  await generateToken(crewId, 'crew');
+  const body = await c.req.parseBody();
+  const authRole = String(body.auth_role || 'crew');
+  // Only allow valid roles
+  const validRoles = ['crew', 'manager', 'admin'];
+  const role = validRoles.includes(authRole) ? authRole : 'crew';
+  await generateToken(crewId, role);
   return c.redirect(`/report/crew?generated=${crewId}`);
 });
 
