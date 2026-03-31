@@ -10,10 +10,10 @@
 export function bottomNav(active: string, isManager: boolean = false): string {
   const tabs = [
     { id: 'home', label: 'Home', icon: '🏠', href: '/today' },
+    { id: 'tasks', label: 'Tasks', icon: '🔧', href: '/tasks/queue' },
     { id: 'weather', label: 'Weather', icon: '🌤️', href: '/weather' },
     { id: 'submit', label: 'Note', icon: '📝', href: '/submit' },
-    { id: 'more', label: 'More', icon: '⚙️', href: '/more' },
-    { id: 'mgmt', label: 'MGMT', icon: '📊', href: '/report' },
+    { id: 'more', label: 'More', icon: '•••', href: '/more' },
   ];
 
   const tabsHtml = tabs.map(t => {
