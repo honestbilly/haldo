@@ -5,7 +5,9 @@ import { serveStatic } from '@hono/node-server/serve-static';
 import { initDatabase } from './db.js';
 import { loadTemplates } from './services/templates.js';
 import sessionRoutes from './routes/session.js';
-import formRoutes from './routes/forms.js';
+import logRoutes from './routes/log.js';
+import todayRoutes from './routes/today.js';
+import checklistRoutes from './routes/checklist.js';
 import reportRoutes from './routes/reports.js';
 import apiRoutes from './routes/api.js';
 import handoffRoutes from './routes/handoff.js';
@@ -26,7 +28,9 @@ app.get('/health', (c) => {
 
 // Mount routes
 app.route('/', sessionRoutes);
-app.route('/', formRoutes);
+app.route('/', logRoutes);
+app.route('/', todayRoutes);
+app.route('/', checklistRoutes);
 app.route('/', reportRoutes);
 app.route('/api', apiRoutes);
 app.route('/handoff', handoffRoutes);

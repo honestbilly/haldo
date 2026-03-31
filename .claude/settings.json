@@ -1,0 +1,16 @@
+{
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "OVER=$(find src public -name '*.ts' -o -name '*.js' 2>/dev/null | while read f; do lines=$(wc -l < \"$f\" 2>/dev/null | tr -d ' '); if [ \"$lines\" -gt 500 ]; then echo \"  $f ($lines lines)\"; fi; done) && if [ -n \"$OVER\" ]; then printf '{\"systemMessage\":\"⚠️ FILES OVER 500 LINES — refactor before next commit:\\n%s\"}' \"$OVER\"; fi",
+            "timeout": 10,
+            "statusMessage": "Checking file sizes..."
+          }
+        ]
+      }
+    ]
+  }
+}
