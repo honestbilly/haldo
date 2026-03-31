@@ -289,7 +289,7 @@ export function reportLayout(activeTab: string, content: string): string {
 
   const navTab = (label: string, href: string, tabName: string) => {
     const isActive = activeTab === tabName;
-    return `<a href="${href}" style="padding:8px 0;text-decoration:none;font-weight:${isActive ? '700' : '500'};font-size:0.875rem;margin-bottom:-2px;${isActive ? 'color:#1A6B8A;border-bottom:2px solid #1A6B8A' : 'color:#8E8E93;border-bottom:2px solid transparent'};transition:color 0.15s">${label}</a>`;
+    return `<a href="${href}" style="display:flex;align-items:center;height:44px;padding:0 16px;text-decoration:none;font-weight:${isActive ? '700' : '500'};font-size:0.8125rem;color:${isActive ? '#1A6B8A' : '#8E8E93'};border-bottom:2px solid ${isActive ? '#1A6B8A' : 'transparent'};transition:color 0.15s;white-space:nowrap">${label}</a>`;
   };
 
   return `<!DOCTYPE html>
@@ -297,15 +297,15 @@ export function reportLayout(activeTab: string, content: string): string {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${activeTab} &mdash; Haldo</title>
+  <title>${activeTab} &mdash; Haldo Manager</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       font-family: 'Inter', -apple-system, sans-serif;
-      background: #F2F2F7;
+      background: #F8F9FA;
       color: #1a1c1e;
       line-height: 1.5;
       -webkit-font-smoothing: antialiased;
@@ -315,35 +315,43 @@ export function reportLayout(activeTab: string, content: string): string {
       vertical-align: middle;
     }
     a { color: inherit; }
-    .report-page { max-width: 960px; margin: 0 auto; padding: 32px; }
-    @media (max-width: 640px) { .report-page { padding: 16px; } }
+    .report-page { max-width: 1024px; margin: 0 auto; padding: 0 32px 48px; }
+    @media (max-width: 768px) { .report-page { padding: 0 16px 32px; } }
+
+    /* Stitch table hover */
+    .log-row:hover { background: #F2F4F7; }
+    .task-card:hover { box-shadow: 0 8px 20px rgba(0,0,0,0.06); }
   </style>
 </head>
 <body>
-  <div class="report-page">
-    <!-- Header (Stitch pattern) -->
-    <header style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;padding-bottom:16px;border-bottom:0">
-      <div style="display:flex;align-items:center;gap:16px">
-        <a href="/today" style="text-decoration:none;color:#1A6B8A;font-size:0.875rem;font-weight:600;display:flex;align-items:center;gap:4px">
-          <span class="material-symbols-outlined" style="font-size:18px">arrow_back</span> Home
-        </a>
-        <h1 style="font-family:'Manrope',-apple-system,sans-serif;font-size:1.5rem;font-weight:800;color:#1A6B8A;letter-spacing:-0.02em">Haldo</h1>
+  <!-- Sticky Header (Stitch pattern: clean bar with nav) -->
+  <header style="position:sticky;top:0;z-index:50;background:rgba(248,249,250,0.9);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-bottom:1px solid #E5E5EA">
+    <div style="max-width:1024px;margin:0 auto;padding:0 32px">
+      <div style="display:flex;justify-content:space-between;align-items:center;height:64px">
+        <div style="display:flex;align-items:center;gap:24px">
+          <a href="/today" style="text-decoration:none;color:#1A6B8A;font-size:0.8125rem;font-weight:600;display:flex;align-items:center;gap:4px">
+            <span class="material-symbols-outlined" style="font-size:16px">arrow_back</span> Crew App
+          </a>
+          <h1 style="font-family:'Manrope',-apple-system,sans-serif;font-size:1.25rem;font-weight:800;color:#1A6B8A;letter-spacing:-0.02em">Haldo Manager</h1>
+        </div>
+        <div style="display:flex;align-items:center;gap:16px">
+          <span style="font-size:0.6875rem;font-weight:500;color:#8E8E93;text-transform:uppercase;letter-spacing:0.15em">${today}</span>
+          <div style="width:32px;height:32px;border-radius:50%;background:#1A6B8A;display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:0.75rem;border:2px solid rgba(26,107,138,0.2)">M</div>
+        </div>
       </div>
-      <div style="display:flex;align-items:center;gap:12px">
-        <span style="font-size:0.75rem;font-weight:500;color:#8E8E93;text-transform:uppercase;letter-spacing:0.1em">${today}</span>
-        <div style="width:32px;height:32px;border-radius:50%;background:#1A6B8A;display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:0.8125rem">M</div>
-      </div>
-    </header>
 
-    <!-- Navigation -->
-    <nav style="display:flex;gap:24px;margin-bottom:32px;border-bottom:2px solid #E5E5EA;padding-bottom:0">
-      ${navTab('Today', '/report', 'Today')}
-      ${navTab('History', '/report/history', 'History')}
-      ${navTab('Templates', '/report/templates', 'Templates')}
-      ${navTab('Crew', '/report/crew', 'Crew')}
-      ${navTab('Tasks', '/report/tasks', 'Tasks')}
-    </nav>
+      <!-- Navigation Tabs -->
+      <nav style="display:flex;gap:0;height:44px;overflow-x:auto;-webkit-overflow-scrolling:touch">
+        ${navTab('Today', '/report', 'Today')}
+        ${navTab('History', '/report/history', 'History')}
+        ${navTab('Templates', '/report/templates', 'Templates')}
+        ${navTab('Crew', '/report/crew', 'Crew')}
+        ${navTab('Tasks', '/report/tasks', 'Tasks')}
+      </nav>
+    </div>
+  </header>
 
+  <div class="report-page" style="padding-top:32px">
     ${content}
   </div>
   <script>
