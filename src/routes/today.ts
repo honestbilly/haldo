@@ -41,12 +41,15 @@ app.get('/today', async (c) => {
     completedMap.get(key)!.push({ trip_slot: row.trip_slot, completed_at: row.completed_at });
   }
 
-  // Count active handoff notes for this vessel
+  // Fetch active handoff notes for this vessel (full content, not just count)
   const handoffResult = await pool.query(
-    'SELECT COUNT(*) FROM handoff_notes WHERE vessel = $1 AND resolved = FALSE',
+    `SELECT h.*, c.name as crew_display_name FROM handoff_notes h
+     LEFT JOIN crew c ON h.crew_id = c.id
+     WHERE h.vessel = $1 AND h.resolved = FALSE
+     ORDER BY h.created_at DESC`,
     [session.vessel]
   );
-  const handoffCount = parseInt(handoffResult.rows[0].count);
+  const handoffNotes = handoffResult.rows;
 
   // Get the other role's checklist status for today (captain sees deckhand, deckhand sees captain)
   const otherRole = session.role === 'captain' ? 'deckhand' : 'captain';
@@ -68,23 +71,33 @@ app.get('/today', async (c) => {
     role_label: otherRoleLabel,
   }));
 
-  // Get maintenance tasks for this vessel (active, not snoozed/completed/cancelled)
+  // Get maintenance tasks ASSIGNED TO this crew member (not unassigned — those go in the queue)
   const tasksResult = await pool.query(
     `SELECT t.*, ca.name as assignee_name
      FROM assigned_tasks t
      LEFT JOIN crew ca ON t.assigned_to = ca.id
      WHERE (t.vessel = $1 OR t.vessel IS NULL)
        AND t.status NOT IN ('completed', 'cancelled', 'snoozed')
-       AND (t.assigned_to = $2 OR t.assigned_to IS NULL)
+       AND t.assigned_to = $2
      ORDER BY
        CASE t.priority WHEN 'urgent' THEN 0 WHEN 'high' THEN 1 WHEN 'medium' THEN 2 ELSE 3 END,
        t.due_date ASC NULLS LAST`,
     [session.vessel, session.crew_id]
   );
-  const maintenanceTasks = tasksResult.rows;
+  const myTasks = tasksResult.rows;
+
+  // Count available tasks in the queue (unassigned, for this vessel)
+  const queueResult = await pool.query(
+    `SELECT COUNT(*) FROM assigned_tasks
+     WHERE (vessel = $1 OR vessel IS NULL)
+       AND assigned_to IS NULL
+       AND status NOT IN ('completed', 'cancelled', 'snoozed')`,
+    [session.vessel]
+  );
+  const queueCount = parseInt(queueResult.rows[0].count);
 
   const weather = getWeatherSummary();
-  return c.html(renderTodayList(session, templates, onDemand, completedMap, handoffCount, crewmateStatus, weather, maintenanceTasks));
+  return c.html(renderTodayList(session, templates, onDemand, completedMap, handoffNotes, crewmateStatus, weather, myTasks, queueCount));
 });
 
 function renderWeatherCard(weather: any): string {
@@ -132,10 +145,11 @@ function renderTodayList(
   templates: Template[],
   onDemand: Template[],
   completedMap: Map<string, any[]>,
-  handoffCount: number = 0,
+  handoffNotes: any[] = [],
   crewmateStatus: { template_name: string; template_id: string; done: boolean; crew_name: string | null; role_label: string }[] = [],
   weather: any = null,
-  maintenanceTasks: any[] = []
+  myTasks: any[] = [],
+  queueCount: number = 0
 ): string {
   const renderCard = (t: Template, pinned: boolean = false) => {
     const comps = completedMap.get(t.id) || [];
@@ -213,29 +227,35 @@ function renderTodayList(
       </div>
     </div>` : '';
 
-  // Maintenance tasks (from assigned_tasks table)
-  const maintenanceHtml = maintenanceTasks.length > 0 ? `
+  // My assigned tasks (from assigned_tasks table — only tasks assigned to ME)
+  const myTasksHtml = myTasks.length > 0 ? `
     <div style="margin-top:16px;margin-bottom:16px">
       <h3 class="on-demand-header" style="cursor:default;display:flex;align-items:center;justify-content:space-between">
-        <span>Maintenance Tasks</span>
-        <span style="font-size:0.6875rem;background:rgba(112,208,235,0.15);color:#0C7DA0;padding:2px 8px;border-radius:10px">${maintenanceTasks.length}</span>
+        <span>My Tasks</span>
+        <span style="font-size:0.6875rem;background:rgba(112,208,235,0.15);color:#0C7DA0;padding:2px 8px;border-radius:10px">${myTasks.length}</span>
       </h3>
-      ${maintenanceTasks.map((t: any) => {
-        const isUnclaimed = !t.assigned_to;
+      ${myTasks.map((t: any) => {
         const priorityIcon = t.priority === 'urgent' ? '🔴 ' : t.priority === 'high' ? '⚠ ' : '';
         const statusColor = t.status === 'in-progress' ? 'var(--primary)' : t.status === 'blocked' ? '#F36D4F' : 'var(--text-muted)';
-        const statusLabel = t.status === 'in-progress' ? 'In Progress' : t.status === 'blocked' ? 'Blocked' : isUnclaimed ? 'Tap to claim' : 'In Queue';
+        const statusLabel = t.status === 'in-progress' ? 'In Progress' : t.status === 'blocked' ? 'Blocked' : 'To Do';
         const dueStr = t.due_date ? ` · Due ${new Date(t.due_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}` : '';
+        const estStr = t.estimated_minutes ? ` · ~${t.estimated_minutes}min` : '';
         return `
           <a href="/tasks/${t.id}" style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;background:var(--surface);border-radius:var(--radius);margin-bottom:6px;text-decoration:none;color:var(--text);border-left:4px solid ${t.status === 'blocked' ? '#F36D4F' : '#70D0EB'};min-height:48px">
             <div>
               <div style="font-weight:500;font-size:0.875rem">${priorityIcon}${t.title}</div>
-              <div style="font-size:0.6875rem;color:var(--text-muted)">${t.vessel ? t.vessel.toUpperCase() : 'Any'}${t.assignee_name ? ' · ' + t.assignee_name : ''}${dueStr}</div>
+              <div style="font-size:0.6875rem;color:var(--text-muted)">${t.vessel ? t.vessel.toUpperCase() : 'Any'}${dueStr}${estStr}</div>
             </div>
             <span style="font-size:0.75rem;color:${statusColor};font-weight:500;white-space:nowrap">${statusLabel}</span>
           </a>`;
       }).join('')}
     </div>` : '';
+
+  // Queue link (unassigned tasks crew can browse/claim)
+  const queueHtml = queueCount > 0 ? `
+    <a href="/tasks/queue" style="display:flex;align-items:center;justify-content:center;gap:8px;padding:10px 16px;background:var(--surface);border:1px dashed var(--border);border-radius:var(--radius);text-decoration:none;color:var(--text-muted);font-size:0.8125rem;font-weight:500;margin-bottom:16px;min-height:44px">
+      <span style="color:var(--primary)">${queueCount}</span> task${queueCount > 1 ? 's' : ''} available to pick up
+    </a>` : '';
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -262,12 +282,21 @@ function renderTodayList(
     </header>
     ${renderWeatherCard(weather)}
 
-    ${handoffCount > 0 ? `
-    <a href="/handoff" class="handoff-banner" style="display:flex;align-items:center;gap:10px;padding:12px 16px;background:#FFF8E1;border:1px solid #F59E0B;border-radius:var(--radius);text-decoration:none;color:#92400E;margin-bottom:12px;min-height:48px">
-      <span style="font-size:1.1rem">📝</span>
-      <span style="flex:1;font-weight:500;font-size:0.875rem">${handoffCount} handoff note${handoffCount > 1 ? 's' : ''} from crew</span>
-      <span style="color:#D97706">→</span>
-    </a>` : ''}
+    ${handoffNotes.length > 0 ? `
+    <div style="background:#FFF8E1;border:1px solid #F59E0B;border-radius:var(--radius);padding:12px 16px;margin-bottom:12px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <span style="font-weight:600;font-size:0.875rem;color:#92400E">📝 Handoff Notes</span>
+        <a href="/handoff" style="font-size:0.75rem;color:#D97706;text-decoration:none;font-weight:500">View all →</a>
+      </div>
+      ${handoffNotes.slice(0, 3).map((n: any) => {
+        const roleLabel = n.role === 'captain' ? 'Capt.' : 'DH';
+        const name = n.crew_display_name || n.crew_name;
+        return `<div style="padding:6px 0;border-top:1px solid rgba(245,158,11,0.2);font-size:0.8125rem;color:#78350F;line-height:1.4">
+          <span style="font-weight:600">${roleLabel} ${name}:</span> ${n.note}
+        </div>`;
+      }).join('')}
+      ${handoffNotes.length > 3 ? `<div style="font-size:0.75rem;color:#D97706;padding-top:4px">+${handoffNotes.length - 3} more</div>` : ''}
+    </div>` : ''}
 
     ${dmtHtml}
 
@@ -277,7 +306,8 @@ function renderTodayList(
 
     ${onDemandHtml}
 
-    ${maintenanceHtml}
+    ${myTasksHtml}
+    ${queueHtml}
 
     ${crewmateStatus.length > 0 ? `
     <div style="margin-top:16px;margin-bottom:16px">

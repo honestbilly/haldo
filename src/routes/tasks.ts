@@ -28,6 +28,58 @@ const STATUS_LABELS: Record<string, { label: string; color: string }> = {
   'completed': { label: 'Done', color: '#006950' },
 };
 
+// ─── Task Queue (browse/claim unassigned tasks) ─────────────
+
+app.get('/queue', async (c) => {
+  const session = c.get('session');
+  const result = await pool.query(
+    `SELECT t.* FROM assigned_tasks t
+     WHERE (t.vessel = $1 OR t.vessel IS NULL)
+       AND t.assigned_to IS NULL
+       AND t.status NOT IN ('completed', 'cancelled', 'snoozed')
+     ORDER BY
+       CASE t.priority WHEN 'urgent' THEN 0 WHEN 'high' THEN 1 WHEN 'medium' THEN 2 ELSE 3 END,
+       t.due_date ASC NULLS LAST`,
+    [session.vessel]
+  );
+  const tasks = result.rows;
+
+  const escHtml = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+  const taskCards = tasks.map((t: any) => {
+    const priorityIcon = t.priority === 'urgent' ? '🔴 ' : t.priority === 'high' ? '⚠ ' : '';
+    const dueStr = t.due_date ? `Due ${new Date(t.due_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}` : '';
+    const estStr = t.estimated_minutes ? `~${t.estimated_minutes}min` : '';
+    const meta = [t.vessel ? t.vessel.toUpperCase() : 'Any', dueStr, estStr].filter(Boolean).join(' · ');
+
+    return `
+      <a href="/tasks/${t.id}" style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;background:var(--surface);border-radius:var(--radius);margin-bottom:6px;text-decoration:none;color:var(--text);border-left:4px solid #70D0EB;min-height:48px">
+        <div>
+          <div style="font-weight:500;font-size:0.875rem">${priorityIcon}${escHtml(t.title)}</div>
+          ${meta ? `<div style="font-size:0.6875rem;color:var(--text-muted)">${meta}</div>` : ''}
+        </div>
+        <span style="font-size:0.75rem;color:var(--primary);font-weight:500">Claim →</span>
+      </a>`;
+  }).join('');
+
+  return c.html(`${htmlHead('Task Queue')}
+<body>
+  <div style="max-width:480px;margin:0 auto;padding:16px;padding-bottom:80px">
+    ${pageHeader('Available Tasks', session.vessel)}
+
+    <p style="font-size:0.8125rem;color:var(--text-muted);margin-bottom:16px">Tasks that need someone to pick them up. Tap to see details and claim.</p>
+
+    ${tasks.length === 0
+      ? '<p style="text-align:center;color:var(--text-muted);padding:40px 0">No tasks available right now.</p>'
+      : taskCards}
+
+    <a href="/today" style="display:block;text-align:center;padding:14px;margin-top:12px;color:var(--primary);text-decoration:none;font-size:0.875rem;font-weight:500">← Back to Home</a>
+  </div>
+  ${bottomNav('home')}
+  <script src="/public/app.js"></script>
+</body></html>`);
+});
+
 // ─── Task Detail ────────────────────────────────────────────
 
 app.get('/:id', async (c) => {
@@ -94,7 +146,7 @@ app.get('/:id', async (c) => {
 
       ${task.description ? `<div style="font-size:0.9375rem;line-height:1.6;margin-bottom:12px;color:var(--text)">${escHtml(task.description)}</div>` : ''}
 
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
+      <div style="display:grid;grid-template-columns:1fr 1fr${task.estimated_minutes ? ' 1fr' : ''};gap:8px;margin-bottom:12px">
         <div style="background:rgba(0,105,80,0.03);padding:8px 10px;border-radius:6px">
           <div style="font-size:0.6875rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em">Priority</div>
           <div style="font-size:0.875rem;font-weight:500;color:${priorityColor}">${priorityLabel}</div>
@@ -103,6 +155,10 @@ app.get('/:id', async (c) => {
           <div style="font-size:0.6875rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em">Vessel</div>
           <div style="font-size:0.875rem;font-weight:500">${task.vessel ? task.vessel.toUpperCase() : 'Any'}</div>
         </div>
+        ${task.estimated_minutes ? `<div style="background:rgba(0,105,80,0.03);padding:8px 10px;border-radius:6px">
+          <div style="font-size:0.6875rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em">Est. Time</div>
+          <div style="font-size:0.875rem;font-weight:500">~${task.estimated_minutes} min</div>
+        </div>` : ''}
       </div>
 
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">

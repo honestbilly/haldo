@@ -13,11 +13,8 @@ export function bottomNav(active: string, isManager: boolean = false): string {
     { id: 'weather', label: 'Weather', icon: '🌤️', href: '/weather' },
     { id: 'submit', label: 'Note', icon: '📝', href: '/submit' },
     { id: 'more', label: 'More', icon: '⚙️', href: '/more' },
+    { id: 'mgmt', label: 'MGMT', icon: '📊', href: '/report' },
   ];
-
-  if (isManager) {
-    tabs.push({ id: 'mgmt', label: 'MGMT', icon: '📊', href: '/report' });
-  }
 
   const tabsHtml = tabs.map(t => {
     const isActive = t.id === active;

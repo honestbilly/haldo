@@ -176,6 +176,7 @@ export interface AssignedTaskRow {
   priority: 'low' | 'medium' | 'high' | 'urgent';
   due_date: string | null;
   snoozed_until: string | null;
+  estimated_minutes: number | null;
   completed_at: Date | null;
   completed_by: string | null;
   notes: string | null;

@@ -225,7 +225,7 @@ app.get('/report/tasks/create', async (c) => {
         </div>
       </div>
 
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:12px">
         <div>
           <label style="display:block;font-size:0.8125rem;font-weight:500;color:#6e7a74;margin-bottom:4px">Priority</label>
           <select name="priority" style="${dropdownStyle}">
@@ -238,6 +238,10 @@ app.get('/report/tasks/create', async (c) => {
         <div>
           <label style="display:block;font-size:0.8125rem;font-weight:500;color:#6e7a74;margin-bottom:4px">Due Date</label>
           <input type="date" name="due_date" style="${inputStyle}">
+        </div>
+        <div>
+          <label style="display:block;font-size:0.8125rem;font-weight:500;color:#6e7a74;margin-bottom:4px">Est. Minutes</label>
+          <input type="number" name="estimated_minutes" min="1" max="480" style="${inputStyle}" placeholder="e.g. 30">
         </div>
       </div>
 
@@ -255,9 +259,10 @@ app.post('/report/tasks/create', async (c) => {
   const body = await c.req.parseBody();
   const id = nanoid();
 
+  const estMin = parseInt(String(body.estimated_minutes || ''), 10);
   await pool.query(
-    `INSERT INTO assigned_tasks (id, title, description, vessel, assigned_to, assigned_by, priority, due_date, notes, source_submission_id, status)
-     VALUES ($1, $2, $3, $4, $5, 'manager', $6, $7, $8, $9, 'pending')`,
+    `INSERT INTO assigned_tasks (id, title, description, vessel, assigned_to, assigned_by, priority, due_date, notes, source_submission_id, estimated_minutes, status)
+     VALUES ($1, $2, $3, $4, $5, 'manager', $6, $7, $8, $9, $10, 'pending')`,
     [
       id,
       String(body.title || '').trim(),
@@ -268,6 +273,7 @@ app.post('/report/tasks/create', async (c) => {
       String(body.due_date || '') || null,
       String(body.notes || '').trim() || null,
       String(body.source_submission_id || '') || null,
+      isNaN(estMin) ? null : estMin,
     ]
   );
 
@@ -360,10 +366,14 @@ app.get('/report/tasks/:id', async (c) => {
         </div>
       </div>
 
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:12px">
         <div>
           <label style="display:block;font-size:0.8125rem;font-weight:500;color:#6e7a74;margin-bottom:4px">Due Date</label>
           <input type="date" name="due_date" value="${task.due_date ? task.due_date.split('T')[0] : ''}" style="${inputStyle}">
+        </div>
+        <div>
+          <label style="display:block;font-size:0.8125rem;font-weight:500;color:#6e7a74;margin-bottom:4px">Est. Minutes</label>
+          <input type="number" name="estimated_minutes" min="1" max="480" value="${task.estimated_minutes || ''}" style="${inputStyle}" placeholder="e.g. 30">
         </div>
         <div>
           <label style="display:block;font-size:0.8125rem;font-weight:500;color:#6e7a74;margin-bottom:4px">Snooze Until</label>
@@ -407,14 +417,15 @@ app.post('/report/tasks/:id', async (c) => {
   const newStatus = String(body.status || 'pending');
   const completedAt = newStatus === 'completed' ? 'NOW()' : null;
 
+  const estMinEdit = parseInt(String(body.estimated_minutes || ''), 10);
   await pool.query(
     `UPDATE assigned_tasks SET
        title = $1, description = $2, status = $3, priority = $4,
        vessel = $5, assigned_to = $6, due_date = $7, notes = $8,
-       snoozed_until = $9,
+       snoozed_until = $9, estimated_minutes = $10,
        completed_at = ${completedAt ? 'NOW()' : 'completed_at'},
        updated_at = NOW()
-     WHERE id = $10`,
+     WHERE id = $11`,
     [
       String(body.title || '').trim(),
       String(body.description || '').trim() || null,
@@ -425,6 +436,7 @@ app.post('/report/tasks/:id', async (c) => {
       String(body.due_date || '') || null,
       String(body.notes || '').trim() || null,
       newStatus === 'snoozed' ? (String(body.snoozed_until || '') || null) : null,
+      isNaN(estMinEdit) ? null : estMinEdit,
       taskId,
     ]
   );

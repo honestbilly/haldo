@@ -173,6 +173,10 @@ export async function initDatabase(): Promise<void> {
         ALTER TABLE assigned_tasks ADD COLUMN snoozed_until DATE;
       EXCEPTION WHEN duplicate_column THEN NULL;
       END $$;
+      DO $$ BEGIN
+        ALTER TABLE assigned_tasks ADD COLUMN estimated_minutes INTEGER;
+      EXCEPTION WHEN duplicate_column THEN NULL;
+      END $$;
 
       -- Indexes for new tables
       CREATE INDEX IF NOT EXISTS idx_submissions_vessel ON submissions(vessel);
