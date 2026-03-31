@@ -58,7 +58,7 @@
           "id": "deckhand-name",
           "label": "Deckhand",
           "type": "select",
-          "options": ["Hadden", "Bryan", "Jackie", "Charlie"],
+          "options": ["(loaded from crew database)"],
           "required": true
         },
         {

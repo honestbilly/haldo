@@ -2,7 +2,7 @@ import { renderItemHtml } from '../lib/render-item.js';
 import { bottomNav } from '../ui.js';
 import type { LogbookTemplate } from '../types.js';
 
-export function renderLogbook(session: any, template: LogbookTemplate): string {
+export function renderLogbook(session: any, template: LogbookTemplate, crewList: Array<{ id: string; name: string; role: string }> = []): string {
   const role = session.role as 'captain' | 'deckhand';
   // Default to all steps if captain_steps/mate_steps not defined (e.g. on-demand drills)
   const allStepNums = template.steps.map(s => s.step);
@@ -14,12 +14,27 @@ export function renderLogbook(session: any, template: LogbookTemplate): string {
     return `<!DOCTYPE html><html><body><p>This logbook is not available for your role.</p><a href="/today">Back</a></body></html>`;
   }
 
+  // Build dynamic crew options from DB for deckhand picker
+  const deckhands = crewList.filter(c => c.role === 'deckhand');
+  const captains = crewList.filter(c => c.role === 'captain' && c.name !== session.crew_name);
+
   const stepsHtml = template.steps
     .filter(s => visibleSteps.includes(s.step))
     .map((step, idx) => {
       const itemsHtml = step.items
         .filter(item => !step.captain_only || role === 'captain')
-        .map(item => renderItemHtml(item))
+        .map(item => {
+          // Dynamically populate crew picker items from the database
+          if (item.id === 'deckhand-name' && item.type === 'select' && deckhands.length > 0) {
+            const dynamicItem = { ...item, options: deckhands.map(d => d.name) };
+            return renderItemHtml(dynamicItem);
+          }
+          if (item.id === 'crew-on-board' && item.type === 'multi_select' && crewList.length > 0) {
+            const dynamicItem = { ...item, options: crewList.map(c => c.name) };
+            return renderItemHtml(dynamicItem);
+          }
+          return renderItemHtml(item);
+        })
         .join('');
 
       return `

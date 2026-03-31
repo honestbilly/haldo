@@ -62,7 +62,12 @@ app.get('/c/:templateId', async (c) => {
     const savedMsg = c.req.query('saved') === '1';
     return c.html(renderChecklist(session, template as ChecklistTemplate, lastEngineHours, !!editMode, !!canEdit, savedMsg));
   } else {
-    return c.html(renderLogbook(session, template as LogbookTemplate));
+    // Fetch active crew for the logbook deckhand picker (from DB, not hardcoded)
+    const crewResult = await pool.query(
+      `SELECT id, name, role FROM crew WHERE active = TRUE ORDER BY role, name`
+    );
+    const crewList = crewResult.rows;
+    return c.html(renderLogbook(session, template as LogbookTemplate, crewList));
   }
 });
 
