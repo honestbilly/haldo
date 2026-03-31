@@ -82,6 +82,22 @@ export async function initDatabase(): Promise<void> {
         updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
       );
 
+      -- Auth tokens for persistent login
+      CREATE TABLE IF NOT EXISTS auth_tokens (
+        token TEXT PRIMARY KEY,
+        crew_id TEXT NOT NULL REFERENCES crew(id),
+        role TEXT NOT NULL DEFAULT 'crew',  -- 'crew' | 'manager' | 'admin'
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        last_used_at TIMESTAMPTZ,
+        revoked BOOLEAN NOT NULL DEFAULT FALSE
+      );
+
+      -- Add login_token to crew if not exists
+      DO $$ BEGIN
+        ALTER TABLE crew ADD COLUMN login_token TEXT;
+      EXCEPTION WHEN duplicate_column THEN NULL;
+      END $$;
+
       -- Migration: add 'log' to template_type check constraint
       DO $$ BEGIN
         ALTER TABLE completions DROP CONSTRAINT IF EXISTS completions_template_type_check;

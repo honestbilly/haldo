@@ -674,6 +674,7 @@ app.post('/report/alerts/:alertId/acknowledge', async (c) => {
 // ── Template Editor ──
 
 import { getAllTemplates, loadTemplates, saveTemplate, deleteTemplate } from '../services/templates.js';
+import { generateToken, revokeToken } from './auth.js';
 
 // Template list
 app.get('/report/templates', async (c) => {
@@ -815,6 +816,83 @@ app.get('/report/templates/:templateId/clone', async (c) => {
   return c.redirect(`/report/templates/${encodeURIComponent(cloneId)}?saved=1`);
 });
 
+// ── Crew Management & Login Tokens ──
+
+app.get('/report/crew', async (c) => {
+  const crewList = await pool.query(
+    `SELECT cr.*, at.token, at.last_used_at, at.revoked
+     FROM crew cr
+     LEFT JOIN auth_tokens at ON cr.id = at.crew_id AND at.revoked = FALSE
+     ORDER BY cr.role, cr.name`
+  );
+
+  // Group by crew member (may have multiple tokens, take the latest non-revoked one)
+  const crewMap = new Map<string, any>();
+  for (const row of crewList.rows) {
+    if (!crewMap.has(row.id)) {
+      crewMap.set(row.id, { ...row });
+    } else if (row.token && !crewMap.get(row.id).token) {
+      crewMap.get(row.id).token = row.token;
+      crewMap.get(row.id).last_used_at = row.last_used_at;
+    }
+  }
+
+  const appUrl = process.env.APP_URL || `https://${process.env.RAILWAY_PUBLIC_DOMAIN || 'localhost:3000'}`;
+  const generated = c.req.query('generated');
+
+  const crewRows = Array.from(crewMap.values()).map(cr => {
+    const roleLabel = cr.role === 'captain' ? 'Captain' : 'Mate';
+    const statusBadge = cr.active
+      ? '<span style="font-size:0.6875rem;background:rgba(0,105,80,0.1);color:#006950;padding:2px 6px;border-radius:4px">Active</span>'
+      : '<span style="font-size:0.6875rem;background:rgba(186,26,26,0.1);color:#ba1a1a;padding:2px 6px;border-radius:4px">Inactive</span>';
+
+    const tokenSection = cr.token
+      ? `<div style="margin-top:6px">
+          <div style="font-size:0.6875rem;color:#6e7a74;margin-bottom:2px">Login link:</div>
+          <input type="text" value="${appUrl}/login/${cr.token}" readonly onclick="this.select();navigator.clipboard.writeText(this.value)" style="width:100%;padding:6px 8px;border:1px solid #bdc9c2;border-radius:6px;font-family:monospace;font-size:0.75rem;background:#f9fafb;cursor:pointer" title="Click to copy">
+          <div style="font-size:0.625rem;color:#6e7a74;margin-top:2px">${cr.last_used_at ? 'Last used: ' + new Date(cr.last_used_at).toLocaleDateString() : 'Never used'}</div>
+        </div>`
+      : `<form action="/report/crew/${cr.id}/generate-token" method="POST" style="margin-top:6px">
+          <button type="submit" style="padding:6px 12px;background:#006950;color:white;border:none;border-radius:6px;font-size:0.75rem;cursor:pointer;min-height:36px">Generate Login Link</button>
+        </form>`;
+
+    const highlight = generated === cr.id ? 'border:2px solid #006950;' : '';
+
+    return `
+      <div style="background:#FFFFFF;border-radius:8px;padding:14px 16px;margin-bottom:8px;${highlight}">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <span style="font-weight:600;font-size:0.9375rem">${escapeHtml(cr.name)}</span>
+            <span style="font-size:0.75rem;color:#6e7a74;margin-left:6px">${roleLabel}</span>
+            ${statusBadge}
+          </div>
+          <span style="font-size:0.75rem;color:#6e7a74">${VESSEL_LABELS[cr.vessel] || cr.vessel || 'Unassigned'}</span>
+        </div>
+        ${tokenSection}
+      </div>`;
+  }).join('');
+
+  return c.html(reportLayout('Crew', `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <h2 style="font-family:'Manrope',-apple-system,sans-serif;font-size:1.125rem;font-weight:700">Crew & Login Links</h2>
+      <span style="font-size:0.8125rem;color:#6e7a74">${crewMap.size} members</span>
+    </div>
+
+    <div style="padding:12px;background:rgba(112,208,235,0.1);border-radius:8px;margin-bottom:16px;font-size:0.8125rem;color:#1a1c1c;line-height:1.5">
+      <strong>How login works:</strong> Generate a login link for each crew member. Send it via WhatsApp or text. They tap it once and stay logged in permanently. To revoke access, deactivate the crew member.
+    </div>
+
+    ${crewRows}
+  `));
+});
+
+// Generate token for a crew member
+app.post('/report/crew/:crewId/generate-token', async (c) => {
+  const crewId = c.req.param('crewId');
+  await generateToken(crewId, 'crew');
+  return c.redirect(`/report/crew?generated=${crewId}`);
+});
+
 // Shared layout — all CSS inline, no external stylesheet dependency for reports
 function reportLayout(activeTab: string, content: string): string {
   const today = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
@@ -851,6 +929,7 @@ function reportLayout(activeTab: string, content: string): string {
       <a href="/report" style="padding:8px 0;text-decoration:none;font-weight:500;margin-bottom:-2px;${activeTab === 'Today' ? 'color:#006950;border-bottom:2px solid #006950' : 'color:#6e7a74;border-bottom:2px solid transparent'}">Today</a>
       <a href="/report/history" style="padding:8px 0;text-decoration:none;font-weight:500;margin-bottom:-2px;${activeTab === 'History' ? 'color:#006950;border-bottom:2px solid #006950' : 'color:#6e7a74;border-bottom:2px solid transparent'}">History</a>
       <a href="/report/templates" style="padding:8px 0;text-decoration:none;font-weight:500;margin-bottom:-2px;${activeTab === 'Templates' ? 'color:#006950;border-bottom:2px solid #006950' : 'color:#6e7a74;border-bottom:2px solid transparent'}">Templates</a>
+      <a href="/report/crew" style="padding:8px 0;text-decoration:none;font-weight:500;margin-bottom:-2px;${activeTab === 'Crew' ? 'color:#006950;border-bottom:2px solid #006950' : 'color:#6e7a74;border-bottom:2px solid transparent'}">Crew</a>
     </nav>
     ${content}
   </div>
