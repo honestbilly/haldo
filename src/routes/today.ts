@@ -158,6 +158,17 @@ function renderTodayList(
   myTasks: any[] = [],
   queueCount: number = 0
 ): string {
+  // Stitch card pattern: white card, 12px radius, 20px padding, shadow-sm, 6px absolute left bar, 72px min-height
+  const stitchCard = (href: string, title: string, subtitle: string, statusText: string, leftBarColor: string, isDone: boolean) => `
+    <a href="${href}" style="display:flex;align-items:center;justify-content:space-between;min-height:72px;background:white;border-radius:12px;padding:20px;padding-left:26px;box-shadow:0 2px 8px rgba(0,0,0,0.04);text-decoration:none;color:#1a1c1e;position:relative;overflow:hidden;transition:transform 0.15s;-webkit-tap-highlight-color:transparent" ontouchstart="this.style.transform='scale(0.99)'" ontouchend="this.style.transform='scale(1)'">
+      <div style="position:absolute;left:0;top:0;bottom:0;width:6px;background:${leftBarColor}"></div>
+      <div style="display:flex;flex-direction:column;gap:2px">
+        <h3 style="font-weight:700;font-size:0.9375rem;color:#1a1c1e">${title}</h3>
+        ${subtitle ? `<div style="display:flex;align-items:center;gap:6px;color:#5b5f67;font-size:0.75rem;font-weight:500"><span class="material-symbols-outlined" style="font-size:14px">schedule</span> ${subtitle}</div>` : ''}
+      </div>
+      <span style="font-weight:700;font-size:0.625rem;letter-spacing:0.1em;text-transform:uppercase;color:${isDone ? '#34C759' : '#5b5f67'}">${statusText}</span>
+    </a>`;
+
   const renderCard = (t: Template, pinned: boolean = false) => {
     const comps = completedMap.get(t.id) || [];
     const isDone = t.type === 'logbook' || (t.type === 'checklist' && (t as ChecklistTemplate).recurrence === 'per-trip')
@@ -167,13 +178,12 @@ function renderTodayList(
     const est = t.type === 'checklist'
       ? (t as ChecklistTemplate).estimated_minutes
       : (t as LogbookTemplate).estimated_minutes;
+    const estStr = est ? `~${est} min` : '';
 
     if (pinned) {
-      // DMT pinned card — extract today's task name from section titles
       const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
       const [y, m, d] = session.trip_date.split('-').map(Number);
       const todayDay = dayNames[new Date(y, m - 1, d).getDay()];
-      // Find today's section and extract the task name (after the dash)
       let taskName = 'Daily Maintenance';
       if (t.type === 'checklist') {
         const ct = t as ChecklistTemplate;
@@ -183,31 +193,26 @@ function renderTodayList(
           taskName = dashIdx > -1 ? todaySection.title.substring(dashIdx + 1).trim() : todaySection.title;
         }
       }
+      // DMT card — Stitch pattern with bolt icon badge
       return `
-        <a href="/c/${t.id}" class="today-card dmt-pinned ${isDone ? 'done' : ''}">
-          <div class="dmt-pinned-label"><span class="material-symbols-outlined" style="font-size:14px;vertical-align:middle;margin-right:2px;font-variation-settings:'FILL' 1">bolt</span> TODAY'S DMT</div>
-          <div class="today-card-info">
-            <span class="today-card-name">${taskName}</span>
-            ${est ? `<span class="today-card-time">~${est} min</span>` : ''}
+        <a href="/c/${t.id}" style="display:block;background:white;border-radius:12px;padding:20px;padding-left:26px;box-shadow:0 2px 8px rgba(0,0,0,0.04);text-decoration:none;color:#1a1c1e;position:relative;overflow:hidden;min-height:72px;margin-bottom:12px;transition:transform 0.15s" ontouchstart="this.style.transform='scale(0.99)'" ontouchend="this.style.transform='scale(1)'">
+          <div style="position:absolute;left:0;top:0;bottom:0;width:6px;background:#1A6B8A"></div>
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+            <span style="background:#1A6B8A;color:white;font-size:0.625rem;font-weight:900;padding:3px 8px;border-radius:4px;letter-spacing:-0.02em;display:flex;align-items:center;gap:4px"><span class="material-symbols-outlined" style="font-size:14px;font-variation-settings:'FILL' 1">bolt</span> TODAY'S DMT</span>
           </div>
-          <span class="today-card-status ${isDone ? 'status-done' : 'status-pending'}">
-            ${isDone ? '✓ Done' : 'Not done'}
-          </span>
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <h3 style="font-weight:700;font-size:1rem">${taskName}</h3>
+            <div style="text-align:right">
+              ${estStr ? `<div style="font-size:0.75rem;color:#5b5f67;font-weight:500">${estStr}</div>` : ''}
+              <div style="font-weight:700;font-size:0.625rem;letter-spacing:0.1em;text-transform:uppercase;color:${isDone ? '#34C759' : '#5b5f67'}">${isDone ? '✓ Done' : 'Not done'}</div>
+            </div>
+          </div>
         </a>`;
     }
 
-    // Strip role suffix from display name (crew only sees their own role's checklists)
     const displayName = t.name.replace(/\s*—\s*(Captain|Deckhand|Mate)$/i, '');
-    return `
-      <a href="/c/${t.id}" class="today-card ${isDone ? 'done' : ''}">
-        <div class="today-card-info">
-          <span class="today-card-name">${displayName}</span>
-          ${est ? `<span class="today-card-time">~${est} min</span>` : ''}
-        </div>
-        <span class="today-card-status ${isDone ? 'status-done' : 'status-pending'}">
-          ${isDone ? '✓ Done' : 'Not started'}
-        </span>
-      </a>`;
+    const barColor = isDone ? '#34C759' : '#34C759'; // Green left bar for checklists (Stitch uses green-600)
+    return stitchCard(`/c/${t.id}`, displayName, estStr, isDone ? '✓ Done' : 'Not started', barColor, isDone);
   };
 
   // Separate DMT from regular templates
@@ -274,11 +279,13 @@ function renderTodayList(
       </a>
     </div>` : '';
 
+  const dateDisplay = (() => { const [y,m,d] = session.trip_date.split('-').map(Number); return new Date(y, m-1, d).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }); })();
+
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
   <title>Today — Haldo</title>
   <link rel="stylesheet" href="/public/style.css">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap">
@@ -289,15 +296,23 @@ function renderTodayList(
   <link rel="apple-touch-icon" href="/public/apple-touch-icon.png">
   <link rel="icon" type="image/png" sizes="32x32" href="/public/favicon-32.png">
 </head>
-<body>
-  <div class="today-page">
-    <header class="today-header">
-      <div style="display:flex;justify-content:space-between;align-items:center">
-        <h1>${session.crew_name} — ${session.vessel.toUpperCase()}</h1>
-        <a href="/" style="font-size:0.75rem;color:var(--primary);text-decoration:none;padding:6px 10px;border:1px solid var(--border);border-radius:6px;white-space:nowrap">Switch</a>
-      </div>
-      <p>${session.trip_slot} Trip | ${(() => { const [y,m,d] = session.trip_date.split('-').map(Number); return new Date(y, m-1, d).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }); })()}</p>
-    </header>
+<body style="background:#F2F2F7">
+  <!-- Fixed Header (Stitch pattern) -->
+  <header style="position:fixed;top:0;left:0;right:0;z-index:50;background:rgba(255,255,255,0.8);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);box-shadow:0 1px 3px rgba(0,0,0,0.06);display:flex;justify-content:space-between;align-items:center;padding:0 24px;height:64px">
+    <div style="display:flex;align-items:center;gap:12px">
+      <div style="width:32px;height:32px;border-radius:50%;background:#1A6B8A;color:white;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.875rem">${session.crew_name.charAt(0)}</div>
+      <h1 style="font-family:'Inter',sans-serif;font-weight:600;font-size:1.125rem;color:#1a4a5e;letter-spacing:-0.01em">${session.crew_name} — ${session.vessel.toUpperCase()}</h1>
+    </div>
+    <a href="/" style="color:#1A6B8A;font-weight:700;font-size:0.6875rem;letter-spacing:0.1em;text-transform:uppercase;text-decoration:none;padding:6px 12px;border-radius:8px;transition:background 0.15s" ontouchstart="this.style.background='rgba(26,107,138,0.08)'" ontouchend="this.style.background='transparent'">Switch</a>
+  </header>
+
+  <main style="padding:80px 16px 120px;max-width:480px;margin:0 auto">
+    <!-- Page Context -->
+    <section style="margin-top:16px;margin-bottom:24px">
+      <h2 style="font-family:'Manrope',sans-serif;font-weight:800;font-size:1.75rem;color:#1a1c1e;letter-spacing:-0.02em">${session.trip_slot} Trip</h2>
+      <p style="font-size:0.875rem;font-weight:500;color:#5b5f67">${dateDisplay}</p>
+    </section>
+
     ${renderWeatherCard(weather)}
 
     ${handoffNotes.length > 0 ? `
@@ -320,38 +335,40 @@ function renderTodayList(
       ${handoffNotes.length > 3 ? `<div style="font-size:0.75rem;color:#D97706;padding-top:4px">+${handoffNotes.length - 3} more</div>` : ''}
     </div>` : ''}
 
+    <!-- Today's DMT -->
     ${dmtHtml}
 
-    <div class="today-list">
-      ${items || '<p class="empty-state">No checklists scheduled for today.</p>'}
-    </div>
+    <!-- Checklists (Stitch section pattern) -->
+    <section style="margin-bottom:24px">
+      <h2 style="font-family:'Manrope',sans-serif;font-weight:700;font-size:1.125rem;color:#1a1c1e;display:flex;align-items:center;gap:8px;padding:0 4px;margin-bottom:12px">
+        <span class="material-symbols-outlined" style="color:#1A6B8A;font-size:22px">fact_check</span> Checklists
+      </h2>
+      <div style="display:flex;flex-direction:column;gap:12px">
+        ${items || '<p style="text-align:center;color:#8E8E93;padding:32px 0">No checklists scheduled for today.</p>'}
+      </div>
+    </section>
 
     ${onDemandHtml}
 
     ${myTasksHtml}
     ${queueHtml}
 
+    <!-- Crewmate Status -->
     ${crewmateStatus.length > 0 ? `
-    <div style="margin-top:16px;margin-bottom:16px">
-      <h3 class="on-demand-header" onclick="document.getElementById('crewmate-status').classList.toggle('collapsed')" style="cursor:pointer;display:flex;align-items:center;justify-content:space-between">
-        <span>${crewmateStatus[0].role_label} Status${crewmateStatus[0].crew_name ? ` — ${crewmateStatus[0].crew_name}` : ''}</span>
-        <span class="collapse-icon" style="font-size:0.75rem;color:var(--text-muted)">▼</span>
-      </h3>
-      <div id="crewmate-status" class="collapsed">
+    <section style="margin-bottom:24px">
+      <h2 style="font-family:'Manrope',sans-serif;font-weight:700;font-size:1.125rem;color:#1a1c1e;display:flex;align-items:center;gap:8px;padding:0 4px;margin-bottom:12px;cursor:pointer" onclick="document.getElementById('crewmate-status').style.display=document.getElementById('crewmate-status').style.display==='none'?'':'none'">
+        <span class="material-symbols-outlined" style="color:#70D0EB;font-size:22px">group</span>
+        ${crewmateStatus[0].role_label} Status${crewmateStatus[0].crew_name ? ` — ${crewmateStatus[0].crew_name}` : ''}
+      </h2>
+      <div id="crewmate-status" style="display:none;background:white;border-radius:12px;padding:8px 0;box-shadow:0 2px 8px rgba(0,0,0,0.04)">
         ${crewmateStatus.map(ds => `
-          <div style="display:flex;align-items:center;gap:8px;padding:8px 12px;font-size:0.8125rem;color:${ds.done ? 'var(--primary)' : 'var(--text-muted)'}">
-            <span style="font-size:1rem">${ds.done ? '✓' : '○'}</span>
-            <span>${ds.template_name}</span>
+          <div style="display:flex;align-items:center;gap:10px;padding:12px 20px;font-size:0.875rem;color:${ds.done ? '#34C759' : '#5b5f67'}">
+            <span class="material-symbols-outlined" style="font-size:20px;${ds.done ? "font-variation-settings:'FILL' 1;color:#34C759" : 'color:#c7c7cc'}">${ds.done ? 'check_circle' : 'radio_button_unchecked'}</span>
+            <span style="font-weight:${ds.done ? '600' : '400'}">${ds.template_name}</span>
           </div>`).join('')}
       </div>
-    </div>` : ''}
-
-    <div style="display:flex;justify-content:flex-end;margin-bottom:16px">
-      <a href="/log" style="display:inline-flex;align-items:center;gap:6px;padding:10px 14px;background:var(--surface);border:1px dashed var(--border);border-radius:var(--radius);text-decoration:none;color:var(--text-muted);font-size:0.8125rem;font-weight:500;min-height:40px">
-        <span style="color:var(--primary);font-weight:700">+</span> Log
-      </a>
-    </div>
-  </div>
+    </section>` : ''}
+  </main>
   ${bottomNav('home')}
   <script src="/public/app.js"></script>
 </body>
