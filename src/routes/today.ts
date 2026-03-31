@@ -219,7 +219,6 @@ function renderTodayList(
   const dmt = templates.find(t => t.id.startsWith('daily-maintenance'));
   const regularTemplates = templates.filter(t => !t.id.startsWith('daily-maintenance'));
   const dmtHtml = dmt ? renderCard(dmt, true) : '';
-  const items = regularTemplates.map(t => renderCard(t)).join('');
 
   // Assigned tasks: first expanded, rest collapsed
   const onDemandHtml = onDemand.length > 0 ? `
@@ -346,23 +345,16 @@ function renderTodayList(
     <!-- Today's DMT -->
     ${dmtHtml}
 
-    <!-- Daily Routine: 3 square cards in a row -->
+    <!-- Daily Routine: 3 square cards + trip logbook below -->
     ${(() => {
-      const routineTemplates = regularTemplates.filter(t =>
-        t.id.startsWith('wakeup') || t.id.startsWith('between') || t.id.startsWith('put-to-bed')
-      );
-      const otherChecklists = regularTemplates.filter(t =>
-        !t.id.startsWith('wakeup') && !t.id.startsWith('between') && !t.id.startsWith('put-to-bed') && t.type !== 'logbook'
-      );
-
       const routineCards = [
         { prefix: 'wakeup', icon: 'coffee', label: 'Wake Up' },
         { prefix: 'between', icon: 'restaurant', label: 'Between' },
         { prefix: 'put-to-bed', icon: 'bed', label: 'Bed' },
       ];
 
-      const routineHtml = routineCards.map(rc => {
-        const tmpl = routineTemplates.find(t => t.id.startsWith(rc.prefix));
+      const squareCards = routineCards.map(rc => {
+        const tmpl = regularTemplates.find(t => t.id.startsWith(rc.prefix));
         if (!tmpl) return '';
         const comps = completedMap.get(tmpl.id) || [];
         const isDone = comps.length > 0;
@@ -374,38 +366,22 @@ function renderTodayList(
           </a>`;
       }).join('');
 
-      const otherHtml = otherChecklists.map(t => {
-        const comps2 = completedMap.get(t.id) || [];
-        const isDone2 = comps2.length > 0;
-        const displayName = t.name.replace(/\s*—\s*(Captain|Deckhand|Mate)$/i, '');
-        const est2 = t.type === 'checklist' ? (t as ChecklistTemplate).estimated_minutes : (t as LogbookTemplate).estimated_minutes;
-        return stitchCard(`/c/${t.id}`, displayName, est2 ? `~${est2} min` : '', isDone2 ? '✓ DONE' : 'NOT STARTED', isDone2 ? '#34C759' : '#34C759', isDone2);
-      }).join('');
+      // Trip logbook goes in this section (part of daily routine)
+      const tripLogbook = templates.find(t => t.type === 'logbook' && t.id.startsWith('trip-logbook'));
+      const logbookHtml = tripLogbook ? (() => {
+        const comps = completedMap.get(tripLogbook.id) || [];
+        const isDone = comps.some(c => c.trip_slot === session.trip_slot);
+        const est = (tripLogbook as LogbookTemplate).estimated_minutes;
+        return stitchCard(`/c/${tripLogbook.id}`, `Trip Logbook — ${session.vessel.toUpperCase()}`, est ? `~${est} min` : '', isDone ? '✓ DONE' : 'NOT DONE', isDone ? '#34C759' : '#1A6B8A', isDone);
+      })() : '';
 
-      return `
-        <section style="margin-bottom:20px">
-          <h2 style="font-size:0.6875rem;font-weight:700;letter-spacing:0.15em;color:#8E8E93;text-transform:uppercase;margin-bottom:12px;padding:0 4px">Daily Routine</h2>
-          <div style="display:flex;gap:10px;margin-bottom:12px">
-            ${routineHtml}
-          </div>
-        </section>
-        ${otherHtml ? `<section style="margin-bottom:20px"><div style="display:flex;flex-direction:column;gap:12px">${otherHtml}</div></section>` : ''}`;
-    })()}
-
-    <!-- Logbook (visually separate) -->
-    ${(() => {
-      const logbooks = regularTemplates.filter(t => t.type === 'logbook');
-      const logbookCards = templates.filter(t => t.type === 'logbook');
-      if (logbookCards.length === 0) return '';
       return `
         <section style="margin-bottom:24px">
-          <h2 style="font-size:0.6875rem;font-weight:700;letter-spacing:0.15em;color:#8E8E93;text-transform:uppercase;margin-bottom:12px;padding:0 4px">Logbook</h2>
-          ${logbookCards.map(t => {
-            const comps = completedMap.get(t.id) || [];
-            const isDone = comps.some(c => c.trip_slot === session.trip_slot);
-            const est = (t as LogbookTemplate).estimated_minutes;
-            return stitchCard(`/c/${t.id}`, `${t.name}`, est ? `~${est} min` : '', isDone ? '✓ DONE' : 'NOT DONE', isDone ? '#34C759' : '#1A6B8A', isDone);
-          }).join('')}
+          <h2 style="font-size:0.6875rem;font-weight:700;letter-spacing:0.15em;color:#8E8E93;text-transform:uppercase;margin-bottom:12px;padding:0 4px">Daily Routine</h2>
+          <div style="display:flex;gap:10px;margin-bottom:12px">
+            ${squareCards}
+          </div>
+          ${logbookHtml}
         </section>`;
     })()}
 
