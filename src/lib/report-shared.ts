@@ -323,6 +323,7 @@ export function reportLayout(activeTab: string, content: string): string {
       <a href="/report/history" style="padding:8px 0;text-decoration:none;font-weight:500;margin-bottom:-2px;${activeTab === 'History' ? 'color:#006950;border-bottom:2px solid #006950' : 'color:#6e7a74;border-bottom:2px solid transparent'}">History</a>
       <a href="/report/templates" style="padding:8px 0;text-decoration:none;font-weight:500;margin-bottom:-2px;${activeTab === 'Templates' ? 'color:#006950;border-bottom:2px solid #006950' : 'color:#6e7a74;border-bottom:2px solid transparent'}">Templates</a>
       <a href="/report/crew" style="padding:8px 0;text-decoration:none;font-weight:500;margin-bottom:-2px;${activeTab === 'Crew' ? 'color:#006950;border-bottom:2px solid #006950' : 'color:#6e7a74;border-bottom:2px solid transparent'}">Crew</a>
+      <a href="/report/tasks" style="padding:8px 0;text-decoration:none;font-weight:500;margin-bottom:-2px;${activeTab === 'Tasks' ? 'color:#006950;border-bottom:2px solid #006950' : 'color:#6e7a74;border-bottom:2px solid transparent'}">Tasks</a>
     </nav>
     ${content}
   </div>

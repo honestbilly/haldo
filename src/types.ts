@@ -160,6 +160,50 @@ export interface AlertRow {
 }
 
 // ============================================================
+// Assigned Tasks (maintenance work orders)
+// ============================================================
+
+export interface AssignedTaskRow {
+  id: string;
+  title: string;
+  description: string | null;
+  vessel: string | null;
+  assigned_to: string | null;
+  assigned_by: string | null;
+  template_id: string | null;
+  source_submission_id: string | null;
+  status: 'pending' | 'in-progress' | 'completed' | 'cancelled' | 'blocked' | 'snoozed';
+  priority: 'low' | 'medium' | 'high' | 'urgent';
+  due_date: string | null;
+  snoozed_until: string | null;
+  completed_at: Date | null;
+  completed_by: string | null;
+  notes: string | null;
+  created_at: Date;
+  updated_at: Date;
+}
+
+// ============================================================
+// Crew Submissions
+// ============================================================
+
+export interface SubmissionRow {
+  id: string;
+  crew_id: string;
+  vessel: string;
+  category: 'maintenance' | 'suggestion' | 'meeting-topic' | 'safety' | 'sop-feedback' | 'kudos' | 'general';
+  title: string;
+  details: string | null;
+  photo_url: string | null;
+  status: 'new' | 'reviewed' | 'in-progress' | 'resolved';
+  priority: 'low' | 'medium' | 'high' | 'urgent' | null;
+  resolution_note: string | null;
+  reviewed_by: string | null;
+  created_at: Date;
+  updated_at: Date;
+}
+
+// ============================================================
 // Session
 // ============================================================
 

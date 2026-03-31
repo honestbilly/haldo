@@ -45,9 +45,12 @@ app.post('/feedback', async (c) => {
 
   if (!title) return c.redirect('/submit/feedback');
 
-  // For now, save as a completion note until submissions table is built
-  // TODO: Create submissions table in v1
-  // For now, just redirect back with confirmation
+  await pool.query(
+    `INSERT INTO submissions (id, crew_id, vessel, category, title, details, status)
+     VALUES ($1, $2, $3, $4, $5, $6, 'new')`,
+    [nanoid(), session.crew_id, session.vessel, category, title, details || null]
+  );
+
   return c.html(renderFeedbackSuccess(session, category, title));
 });
 

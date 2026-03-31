@@ -68,8 +68,23 @@ app.get('/today', async (c) => {
     role_label: otherRoleLabel,
   }));
 
+  // Get maintenance tasks for this vessel (active, not snoozed/completed/cancelled)
+  const tasksResult = await pool.query(
+    `SELECT t.*, ca.name as assignee_name
+     FROM assigned_tasks t
+     LEFT JOIN crew ca ON t.assigned_to = ca.id
+     WHERE (t.vessel = $1 OR t.vessel IS NULL)
+       AND t.status NOT IN ('completed', 'cancelled', 'snoozed')
+       AND (t.assigned_to = $2 OR t.assigned_to IS NULL)
+     ORDER BY
+       CASE t.priority WHEN 'urgent' THEN 0 WHEN 'high' THEN 1 WHEN 'medium' THEN 2 ELSE 3 END,
+       t.due_date ASC NULLS LAST`,
+    [session.vessel, session.crew_id]
+  );
+  const maintenanceTasks = tasksResult.rows;
+
   const weather = getWeatherSummary();
-  return c.html(renderTodayList(session, templates, onDemand, completedMap, handoffCount, crewmateStatus, weather));
+  return c.html(renderTodayList(session, templates, onDemand, completedMap, handoffCount, crewmateStatus, weather, maintenanceTasks));
 });
 
 function renderWeatherCard(weather: any): string {
@@ -119,7 +134,8 @@ function renderTodayList(
   completedMap: Map<string, any[]>,
   handoffCount: number = 0,
   crewmateStatus: { template_name: string; template_id: string; done: boolean; crew_name: string | null; role_label: string }[] = [],
-  weather: any = null
+  weather: any = null,
+  maintenanceTasks: any[] = []
 ): string {
   const renderCard = (t: Template, pinned: boolean = false) => {
     const comps = completedMap.get(t.id) || [];
@@ -197,6 +213,30 @@ function renderTodayList(
       </div>
     </div>` : '';
 
+  // Maintenance tasks (from assigned_tasks table)
+  const maintenanceHtml = maintenanceTasks.length > 0 ? `
+    <div style="margin-top:16px;margin-bottom:16px">
+      <h3 class="on-demand-header" style="cursor:default;display:flex;align-items:center;justify-content:space-between">
+        <span>Maintenance Tasks</span>
+        <span style="font-size:0.6875rem;background:rgba(112,208,235,0.15);color:#0C7DA0;padding:2px 8px;border-radius:10px">${maintenanceTasks.length}</span>
+      </h3>
+      ${maintenanceTasks.map((t: any) => {
+        const isUnclaimed = !t.assigned_to;
+        const priorityIcon = t.priority === 'urgent' ? '🔴 ' : t.priority === 'high' ? '⚠ ' : '';
+        const statusColor = t.status === 'in-progress' ? 'var(--primary)' : t.status === 'blocked' ? '#F36D4F' : 'var(--text-muted)';
+        const statusLabel = t.status === 'in-progress' ? 'In Progress' : t.status === 'blocked' ? 'Blocked' : isUnclaimed ? 'Tap to claim' : 'In Queue';
+        const dueStr = t.due_date ? ` · Due ${new Date(t.due_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}` : '';
+        return `
+          <a href="/tasks/${t.id}" style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;background:var(--surface);border-radius:var(--radius);margin-bottom:6px;text-decoration:none;color:var(--text);border-left:4px solid ${t.status === 'blocked' ? '#F36D4F' : '#70D0EB'};min-height:48px">
+            <div>
+              <div style="font-weight:500;font-size:0.875rem">${priorityIcon}${t.title}</div>
+              <div style="font-size:0.6875rem;color:var(--text-muted)">${t.vessel ? t.vessel.toUpperCase() : 'Any'}${t.assignee_name ? ' · ' + t.assignee_name : ''}${dueStr}</div>
+            </div>
+            <span style="font-size:0.75rem;color:${statusColor};font-weight:500;white-space:nowrap">${statusLabel}</span>
+          </a>`;
+      }).join('')}
+    </div>` : '';
+
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -236,6 +276,8 @@ function renderTodayList(
     </div>
 
     ${onDemandHtml}
+
+    ${maintenanceHtml}
 
     ${crewmateStatus.length > 0 ? `
     <div style="margin-top:16px;margin-bottom:16px">

@@ -14,6 +14,7 @@ import handoffRoutes from './routes/handoff.js';
 import submitRoutes from './routes/submit.js';
 import moreRoutes from './routes/more.js';
 import authRoutes from './routes/auth.js';
+import taskCrewRoutes from './routes/tasks.js';
 import weatherRoutes from './routes/weather.js';
 import { refreshWeather } from './services/weather/weather-cache.js';
 
@@ -40,6 +41,7 @@ app.route('/submit', submitRoutes);
 app.route('/more', moreRoutes);
 app.route('/login', authRoutes);
 app.route('/', weatherRoutes);
+app.route('/tasks', taskCrewRoutes);
 
 // Startup
 async function start() {

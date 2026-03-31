@@ -162,6 +162,18 @@ export async function initDatabase(): Promise<void> {
       EXCEPTION WHEN OTHERS THEN NULL;
       END $$;
 
+      -- Migration: expand assigned_tasks status to include blocked/snoozed + add snoozed_until
+      DO $$ BEGIN
+        ALTER TABLE assigned_tasks DROP CONSTRAINT IF EXISTS assigned_tasks_status_check;
+        ALTER TABLE assigned_tasks ADD CONSTRAINT assigned_tasks_status_check
+          CHECK (status IN ('pending', 'in-progress', 'completed', 'cancelled', 'blocked', 'snoozed'));
+      EXCEPTION WHEN OTHERS THEN NULL;
+      END $$;
+      DO $$ BEGIN
+        ALTER TABLE assigned_tasks ADD COLUMN snoozed_until DATE;
+      EXCEPTION WHEN duplicate_column THEN NULL;
+      END $$;
+
       -- Indexes for new tables
       CREATE INDEX IF NOT EXISTS idx_submissions_vessel ON submissions(vessel);
       CREATE INDEX IF NOT EXISTS idx_submissions_status ON submissions(status);
