@@ -157,8 +157,8 @@ export async function initDatabase(): Promise<void> {
       -- Migration: rename 'mate' → 'deckhand' in crew table
       DO $$ BEGIN
         ALTER TABLE crew DROP CONSTRAINT IF EXISTS crew_role_check;
-        ALTER TABLE crew ADD CONSTRAINT crew_role_check CHECK (role IN ('captain', 'deckhand'));
         UPDATE crew SET role = 'deckhand' WHERE role = 'mate';
+        ALTER TABLE crew ADD CONSTRAINT crew_role_check CHECK (role IN ('captain', 'deckhand'));
       EXCEPTION WHEN OTHERS THEN NULL;
       END $$;
 

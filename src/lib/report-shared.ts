@@ -241,29 +241,37 @@ function renderChecklistCard(
 
 // Render checklist summary symbol row for a vessel
 export function renderChecklistSymbols(checklists: any[]): string {
-  const CHECKLIST_ORDER = ['wake-up', 'between', 'put-to-bed', 'dmt'];
-  const CHECKLIST_LABELS: Record<string, string> = {
-    'wake-up': 'Wake Up',
-    'between': 'Between',
-    'put-to-bed': 'Put to Bed',
-    'dmt': 'DMT',
-  };
+  // Match template IDs by prefix — actual IDs are like 'wakeup-captain', 'between-trips-mate', etc.
+  const CHECKLIST_CATEGORIES = [
+    { prefix: 'wakeup', label: 'Wake Up' },
+    { prefix: 'between-trips', label: 'Between' },
+    { prefix: 'put-to-bed', label: 'Put to Bed' },
+    { prefix: 'daily-maintenance', label: 'DMT' },
+  ];
 
-  const symbols = CHECKLIST_ORDER.map(id => {
-    const match = checklists.find(co => co.template_id === id);
-    if (match) {
-      const time = match.completed_at
-        ? new Date(match.completed_at).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })
-        : '';
-      return `<span style="color:#006950;font-size:0.8125rem" title="${escapeHtml(CHECKLIST_LABELS[id] || id)} completed${time ? ' at ' + time : ''}">&#9745; ${escapeHtml(CHECKLIST_LABELS[id] || id)}${time ? ' (' + time + ')' : ''}</span>`;
+  const matched = new Set<string>();
+
+  const symbols = CHECKLIST_CATEGORIES.map(cat => {
+    // Find any completion matching this category prefix
+    const matches = checklists.filter(co => co.template_id.startsWith(cat.prefix));
+    if (matches.length > 0) {
+      matches.forEach(m => matched.add(m.template_id));
+      const times = matches.map(m => {
+        const role = m.template_id.includes('captain') ? 'Capt' : 'DH';
+        const t = m.completed_at
+          ? new Date(m.completed_at).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })
+          : '';
+        return `${role}${t ? ' ' + t : ''}`;
+      });
+      return `<span style="color:#006950;font-size:0.8125rem" title="${escapeHtml(cat.label)}: ${escapeHtml(times.join(', '))}">&#9745; ${escapeHtml(cat.label)}</span>`;
     } else {
-      return `<span style="color:#ba1a1a;font-size:0.8125rem;opacity:0.6" title="${escapeHtml(CHECKLIST_LABELS[id] || id)} not completed">&#10007; ${escapeHtml(CHECKLIST_LABELS[id] || id)}</span>`;
+      return `<span style="color:#ba1a1a;font-size:0.8125rem;opacity:0.6" title="${escapeHtml(cat.label)} not completed">&#10007; ${escapeHtml(cat.label)}</span>`;
     }
   });
 
-  // Also include any checklists not in the standard order
+  // Also include any checklists not matching standard categories
   for (const co of checklists) {
-    if (!CHECKLIST_ORDER.includes(co.template_id)) {
+    if (!matched.has(co.template_id)) {
       const label = co.template_id.replace(/-/g, ' ').replace(/\b\w/g, (ch: string) => ch.toUpperCase());
       const time = co.completed_at
         ? new Date(co.completed_at).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })
