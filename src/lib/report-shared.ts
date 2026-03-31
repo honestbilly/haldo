@@ -287,6 +287,11 @@ export function renderChecklistSymbols(checklists: any[]): string {
 export function reportLayout(activeTab: string, content: string): string {
   const today = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
 
+  const navTab = (label: string, href: string, tabName: string) => {
+    const isActive = activeTab === tabName;
+    return `<a href="${href}" style="padding:8px 0;text-decoration:none;font-weight:${isActive ? '700' : '500'};font-size:0.875rem;margin-bottom:-2px;${isActive ? 'color:#1A6B8A;border-bottom:2px solid #1A6B8A' : 'color:#8E8E93;border-bottom:2px solid transparent'};transition:color 0.15s">${label}</a>`;
+  };
+
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -294,38 +299,51 @@ export function reportLayout(activeTab: string, content: string): string {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>${activeTab} &mdash; Haldo</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Manrope:wght@600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       font-family: 'Inter', -apple-system, sans-serif;
       background: #F2F2F7;
-      color: #1a1c1c;
+      color: #1a1c1e;
       line-height: 1.5;
       -webkit-font-smoothing: antialiased;
     }
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      vertical-align: middle;
+    }
     a { color: inherit; }
-    .report-page { max-width: 960px; margin: 0 auto; padding: 24px; }
+    .report-page { max-width: 960px; margin: 0 auto; padding: 32px; }
     @media (max-width: 640px) { .report-page { padding: 16px; } }
   </style>
 </head>
 <body>
   <div class="report-page">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
-      <div style="display:flex;align-items:center;gap:12px">
-        <a href="/today" style="text-decoration:none;color:#1A6B8A;font-size:0.875rem;font-weight:500">← Home</a>
-        <h1 style="font-family:'Manrope',-apple-system,sans-serif;font-size:1.5rem;color:#1A6B8A">Haldo</h1>
+    <!-- Header (Stitch pattern) -->
+    <header style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;padding-bottom:16px;border-bottom:0">
+      <div style="display:flex;align-items:center;gap:16px">
+        <a href="/today" style="text-decoration:none;color:#1A6B8A;font-size:0.875rem;font-weight:600;display:flex;align-items:center;gap:4px">
+          <span class="material-symbols-outlined" style="font-size:18px">arrow_back</span> Home
+        </a>
+        <h1 style="font-family:'Manrope',-apple-system,sans-serif;font-size:1.5rem;font-weight:800;color:#1A6B8A;letter-spacing:-0.02em">Haldo</h1>
       </div>
-      <span style="font-size:0.875rem;color:#6e7a74">${today}</span>
-    </div>
-    <nav style="display:flex;gap:16px;margin-bottom:24px;border-bottom:2px solid #bdc9c2">
-      <a href="/report" style="padding:8px 0;text-decoration:none;font-weight:500;margin-bottom:-2px;${activeTab === 'Today' ? 'color:#1A6B8A;border-bottom:2px solid #1A6B8A' : 'color:#6e7a74;border-bottom:2px solid transparent'}">Today</a>
-      <a href="/report/history" style="padding:8px 0;text-decoration:none;font-weight:500;margin-bottom:-2px;${activeTab === 'History' ? 'color:#1A6B8A;border-bottom:2px solid #1A6B8A' : 'color:#6e7a74;border-bottom:2px solid transparent'}">History</a>
-      <a href="/report/templates" style="padding:8px 0;text-decoration:none;font-weight:500;margin-bottom:-2px;${activeTab === 'Templates' ? 'color:#1A6B8A;border-bottom:2px solid #1A6B8A' : 'color:#6e7a74;border-bottom:2px solid transparent'}">Templates</a>
-      <a href="/report/crew" style="padding:8px 0;text-decoration:none;font-weight:500;margin-bottom:-2px;${activeTab === 'Crew' ? 'color:#1A6B8A;border-bottom:2px solid #1A6B8A' : 'color:#6e7a74;border-bottom:2px solid transparent'}">Crew</a>
-      <a href="/report/tasks" style="padding:8px 0;text-decoration:none;font-weight:500;margin-bottom:-2px;${activeTab === 'Tasks' ? 'color:#1A6B8A;border-bottom:2px solid #1A6B8A' : 'color:#6e7a74;border-bottom:2px solid transparent'}">Tasks</a>
+      <div style="display:flex;align-items:center;gap:12px">
+        <span style="font-size:0.75rem;font-weight:500;color:#8E8E93;text-transform:uppercase;letter-spacing:0.1em">${today}</span>
+        <div style="width:32px;height:32px;border-radius:50%;background:#1A6B8A;display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:0.8125rem">M</div>
+      </div>
+    </header>
+
+    <!-- Navigation -->
+    <nav style="display:flex;gap:24px;margin-bottom:32px;border-bottom:2px solid #E5E5EA;padding-bottom:0">
+      ${navTab('Today', '/report', 'Today')}
+      ${navTab('History', '/report/history', 'History')}
+      ${navTab('Templates', '/report/templates', 'Templates')}
+      ${navTab('Crew', '/report/crew', 'Crew')}
+      ${navTab('Tasks', '/report/tasks', 'Tasks')}
     </nav>
+
     ${content}
   </div>
   <script>

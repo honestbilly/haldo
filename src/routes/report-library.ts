@@ -18,8 +18,8 @@ function subNav(active: string): string {
     { id: 'schedule', label: 'Schedule', href: '/report/schedule' },
     { id: 'library', label: 'Library', href: '/report/library' },
   ];
-  return `<div style="display:flex;gap:12px;margin-bottom:20px;padding-bottom:8px;border-bottom:1px solid #bdc9c2">
-    ${tabs.map(t => `<a href="${t.href}" style="padding:6px 12px;border-radius:6px;font-size:0.8125rem;font-weight:500;text-decoration:none;${active === t.id ? 'background:#1A6B8A;color:white' : 'background:rgba(26,107,138,0.06);color:#1A6B8A'}">${t.label}</a>`).join('')}
+  return `<div style="display:flex;align-items:center;gap:4px;padding:4px;background:#E5E8F0;border-radius:999px;width:fit-content;margin-bottom:24px">
+    ${tabs.map(t => `<a href="${t.href}" style="padding:8px 20px;border-radius:999px;font-size:0.75rem;font-weight:${active === t.id ? '700' : '500'};text-decoration:none;transition:all 0.15s;${active === t.id ? 'background:#1A6B8A;color:white;box-shadow:0 2px 4px rgba(0,0,0,0.1)' : 'color:#5b5f67'}">${t.label}</a>`).join('')}
   </div>`;
 }
 

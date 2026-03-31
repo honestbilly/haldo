@@ -50,8 +50,8 @@ function subNav(active: string): string {
     { id: 'schedule', label: 'Schedule', href: '/report/schedule' },
     { id: 'library', label: 'Library', href: '/report/library' },
   ];
-  return `<div style="display:flex;gap:12px;margin-bottom:20px;padding-bottom:8px;border-bottom:1px solid #bdc9c2">
-    ${tabs.map(t => `<a href="${t.href}" style="padding:6px 12px;border-radius:6px;font-size:0.8125rem;font-weight:500;text-decoration:none;${active === t.id ? 'background:#1A6B8A;color:white' : 'background:rgba(26,107,138,0.06);color:#1A6B8A'}">${t.label}</a>`).join('')}
+  return `<div style="display:flex;align-items:center;gap:4px;padding:4px;background:#E5E8F0;border-radius:999px;width:fit-content;margin-bottom:24px">
+    ${tabs.map(t => `<a href="${t.href}" style="padding:8px 20px;border-radius:999px;font-size:0.75rem;font-weight:${active === t.id ? '700' : '500'};text-decoration:none;transition:all 0.15s;${active === t.id ? 'background:#1A6B8A;color:white;box-shadow:0 2px 4px rgba(0,0,0,0.1)' : 'color:#5b5f67'}">${t.label}</a>`).join('')}
   </div>`;
 }
 
@@ -109,24 +109,31 @@ app.get('/report/tasks', async (c) => {
   }
 
   const renderTaskCard = (t: any) => {
-    const borderColor = t.status === 'blocked' ? '#F36D4F' : t.priority === 'urgent' ? '#ba1a1a' : t.priority === 'high' ? '#F36D4F' : '#1A6B8A';
+    const borderColor = t.status === 'blocked' ? '#FF3B30' : t.priority === 'urgent' ? '#FF3B30' : t.priority === 'high' ? '#FF9500' : '#1A6B8A';
+    const iconBg = t.status === 'blocked' ? 'rgba(255,59,48,0.08)' : t.priority === 'urgent' ? 'rgba(255,59,48,0.08)' : t.priority === 'high' ? 'rgba(255,149,0,0.08)' : 'rgba(26,107,138,0.05)';
+    const iconColor = t.status === 'blocked' ? '#FF3B30' : t.priority === 'urgent' ? '#FF3B30' : t.priority === 'high' ? '#FF9500' : '#1A6B8A';
     const dueStr = t.due_date ? new Date(t.due_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '';
-    const assigneeStr = t.assignee_name || (t.assigned_to ? 'Unknown' : 'Unassigned');
+    const assigneeStr = t.assignee_name || (t.assigned_to ? 'Unknown' : '<span style="font-style:italic;opacity:0.6">Unassigned</span>');
 
     return `
-      <a href="/report/tasks/${t.id}" style="display:block;text-decoration:none;color:inherit;background:#FFFFFF;border-radius:8px;padding:12px 16px;margin-bottom:6px;border-left:4px solid ${borderColor}">
-        <div style="display:flex;justify-content:space-between;align-items:flex-start">
-          <div style="flex:1;min-width:0">
-            <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
-              ${priorityBadge(t.priority)}
-              <span style="font-weight:600;font-size:0.875rem">${escapeHtml(t.title)}</span>
-              ${statusBadge(t.status, !!t.assigned_to)}
-            </div>
-            <div style="font-size:0.75rem;color:#6e7a74;margin-top:4px">
-              ${assigneeStr}${dueStr ? ` · Due ${dueStr}` : ''}${t.notes ? ' · 📝' : ''}
-            </div>
+      <a href="/report/tasks/${t.id}" style="display:flex;align-items:center;justify-content:space-between;text-decoration:none;color:#1a1c1e;background:white;border-radius:8px;padding:16px;margin-bottom:8px;border-left:4px solid ${borderColor};box-shadow:0 4px 12px rgba(0,0,0,0.02);transition:box-shadow 0.2s;cursor:pointer" onmouseenter="this.style.boxShadow='0 8px 20px rgba(0,0,0,0.06)'" onmouseleave="this.style.boxShadow='0 4px 12px rgba(0,0,0,0.02)'">
+        <div style="display:flex;align-items:center;gap:16px;flex:1;min-width:0">
+          <div style="width:40px;height:40px;border-radius:50%;background:${iconBg};display:flex;align-items:center;justify-content:center;flex-shrink:0">
+            <span class="material-symbols-outlined" style="font-size:20px;color:${iconColor}">${t.status === 'blocked' ? 'block' : 'build'}</span>
           </div>
-          <span style="color:#6e7a74;font-size:0.875rem;flex-shrink:0;margin-left:8px">→</span>
+          <div style="min-width:0">
+            <div style="display:flex;align-items:center;gap:6px">
+              ${priorityBadge(t.priority)}
+              <h3 style="font-weight:700;font-size:0.875rem">${escapeHtml(t.title)}</h3>
+            </div>
+            <p style="font-size:0.6875rem;color:#5b5f67;margin-top:2px;font-weight:500">
+              ${assigneeStr}${dueStr ? ` · <span style="color:${t.status === 'blocked' ? '#FF3B30' : '#5b5f67'}">Due ${dueStr}</span>` : ''}${t.notes ? ' · <span class="material-symbols-outlined" style="font-size:12px;vertical-align:middle">note</span>' : ''}
+            </p>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;flex-shrink:0">
+          ${statusBadge(t.status, !!t.assigned_to)}
+          <span class="material-symbols-outlined" style="font-size:20px;color:#c7c7cc">chevron_right</span>
         </div>
       </a>`;
   };
@@ -134,9 +141,15 @@ app.get('/report/tasks', async (c) => {
   const vesselSections = VESSELS.filter(v => byVessel.has(v)).map(v => {
     const vTasks = byVessel.get(v)!;
     return `
-      <div style="margin-bottom:20px">
-        <h3 style="font-family:'Manrope',-apple-system,sans-serif;font-size:0.8125rem;font-weight:700;color:#1A6B8A;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px">${VESSEL_LABELS[v] || v} <span style="background:rgba(26,107,138,0.1);color:#1A6B8A;padding:2px 6px;border-radius:10px;font-size:0.6875rem">${vTasks.length}</span></h3>
-        ${vTasks.map(renderTaskCard).join('')}
+      <div style="margin-bottom:32px">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;padding:0 4px">
+          <h2 style="font-family:'Manrope',-apple-system,sans-serif;font-size:1.125rem;font-weight:800;color:#1A6B8A;letter-spacing:-0.01em">${VESSEL_LABELS[v] || v}</h2>
+          <span style="padding:2px 8px;background:rgba(26,107,138,0.1);color:#1A6B8A;font-size:0.625rem;font-weight:900;border-radius:999px">${vTasks.length}</span>
+          <div style="flex:1;height:1px;background:#E5E5EA"></div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          ${vTasks.map(renderTaskCard).join('')}
+        </div>
       </div>`;
   }).join('');
 
@@ -146,21 +159,27 @@ app.get('/report/tasks', async (c) => {
       ${noVessel.map(renderTaskCard).join('')}
     </div>` : '';
 
+  const filterBtnStyle = `display:flex;align-items:center;gap:6px;padding:8px 16px;background:#E5E8F0;color:#1a1c1e;border-radius:8px;font-size:0.75rem;font-weight:500;border:none;text-decoration:none;cursor:pointer;transition:background 0.15s`;
+
   const filterHtml = `
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:16px">
-      <select onchange="window.location=this.value" style="${dropdownStyle}">
-        <option value="/report/tasks?${vesselFilter ? 'vessel=' + vesselFilter : ''}">All Status</option>
-        ${['pending', 'in-progress', 'blocked', 'completed', 'snoozed'].map(s =>
-          `<option value="/report/tasks?status=${s}${vesselFilter ? '&vessel=' + vesselFilter : ''}" ${statusFilter === s ? 'selected' : ''}>${STATUS_BADGES[s]?.label || s}</option>`
-        ).join('')}
-      </select>
-      <select onchange="window.location=this.value" style="${dropdownStyle}">
-        <option value="/report/tasks?${statusFilter ? 'status=' + statusFilter : ''}">All Vessels</option>
-        ${VESSELS.map(v =>
-          `<option value="/report/tasks?vessel=${v}${statusFilter ? '&status=' + statusFilter : ''}" ${vesselFilter === v ? 'selected' : ''}>${VESSEL_LABELS[v]}</option>`
-        ).join('')}
-      </select>
-      <a href="/report/tasks/create" style="display:flex;align-items:center;justify-content:center;padding:10px;background:#1A6B8A;color:white;border-radius:8px;text-decoration:none;font-weight:600;font-size:0.875rem;min-height:44px">+ New Task</a>
+    <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;margin-bottom:24px">
+      <div style="display:flex;align-items:center;gap:8px">
+        <select onchange="window.location=this.value" style="${filterBtnStyle};appearance:none;padding-right:28px;background-image:url('data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2712%27 height=%2712%27 fill=%27%238E8E93%27 viewBox=%270 0 16 16%27%3E%3Cpath d=%27M8 11L3 6h10l-5 5z%27/%3E%3C/svg%3E');background-repeat:no-repeat;background-position:right 8px center">
+          <option value="/report/tasks?${vesselFilter ? 'vessel=' + vesselFilter : ''}">All Status</option>
+          ${['pending', 'in-progress', 'blocked', 'completed', 'snoozed'].map(s =>
+            `<option value="/report/tasks?status=${s}${vesselFilter ? '&vessel=' + vesselFilter : ''}" ${statusFilter === s ? 'selected' : ''}>${STATUS_BADGES[s]?.label || s}</option>`
+          ).join('')}
+        </select>
+        <select onchange="window.location=this.value" style="${filterBtnStyle};appearance:none;padding-right:28px;background-image:url('data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2712%27 height=%2712%27 fill=%27%238E8E93%27 viewBox=%270 0 16 16%27%3E%3Cpath d=%27M8 11L3 6h10l-5 5z%27/%3E%3C/svg%3E');background-repeat:no-repeat;background-position:right 8px center">
+          <option value="/report/tasks?${statusFilter ? 'status=' + statusFilter : ''}">All Vessels</option>
+          ${VESSELS.map(v =>
+            `<option value="/report/tasks?vessel=${v}${statusFilter ? '&status=' + statusFilter : ''}" ${vesselFilter === v ? 'selected' : ''}>${VESSEL_LABELS[v]}</option>`
+          ).join('')}
+        </select>
+      </div>
+      <a href="/report/tasks/create" style="display:flex;align-items:center;gap:6px;padding:8px 24px;background:linear-gradient(135deg,#1A6B8A,#0D5470);color:white;border-radius:8px;text-decoration:none;font-weight:700;font-size:0.75rem;box-shadow:0 2px 8px rgba(26,107,138,0.2);transition:opacity 0.15s">
+        <span class="material-symbols-outlined" style="font-size:18px">add</span> New Task
+      </a>
     </div>`;
 
   return c.html(reportLayout('Tasks', `
