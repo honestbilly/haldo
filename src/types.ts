@@ -121,7 +121,7 @@ export type Template = ChecklistTemplate | LogbookTemplate;
 export interface CrewRow {
   id: string;
   name: string;
-  role: 'captain' | 'mate';
+  role: 'captain' | 'deckhand';
   vessel: string | null;
   active: boolean;
   created_at: Date;
@@ -165,7 +165,7 @@ export interface AlertRow {
 
 export interface SessionData {
   vessel: string;
-  role: 'captain' | 'mate';
+  role: 'captain' | 'deckhand';
   crew_id: string;
   crew_name: string;
   trip_date: string;

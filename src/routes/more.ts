@@ -33,7 +33,7 @@ app.get('/', async (c) => {
         ${session.crew_name.charAt(0)}
       </div>
       <h1 style="font-family:var(--font-heading);font-size:1.125rem;">${session.crew_name}</h1>
-      <p style="font-size:0.8125rem;color:var(--text-muted);">${session.role === 'captain' ? 'Captain' : 'Mate'} — ${session.vessel.toUpperCase()} — ${session.trip_slot}</p>
+      <p style="font-size:0.8125rem;color:var(--text-muted);">${session.role === 'captain' ? 'Captain' : 'Deckhand'} — ${session.vessel.toUpperCase()} — ${session.trip_slot}</p>
     </header>
 
     <div style="display:flex;flex-direction:column;gap:2px;">

@@ -609,7 +609,7 @@ function renderChecklist(session: any, template: ChecklistTemplate, lastEngineHo
       ${template.completion.sign_off ? `
         <label class="sign-off">
           <input type="checkbox" name="sign_off">
-          <span>I, ${session.role === 'captain' ? 'Captain' : 'Mate'} ${session.crew_name}, confirm this is accurate</span>
+          <span>I, ${session.role === 'captain' ? 'Captain' : 'Deckhand'} ${session.crew_name}, confirm this is accurate</span>
         </label>` : ''}
 
       <button type="submit" class="submit-btn" id="submit-btn">
@@ -703,7 +703,7 @@ function renderFreeFormLog(session: any): string {
 }
 
 function renderLogbook(session: any, template: LogbookTemplate): string {
-  const role = session.role as 'captain' | 'mate';
+  const role = session.role as 'captain' | 'deckhand';
   const visibleSteps = role === 'captain' ? template.captain_steps : template.mate_steps;
 
   if (visibleSteps.length === 0) {
@@ -762,7 +762,7 @@ function renderLogbook(session: any, template: LogbookTemplate): string {
           <div id="review-summary" class="review-summary"></div>
           <label class="sign-off">
             <input type="checkbox" name="sign_off">
-            <span>I, ${session.role === 'captain' ? 'Captain' : 'Mate'} ${session.crew_name}, confirm this is accurate</span>
+            <span>I, ${session.role === 'captain' ? 'Captain' : 'Deckhand'} ${session.crew_name}, confirm this is accurate</span>
           </label>
         </div>` : ''}
 

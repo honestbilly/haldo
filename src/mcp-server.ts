@@ -81,7 +81,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
         type: 'object' as const,
         properties: {
           active: { type: 'boolean' },
-          role: { type: 'string', enum: ['captain', 'mate'] },
+          role: { type: 'string', enum: ['captain', 'deckhand'] },
           vessel: { type: 'string' },
         },
       },
@@ -104,7 +104,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
         type: 'object' as const,
         properties: {
           name: { type: 'string' },
-          role: { type: 'string', enum: ['captain', 'mate'] },
+          role: { type: 'string', enum: ['captain', 'deckhand'] },
           vessel: { type: 'string', description: 'Default vessel (optional)' },
         },
         required: ['name', 'role'],
@@ -118,7 +118,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
         properties: {
           crew_id: { type: 'string' },
           name: { type: 'string' },
-          role: { type: 'string', enum: ['captain', 'mate'] },
+          role: { type: 'string', enum: ['captain', 'deckhand'] },
           vessel: { type: 'string' },
           active: { type: 'boolean' },
         },
@@ -198,7 +198,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
         type: 'object' as const,
         properties: {
           vessel: { type: 'string' },
-          role: { type: 'string', enum: ['captain', 'mate'] },
+          role: { type: 'string', enum: ['captain', 'deckhand'] },
           date: { type: 'string', description: 'Start date (ISO format)' },
           days: { type: 'number', description: 'Number of days to preview (default 7)' },
         },

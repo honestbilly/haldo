@@ -3,7 +3,7 @@
   "name": "Daily Maintenance — Blu Q Mate",
   "type": "checklist",
   "vessel": "blu-q",
-  "role": "mate",
+  "role": "deckhand",
   "recurrence": "daily",
   "version": "2026-03-30",
   "source": "KB: blu-q / Mate Blu Q Daily Maintenance",

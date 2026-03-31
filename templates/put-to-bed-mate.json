@@ -1,9 +1,9 @@
 {
   "id": "put-to-bed-mate",
-  "name": "Put SQUID to Bed — Mate",
+  "name": "Put SQUID to Bed — Deckhand",
   "type": "checklist",
   "vessel": "squid",
-  "role": "mate",
+  "role": "deckhand",
   "recurrence": "daily",
   "version": "2026-03-30",
   "source": "KB: squid-on-board-binder / §5 Mate Boat Checklist — PUTTING BOAT TO BED",

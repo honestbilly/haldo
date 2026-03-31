@@ -16,10 +16,20 @@ export async function initDatabase(): Promise<void> {
   const client = await pool.connect();
   try {
     await client.query(`
+      CREATE TABLE IF NOT EXISTS vessels (
+        id TEXT PRIMARY KEY,
+        name TEXT NOT NULL,
+        slug TEXT NOT NULL UNIQUE,
+        active BOOLEAN NOT NULL DEFAULT TRUE,
+        coi BOOLEAN NOT NULL DEFAULT FALSE,
+        notes TEXT,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
+
       CREATE TABLE IF NOT EXISTS crew (
         id TEXT PRIMARY KEY,
         name TEXT NOT NULL,
-        role TEXT NOT NULL CHECK (role IN ('captain', 'mate')),
+        role TEXT NOT NULL CHECK (role IN ('captain', 'deckhand')),
         vessel TEXT,
         active BOOLEAN NOT NULL DEFAULT TRUE,
         created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
@@ -82,6 +92,44 @@ export async function initDatabase(): Promise<void> {
         updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
       );
 
+      CREATE TABLE IF NOT EXISTS submissions (
+        id TEXT PRIMARY KEY,
+        crew_id TEXT NOT NULL REFERENCES crew(id),
+        vessel TEXT NOT NULL,
+        category TEXT NOT NULL CHECK (category IN (
+          'maintenance', 'suggestion', 'meeting-topic',
+          'safety', 'sop-feedback', 'kudos', 'general'
+        )),
+        title TEXT NOT NULL,
+        details TEXT,
+        photo_url TEXT,
+        status TEXT NOT NULL DEFAULT 'new' CHECK (status IN ('new', 'reviewed', 'in-progress', 'resolved')),
+        priority TEXT CHECK (priority IN ('low', 'medium', 'high', 'urgent')),
+        resolution_note TEXT,
+        reviewed_by TEXT,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
+
+      CREATE TABLE IF NOT EXISTS assigned_tasks (
+        id TEXT PRIMARY KEY,
+        title TEXT NOT NULL,
+        description TEXT,
+        vessel TEXT,
+        assigned_to TEXT REFERENCES crew(id),
+        assigned_by TEXT,
+        template_id TEXT,
+        source_submission_id TEXT,
+        status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'in-progress', 'completed', 'cancelled')),
+        priority TEXT NOT NULL DEFAULT 'medium' CHECK (priority IN ('low', 'medium', 'high', 'urgent')),
+        due_date DATE,
+        completed_at TIMESTAMPTZ,
+        completed_by TEXT,
+        notes TEXT,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
+
       -- Auth tokens for persistent login
       CREATE TABLE IF NOT EXISTS auth_tokens (
         token TEXT PRIMARY KEY,
@@ -106,6 +154,22 @@ export async function initDatabase(): Promise<void> {
       EXCEPTION WHEN OTHERS THEN NULL;
       END $$;
 
+      -- Migration: rename 'mate' → 'deckhand' in crew table
+      DO $$ BEGIN
+        ALTER TABLE crew DROP CONSTRAINT IF EXISTS crew_role_check;
+        ALTER TABLE crew ADD CONSTRAINT crew_role_check CHECK (role IN ('captain', 'deckhand'));
+        UPDATE crew SET role = 'deckhand' WHERE role = 'mate';
+      EXCEPTION WHEN OTHERS THEN NULL;
+      END $$;
+
+      -- Indexes for new tables
+      CREATE INDEX IF NOT EXISTS idx_submissions_vessel ON submissions(vessel);
+      CREATE INDEX IF NOT EXISTS idx_submissions_status ON submissions(status);
+      CREATE INDEX IF NOT EXISTS idx_submissions_category ON submissions(category);
+      CREATE INDEX IF NOT EXISTS idx_assigned_tasks_vessel ON assigned_tasks(vessel);
+      CREATE INDEX IF NOT EXISTS idx_assigned_tasks_status ON assigned_tasks(status);
+      CREATE INDEX IF NOT EXISTS idx_assigned_tasks_assigned_to ON assigned_tasks(assigned_to);
+
       -- Indexes for common queries
       CREATE INDEX IF NOT EXISTS idx_handoff_notes_vessel ON handoff_notes(vessel, resolved);
       CREATE INDEX IF NOT EXISTS idx_completions_vessel ON completions(vessel);
@@ -122,6 +186,22 @@ export async function initDatabase(): Promise<void> {
     const crewCount = await client.query('SELECT COUNT(*) FROM crew');
     if (parseInt(crewCount.rows[0].count) === 0) {
       console.log('[db] Empty database detected — seeding crew and settings...');
+      // Seed vessels
+      const vessels = [
+        { name: 'SQUID', slug: 'squid', coi: true },
+        { name: 'Blu Q', slug: 'blu-q', coi: true },
+        { name: 'Cowfish', slug: 'cowfish', coi: true },
+        { name: 'Scout', slug: 'scout', coi: false },
+        { name: 'Java Cat', slug: 'java-cat', coi: false },
+      ];
+      for (const v of vessels) {
+        await client.query(
+          `INSERT INTO vessels (id, name, slug, coi) VALUES ($1, $2, $3, $4)
+           ON CONFLICT (slug) DO NOTHING`,
+          [nanoid(), v.name, v.slug, v.coi]
+        );
+      }
+
       const crew = [
         { name: 'Jess', role: 'captain', vessel: 'squid' },
         { name: 'Chase', role: 'captain', vessel: 'squid' },
@@ -130,10 +210,10 @@ export async function initDatabase(): Promise<void> {
         { name: 'Libbie', role: 'captain', vessel: 'squid' },
         { name: 'Dan', role: 'captain', vessel: 'squid' },
         { name: 'Andrew', role: 'captain', vessel: 'squid' },
-        { name: 'Hadden', role: 'mate', vessel: 'squid' },
-        { name: 'Bryan', role: 'mate', vessel: 'squid' },
-        { name: 'Jackie', role: 'mate', vessel: 'squid' },
-        { name: 'Charlie', role: 'mate', vessel: 'squid' },
+        { name: 'Hadden', role: 'deckhand', vessel: 'squid' },
+        { name: 'Bryan', role: 'deckhand', vessel: 'squid' },
+        { name: 'Jackie', role: 'deckhand', vessel: 'squid' },
+        { name: 'Charlie', role: 'deckhand', vessel: 'squid' },
       ];
       for (const c of crew) {
         await client.query(
@@ -163,7 +243,7 @@ export async function initDatabase(): Promise<void> {
           [key, value]
         );
       }
-      console.log('[db] Seed complete — 11 crew, 5 vessels, settings');
+      console.log('[db] Seed complete — 5 vessels, 11 crew, settings');
     }
   } finally {
     client.release();

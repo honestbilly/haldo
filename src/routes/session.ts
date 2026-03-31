@@ -167,7 +167,7 @@ function renderLanding(
         <label for="role">Your role</label>
         <div class="button-group" id="role-buttons">
           <button type="button" class="select-btn" data-value="captain">Captain</button>
-          <button type="button" class="select-btn" data-value="mate">Mate</button>
+          <button type="button" class="select-btn" data-value="deckhand">Deckhand</button>
         </div>
         <input type="hidden" name="role" id="role-input" required>
       </div>

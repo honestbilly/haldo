@@ -3,7 +3,7 @@
   "name": "Snorkel Gear Inventory & Maintenance",
   "type": "checklist",
   "vessel": "squid",
-  "role": "mate",
+  "role": "deckhand",
   "recurrence": "weekly",
   "trigger_day": "tuesday",
   "version": "2026-03-30",

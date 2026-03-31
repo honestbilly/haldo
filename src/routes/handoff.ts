@@ -84,7 +84,7 @@ function renderHandoff(session: SessionData, notes: any[], saved: boolean = fals
     const time = new Date(n.created_at).toLocaleString('en-US', {
       month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit'
     });
-    const roleLabel = n.role === 'captain' ? 'Capt.' : 'Mate';
+    const roleLabel = n.role === 'captain' ? 'Capt.' : 'Deckhand';
 
     if (editable) {
       return `

@@ -841,7 +841,7 @@ app.get('/report/crew', async (c) => {
   const generated = c.req.query('generated');
 
   const crewRows = Array.from(crewMap.values()).map(cr => {
-    const roleLabel = cr.role === 'captain' ? 'Captain' : 'Mate';
+    const roleLabel = cr.role === 'captain' ? 'Captain' : 'Deckhand';
     const statusBadge = cr.active
       ? '<span style="font-size:0.6875rem;background:rgba(0,105,80,0.1);color:#006950;padding:2px 6px;border-radius:4px">Active</span>'
       : '<span style="font-size:0.6875rem;background:rgba(186,26,26,0.1);color:#ba1a1a;padding:2px 6px;border-radius:4px">Inactive</span>';

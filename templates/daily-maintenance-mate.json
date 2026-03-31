@@ -1,12 +1,12 @@
 {
   "id": "daily-maintenance-mate",
-  "name": "Daily Maintenance — Mate",
+  "name": "Daily Maintenance — Deckhand",
   "type": "checklist",
   "vessel": "squid",
-  "role": "mate",
+  "role": "deckhand",
   "recurrence": "daily",
   "version": "2026-03-30",
-  "source": "KB: squid-on-board-binder / §7 Mate SQUID Daily and Monthly Maintenance — Mate's DMT",
+  "source": "KB: squid-on-board-binder / §7 Mate SQUID Daily and Monthly Maintenance — Deckhand's DMT",
   "estimated_minutes": 15,
   "priority": 80,
   "display_order": 40,
@@ -64,7 +64,7 @@
       ]
     },
     {
-      "title": "Friday — Mate's Cabinet Tidy",
+      "title": "Friday — Deckhand's Cabinet Tidy",
       "items": [
         {
           "id": "fri-cabinet",
