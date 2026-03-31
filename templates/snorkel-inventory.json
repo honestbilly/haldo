@@ -11,7 +11,7 @@
   "estimated_minutes": 10,
   "priority": 90,
   "display_order": 60,
-  "intro": "Check all snorkel gear. Replenish from office or foredeck if below minimum. Order more when office runs low.",
+  "intro": "Tuesday snorkel inventory. Count all gear — only count complete, working sets. Pull damaged items into the repair bin. Restock from office or foredeck dockbox if below minimum. Flag damaged gear with the (+) note button and a photo.",
   "sections": [
     {
       "title": "Masks & Snorkels",
@@ -65,7 +65,11 @@
           "type": "number",
           "min": 10,
           "max": 12,
-          "unit": "pairs"
+          "unit": "pairs",
+          "help": {
+            "title": "Fin sizing",
+            "body": "Large fins fit most adult men. Check straps for cracks. Pull any pair with a broken strap and put in repair bin."
+          }
         },
         {
           "id": "sm-fins",
@@ -102,7 +106,11 @@
           "type": "select",
           "options": ["Empty", "Quarter", "Half", "Three-quarters", "Full"],
           "alert_below": "Half",
-          "alert_message": "Defog running low. Restock."
+          "alert_message": "Defog running low. Restock.",
+          "help": {
+            "title": "Defog usage",
+            "body": "Apply defog and rinse out BEFORE distributing gear. Guests should receive pre-defogged masks. If defog was not applied, correct the behavior."
+          }
         },
         {
           "id": "baby-shampoo",
@@ -110,7 +118,8 @@
           "type": "select",
           "options": ["Empty", "Quarter", "Half", "Three-quarters", "Full"],
           "alert_below": "Half",
-          "alert_message": "Baby shampoo is low. Restock."
+          "alert_message": "Baby shampoo is low. Restock.",
+          "info": "Alternative to defog — some guests prefer it"
         },
         {
           "id": "saniq",
