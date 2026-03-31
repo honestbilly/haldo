@@ -14,6 +14,8 @@ import handoffRoutes from './routes/handoff.js';
 import submitRoutes from './routes/submit.js';
 import moreRoutes from './routes/more.js';
 import authRoutes from './routes/auth.js';
+import weatherRoutes from './routes/weather.js';
+import { refreshWeather } from './services/weather/weather-cache.js';
 
 const app = new Hono();
 
@@ -37,6 +39,7 @@ app.route('/handoff', handoffRoutes);
 app.route('/submit', submitRoutes);
 app.route('/more', moreRoutes);
 app.route('/login', authRoutes);
+app.route('/', weatherRoutes);
 
 // Startup
 async function start() {
@@ -47,6 +50,9 @@ async function start() {
 
   // Load templates
   await loadTemplates();
+
+  // Pre-fetch weather data (fire-and-forget)
+  refreshWeather().catch(err => console.error('[haldo] Weather pre-fetch failed:', err));
 
   // Start server
   const port = Number(process.env.PORT) || 3000;

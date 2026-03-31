@@ -4,6 +4,7 @@ import { getSession } from './session.js';
 import { getTemplatesForContext, getOnDemandTemplates } from '../services/templates.js';
 import { bottomNav } from '../ui.js';
 import type { Template, ChecklistTemplate, LogbookTemplate, SessionData } from '../types.js';
+import { getWeatherSummary } from '../services/weather/weather-cache.js';
 
 type Env = { Variables: { session: SessionData } };
 
@@ -67,8 +68,49 @@ app.get('/today', async (c) => {
     role_label: otherRoleLabel,
   }));
 
-  return c.html(renderTodayList(session, templates, onDemand, completedMap, handoffCount, crewmateStatus));
+  const weather = getWeatherSummary();
+  return c.html(renderTodayList(session, templates, onDemand, completedMap, handoffCount, crewmateStatus, weather));
 });
+
+function renderWeatherCard(weather: any): string {
+  if (!weather) {
+    return `
+      <a href="/weather" style="display:block;text-decoration:none;color:inherit;background:linear-gradient(135deg, #006950 0%, #004D3A 100%);border-radius:12px;padding:14px 16px;margin-bottom:12px;min-height:48px">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <span style="font-size:0.8125rem;color:rgba(255,255,255,0.7)">Weather loading...</span>
+          <span style="color:rgba(255,255,255,0.5)">→</span>
+        </div>
+      </a>`;
+  }
+
+  const nextTide = weather.tideEvents[0];
+  const tideStr = nextTide
+    ? `${nextTide.type === 'H' ? 'High' : 'Low'} ${nextTide.height_ft.toFixed(1)}ft ${nextTide.time.split(' ')[1] ?? ''}`
+    : '';
+
+  const alertBanner = weather.alerts.length > 0
+    ? `<div style="background:rgba(245,158,11,0.2);border-radius:6px;padding:4px 8px;margin-top:6px;font-size:0.6875rem;color:#FEF3C7">⚠ ${weather.alerts[0].event}</div>`
+    : '';
+
+  return `
+    <a href="/weather" style="display:block;text-decoration:none;color:inherit;background:linear-gradient(135deg, #006950 0%, #004D3A 100%);border-radius:12px;padding:14px 16px;margin-bottom:12px">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start">
+        <div>
+          <div style="font-size:1.5rem;font-weight:700;color:white">${weather.currentTemp ? Math.round(weather.currentTemp) + '°' : '--°'}</div>
+          <div style="font-size:0.8125rem;color:rgba(255,255,255,0.8)">${weather.conditions}</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:0.875rem;color:rgba(255,255,255,0.9)">
+            ${Math.round(weather.windSpeed)} kts ${weather.windDirection}
+            ${weather.windGust > weather.windSpeed + 3 ? `<span style="color:rgba(255,255,255,0.6)">g${Math.round(weather.windGust)}</span>` : ''}
+          </div>
+          ${weather.precipChance > 0 ? `<div style="font-size:0.75rem;color:rgba(255,255,255,0.7)">Rain ${weather.precipChance}%</div>` : ''}
+          ${tideStr ? `<div style="font-size:0.75rem;color:rgba(255,255,255,0.6);margin-top:2px">${tideStr}</div>` : ''}
+        </div>
+      </div>
+      ${alertBanner}
+    </a>`;
+}
 
 function renderTodayList(
   session: any,
@@ -76,7 +118,8 @@ function renderTodayList(
   onDemand: Template[],
   completedMap: Map<string, any[]>,
   handoffCount: number = 0,
-  crewmateStatus: { template_name: string; template_id: string; done: boolean; crew_name: string | null; role_label: string }[] = []
+  crewmateStatus: { template_name: string; template_id: string; done: boolean; crew_name: string | null; role_label: string }[] = [],
+  weather: any = null
 ): string {
   const renderCard = (t: Template, pinned: boolean = false) => {
     const comps = completedMap.get(t.id) || [];
@@ -174,6 +217,8 @@ function renderTodayList(
       <h1>${session.crew_name} — ${session.vessel.toUpperCase()}</h1>
       <p>${session.trip_slot} Trip | ${(() => { const [y,m,d] = session.trip_date.split('-').map(Number); return new Date(y, m-1, d).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }); })()}</p>
     </header>
+    ${renderWeatherCard(weather)}
+
     ${handoffCount > 0 ? `
     <a href="/handoff" class="handoff-banner" style="display:flex;align-items:center;gap:10px;padding:12px 16px;background:#FFF8E1;border:1px solid #F59E0B;border-radius:var(--radius);text-decoration:none;color:#92400E;margin-bottom:12px;min-height:48px">
       <span style="font-size:1.1rem">📝</span>
