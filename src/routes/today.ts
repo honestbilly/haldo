@@ -366,13 +366,38 @@ function renderTodayList(
           </a>`;
       }).join('');
 
-      // Trip logbook goes in this section (part of daily routine)
+      // Trip logbook with dual-trip (AM/PM/Sunset) status indicator
       const tripLogbook = templates.find(t => t.type === 'logbook' && t.id.startsWith('trip-logbook'));
       const logbookHtml = tripLogbook ? (() => {
         const comps = completedMap.get(tripLogbook.id) || [];
-        const isDone = comps.some(c => c.trip_slot === session.trip_slot);
+        const amDone = comps.some(c => c.trip_slot === 'AM');
+        const pmDone = comps.some(c => c.trip_slot === 'PM');
+        const sunsetDone = comps.some(c => c.trip_slot === 'Sunset');
+        const totalDone = [amDone, pmDone, sunsetDone].filter(Boolean).length;
         const est = (tripLogbook as LogbookTemplate).estimated_minutes;
-        return stitchCard(`/c/${tripLogbook.id}`, `Trip Logbook — ${session.vessel.toUpperCase()}`, est ? `~${est} min` : '', isDone ? '✓ DONE' : 'NOT DONE', isDone ? '#34C759' : '#1A6B8A', isDone);
+
+        // Dual-trip indicator: show which slots are complete
+        const tripIndicator = (slot: string, done: boolean) =>
+          `<span style="display:flex;align-items:center;gap:4px;font-size:0.6875rem;font-weight:600;color:${done ? '#34C759' : '#c7c7cc'}">
+            <span class="material-symbols-outlined" style="font-size:14px;${done ? "font-variation-settings:'FILL' 1;color:#34C759" : 'color:#c7c7cc'}">${done ? 'check_circle' : 'radio_button_unchecked'}</span>
+            ${slot}
+          </span>`;
+
+        return `
+          <a href="/c/${tripLogbook.id}" style="display:flex;align-items:center;justify-content:space-between;background:white;border-radius:12px;padding:16px 20px;box-shadow:0 2px 8px rgba(0,0,0,0.04);text-decoration:none;color:#1a1c1e;position:relative;overflow:hidden;transition:transform 0.15s;margin-top:8px" ontouchstart="this.style.transform='scale(0.98)'" ontouchend="this.style.transform='scale(1)'">
+            <div style="position:absolute;left:0;top:0;bottom:0;width:6px;background:${totalDone > 0 ? '#1A6B8A' : '#1A6B8A'}"></div>
+            <div style="display:flex;align-items:center;gap:12px">
+              <span class="material-symbols-outlined" style="font-size:24px;color:#1A6B8A">menu_book</span>
+              <div>
+                <h3 style="font-weight:700;font-size:0.9375rem">Trip Logbook</h3>
+                ${est ? `<span style="font-size:0.75rem;color:#8E8E93">~${est} min per trip</span>` : ''}
+              </div>
+            </div>
+            <div style="display:flex;gap:12px;align-items:center">
+              ${tripIndicator('AM', amDone)}
+              ${tripIndicator('PM', pmDone)}
+            </div>
+          </a>`;
       })() : '';
 
       return `
