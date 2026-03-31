@@ -1,0 +1,132 @@
+{
+  "id": "daily-maintenance-mate-bluq",
+  "name": "Daily Maintenance — Blu Q Mate",
+  "type": "checklist",
+  "vessel": "blu-q",
+  "role": "mate",
+  "recurrence": "daily",
+  "version": "2026-03-30",
+  "source": "KB: blu-q / Mate Blu Q Daily Maintenance",
+  "estimated_minutes": 15,
+  "priority": 80,
+  "display_order": 40,
+  "intro": "One task per day, about 15 minutes. Check today's day and complete the matching task. Tuesday snorkel work may take longer — clock in for dock time if needed.",
+  "sections": [
+    {
+      "title": "Monday — Deep Clean Coolers",
+      "items": [
+        {
+          "id": "mon-coolers",
+          "label": "Monday: Deep clean coolers",
+          "type": "checkbox"
+        },
+        {
+          "id": "mon-cooler-photo",
+          "label": "Photo of coolers after cleaning (optional)",
+          "type": "photo",
+          "placeholder": "Document cooler condition",
+          "max_photos": 1
+        }
+      ]
+    },
+    {
+      "title": "Tuesday — Snorkel Inventory & Repair",
+      "items": [
+        {
+          "id": "tue-snorkel",
+          "label": "Tuesday: Snorkel inventory and repair — restock from dockbox if low",
+          "type": "checkbox",
+          "help": {
+            "title": "Snorkel inventory",
+            "body": "Check all snorkel gear for damage. Restock masks, snorkels, and fins from the dockbox if quantities are low. Repair damaged bite tabs, buckles, etc. This task may take longer than 15 minutes — clock in for dock time."
+          }
+        }
+      ]
+    },
+    {
+      "title": "Wednesday — Deep Clean Deck",
+      "items": [
+        {
+          "id": "wed-deck",
+          "label": "Wednesday: Deep clean deck",
+          "type": "checkbox"
+        },
+        {
+          "id": "wed-deck-photo",
+          "label": "Photo of deck after cleaning (optional)",
+          "type": "photo",
+          "placeholder": "Document deck condition",
+          "max_photos": 1
+        }
+      ]
+    },
+    {
+      "title": "Thursday — Deep Clean Food Surfaces",
+      "items": [
+        {
+          "id": "thu-food-surfaces",
+          "label": "Thursday: Deep clean food surfaces",
+          "type": "checkbox",
+          "help": {
+            "title": "Food surface cleaning",
+            "body": "Thoroughly clean all food prep and serving surfaces. Sanitize cutting boards, counters, and any areas where food is handled."
+          }
+        },
+        {
+          "id": "thu-food-photo",
+          "label": "Photo of food surfaces after cleaning (optional)",
+          "type": "photo",
+          "placeholder": "Document food surface condition",
+          "max_photos": 1
+        }
+      ]
+    },
+    {
+      "title": "Friday — Deep Clean Cushions",
+      "items": [
+        {
+          "id": "fri-cushions",
+          "label": "Friday: Deep clean cushions",
+          "type": "checkbox",
+          "help": {
+            "title": "Cushion cleaning",
+            "body": "Scrub cushions thoroughly, hang to dry so they don't stink. Spot clean any stains."
+          }
+        }
+      ]
+    },
+    {
+      "title": "Saturday — Deep Clean Head",
+      "items": [
+        {
+          "id": "sat-head",
+          "label": "Saturday: Deep clean head (behind toilet too!)",
+          "type": "checkbox"
+        },
+        {
+          "id": "sat-head-photo",
+          "label": "Photo of head after deep clean (optional)",
+          "type": "photo",
+          "placeholder": "Document deep-cleaned head including behind toilet",
+          "max_photos": 1
+        }
+      ]
+    },
+    {
+      "title": "Sunday — Clean Boat Towels",
+      "items": [
+        {
+          "id": "sun-towels",
+          "label": "Sunday: Clean boat towels — wring on roof stanchion",
+          "type": "checkbox"
+        }
+      ]
+    }
+  ],
+  "completion": {
+    "require_all": false,
+    "sign_off": true,
+    "notes_field": true,
+    "notes_prompt": "Only check today's task. Any supplies needed? Gear repairs outstanding?"
+  }
+}

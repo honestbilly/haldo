@@ -1,0 +1,141 @@
+{
+  "id": "daily-maintenance-captain-bluq",
+  "name": "Daily Maintenance — Blu Q Captain",
+  "type": "checklist",
+  "vessel": "blu-q",
+  "role": "captain",
+  "recurrence": "daily",
+  "version": "2026-03-30",
+  "source": "KB: blu-q / Captain Blu Q Daily Maintenance",
+  "estimated_minutes": 15,
+  "priority": 80,
+  "display_order": 40,
+  "intro": "One task per day, about 15 minutes. Check today's day and complete the matching task. These daily tasks keep Blu Q safe and in top condition.",
+  "sections": [
+    {
+      "title": "Monday — Bilge Inspection",
+      "items": [
+        {
+          "id": "mon-bilge",
+          "label": "Monday: Bilge inspection",
+          "type": "checkbox",
+          "help": {
+            "title": "Bilge inspection details",
+            "body": "Check bilge pumps, ensure hulls are dry, pump out sugar scoops. Report any standing water or debris."
+          }
+        },
+        {
+          "id": "mon-bilge-photo",
+          "label": "Photo of bilge condition (optional)",
+          "type": "photo",
+          "placeholder": "Document bilge condition after inspection",
+          "max_photos": 2
+        }
+      ]
+    },
+    {
+      "title": "Tuesday — Inspect Snorkel Gear",
+      "items": [
+        {
+          "id": "tue-snorkel",
+          "label": "Tuesday: Inspect snorkel gear (assist mate)",
+          "type": "checkbox",
+          "help": {
+            "title": "Snorkel gear inspection",
+            "body": "Assist the mate with snorkel gear inspection. Check masks, snorkels, and fins for damage. Coordinate with mate on any items needing replacement or repair."
+          }
+        }
+      ]
+    },
+    {
+      "title": "Wednesday — Bench Lockers",
+      "items": [
+        {
+          "id": "wed-lockers",
+          "label": "Wednesday: Organize and clean out bench lockers",
+          "type": "checkbox",
+          "help": {
+            "title": "Bench locker maintenance",
+            "body": "Pull everything out, wipe down interior, organize contents, and remove anything that doesn't belong. Keep lockers tidy and functional."
+          }
+        },
+        {
+          "id": "wed-lockers-photo",
+          "label": "Photo of bench lockers after cleaning (optional)",
+          "type": "photo",
+          "placeholder": "Document locker condition",
+          "max_photos": 1
+        }
+      ]
+    },
+    {
+      "title": "Thursday — Dock Box Inventory",
+      "items": [
+        {
+          "id": "thu-dockbox",
+          "label": "Thursday: Inventory the dock box, resupply as needed",
+          "type": "checkbox",
+          "help": {
+            "title": "Dock box inventory",
+            "body": "Go through the dock box and inventory all items. Resupply anything that is low or missing. Note any items that need to be ordered."
+          }
+        }
+      ]
+    },
+    {
+      "title": "Friday — Deck Safety / Rig Inspection",
+      "items": [
+        {
+          "id": "fri-safety",
+          "label": "Friday: Deck safety inspection or rig inspection as required",
+          "type": "checkbox",
+          "help": {
+            "title": "Safety and rig inspection",
+            "body": "Walk the deck and check for any safety hazards — loose fittings, worn lines, damaged hardware. Inspect rig as required. Address or flag anything that needs attention."
+          }
+        },
+        {
+          "id": "fri-safety-photo",
+          "label": "Photo of any issues found (optional)",
+          "type": "photo",
+          "placeholder": "Document any safety or rig issues",
+          "max_photos": 2
+        }
+      ]
+    },
+    {
+      "title": "Saturday — Aluminum Wipedown",
+      "items": [
+        {
+          "id": "sat-aluminum",
+          "label": "Saturday: Aluminum wipedown",
+          "type": "checkbox",
+          "help": {
+            "title": "Aluminum care",
+            "body": "Use Fitz cleaning solution and terry towel on all aluminum surfaces. Work methodically so nothing gets missed."
+          }
+        }
+      ]
+    },
+    {
+      "title": "Sunday — Salt Away Sunday",
+      "items": [
+        {
+          "id": "sun-salt-away",
+          "label": "Sunday: Salt Away Sunday — spray all aluminum, flush motors, spray rams and fuel tank",
+          "type": "checkbox",
+          "help": {
+            "title": "Salt-Away procedure",
+            "body": "Spray all aluminum surfaces with salt-away. Flush motors with salt-away solution. Spray rams and fuel tank. This weekly salt treatment prevents corrosion buildup."
+          }
+        }
+      ]
+    }
+  ],
+  "completion": {
+    "require_all": false,
+    "sign_off": true,
+    "notes_field": true,
+    "notes_prompt": "Only check today's task. Any issues found during maintenance? Parts or supplies needed?"
+  }
+}
