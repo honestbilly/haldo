@@ -95,7 +95,7 @@ export function renderLogbook(session: any, template: LogbookTemplate, crewList:
           </label>
         </div>` : ''}
 
-      <div style="position:fixed;bottom:0;left:0;right:0;display:flex;gap:8px;padding:12px 24px;background:rgba(255,255,255,0.9);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);box-shadow:0 -1px 3px rgba(0,0,0,0.06);max-width:480px;margin:0 auto;z-index:40">
+      <div style="position:fixed;bottom:0;left:0;right:0;display:flex;gap:8px;padding:12px 24px;padding-bottom:calc(12px + env(safe-area-inset-bottom,0px));background:rgba(255,255,255,0.95);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);box-shadow:0 -1px 3px rgba(0,0,0,0.06);max-width:480px;margin:0 auto;z-index:1100">
         <button type="button" id="back-btn" onclick="wizardNav(-1)" style="visibility:hidden;flex:1;height:54px;background:white;border:2px solid #c7c7cc;border-radius:12px;font-family:'Inter',sans-serif;font-weight:700;font-size:1rem;color:#1a1c1e;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:transform 0.15s" ontouchstart="this.style.transform='scale(0.98)'" ontouchend="this.style.transform='scale(1)'">
           <span class="material-symbols-outlined" style="font-size:18px">arrow_back</span> Back
         </button>
@@ -133,7 +133,7 @@ export function renderLogbook(session: any, template: LogbookTemplate, crewList:
       if (slotBtn) slotBtn.click();
     });
   </script>
-  ${bottomNav('home')}
+  <!-- No bottom nav on logbook wizard — wizard nav buttons are the navigation -->
 </body>
 </html>`;
 }

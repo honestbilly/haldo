@@ -296,7 +296,7 @@ function renderTodayList(
   <!-- Fixed Header with vessel pill -->
   <header style="position:fixed;top:0;left:0;right:0;z-index:50;background:rgba(255,255,255,0.9);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);box-shadow:0 1px 3px rgba(0,0,0,0.06);display:flex;justify-content:space-between;align-items:center;padding:0 20px;height:64px;padding-top:env(safe-area-inset-top,0)">
     <span style="font-size:0.8125rem;font-weight:600;color:#1a1c1e">${session.crew_name}</span>
-    <button onclick="if(confirm('Switch vessel? Your checklists and tasks will change.')){window.location='/'}" style="background:#1A6B8A;color:white;border:none;padding:8px 20px;border-radius:999px;font-family:'Manrope',sans-serif;font-weight:700;font-size:0.875rem;letter-spacing:0.02em;cursor:pointer;-webkit-tap-highlight-color:transparent;box-shadow:0 2px 8px rgba(26,107,138,0.25)">${session.vessel.toUpperCase()}</button>
+    <button onclick="if(confirm('Switch vessel? Your checklists and tasks will change.')){window.location='/logout'}" style="background:#1A6B8A;color:white;border:none;padding:8px 20px;border-radius:999px;font-family:'Manrope',sans-serif;font-weight:700;font-size:0.875rem;letter-spacing:0.02em;cursor:pointer;-webkit-tap-highlight-color:transparent;box-shadow:0 2px 8px rgba(26,107,138,0.25)">${session.vessel.toUpperCase()}</button>
     <div style="width:32px;height:32px;border-radius:50%;background:#1A6B8A;color:white;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.8125rem">${session.crew_name.charAt(0)}</div>
   </header>
 
