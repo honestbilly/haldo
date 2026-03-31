@@ -347,6 +347,7 @@ function renderTodayList(
 
     <!-- Daily Routine: 3 square cards + trip logbook below -->
     ${(() => {
+      // Always show all 3 routine cards — gray out if no template for this vessel
       const routineCards = [
         { prefix: 'wakeup', icon: 'coffee', label: 'Wake Up' },
         { prefix: 'between', icon: 'restaurant', label: 'Between' },
@@ -355,28 +356,35 @@ function renderTodayList(
 
       const squareCards = routineCards.map(rc => {
         const tmpl = regularTemplates.find(t => t.id.startsWith(rc.prefix));
-        if (!tmpl) return '';
-        const comps = completedMap.get(tmpl.id) || [];
+        const comps = tmpl ? (completedMap.get(tmpl.id) || []) : [];
         const isDone = comps.length > 0;
+        const hasTemplate = !!tmpl;
+
+        if (hasTemplate) {
+          return `
+            <a href="/c/${tmpl.id}" style="flex:1;background:white;border-radius:16px;padding:16px 8px;text-decoration:none;color:#1a1c1e;text-align:center;display:flex;flex-direction:column;align-items:center;gap:8px;min-height:100px;transition:transform 0.15s" ontouchstart="this.style.transform='scale(0.96)'" ontouchend="this.style.transform='scale(1)'">
+              <span class="material-symbols-outlined" style="font-size:28px;color:${isDone ? '#34C759' : '#1A6B8A'};${isDone ? "font-variation-settings:'FILL' 1" : ''}">${rc.icon}</span>
+              <span style="font-size:0.75rem;font-weight:600">${rc.label}</span>
+              <span class="material-symbols-outlined" style="font-size:20px;color:${isDone ? '#34C759' : '#c7c7cc'};${isDone ? "font-variation-settings:'FILL' 1" : ''}">${isDone ? 'check_circle' : 'radio_button_unchecked'}</span>
+            </a>`;
+        }
+        // No template for this vessel — show grayed placeholder
         return `
-          <a href="/c/${tmpl.id}" style="flex:1;background:white;border-radius:16px;padding:16px 8px;text-decoration:none;color:#1a1c1e;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,0.04);display:flex;flex-direction:column;align-items:center;gap:8px;min-height:100px;transition:transform 0.15s" ontouchstart="this.style.transform='scale(0.96)'" ontouchend="this.style.transform='scale(1)'">
-            <span class="material-symbols-outlined" style="font-size:28px;color:${isDone ? '#34C759' : '#1A6B8A'};${isDone ? "font-variation-settings:'FILL' 1" : ''}">${rc.icon}</span>
-            <span style="font-size:0.75rem;font-weight:600">${rc.label}</span>
-            <span class="material-symbols-outlined" style="font-size:20px;color:${isDone ? '#34C759' : '#c7c7cc'};${isDone ? "font-variation-settings:'FILL' 1" : ''}">${isDone ? 'check_circle' : 'radio_button_unchecked'}</span>
-          </a>`;
+          <div style="flex:1;background:white;border-radius:16px;padding:16px 8px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:8px;min-height:100px;opacity:0.35">
+            <span class="material-symbols-outlined" style="font-size:28px;color:#c7c7cc">${rc.icon}</span>
+            <span style="font-size:0.75rem;font-weight:600;color:#c7c7cc">${rc.label}</span>
+            <span class="material-symbols-outlined" style="font-size:20px;color:#E5E5EA">remove</span>
+          </div>`;
       }).join('');
 
-      // Trip logbook with dual-trip (AM/PM/Sunset) status indicator
+      // Vessel Logbook with dual-trip (AM/PM) status indicator
       const tripLogbook = templates.find(t => t.type === 'logbook' && t.id.startsWith('trip-logbook'));
       const logbookHtml = tripLogbook ? (() => {
         const comps = completedMap.get(tripLogbook.id) || [];
         const amDone = comps.some(c => c.trip_slot === 'AM');
         const pmDone = comps.some(c => c.trip_slot === 'PM');
-        const sunsetDone = comps.some(c => c.trip_slot === 'Sunset');
-        const totalDone = [amDone, pmDone, sunsetDone].filter(Boolean).length;
         const est = (tripLogbook as LogbookTemplate).estimated_minutes;
 
-        // Dual-trip indicator: show which slots are complete
         const tripIndicator = (slot: string, done: boolean) =>
           `<span style="display:flex;align-items:center;gap:4px;font-size:0.6875rem;font-weight:600;color:${done ? '#34C759' : '#c7c7cc'}">
             <span class="material-symbols-outlined" style="font-size:14px;${done ? "font-variation-settings:'FILL' 1;color:#34C759" : 'color:#c7c7cc'}">${done ? 'check_circle' : 'radio_button_unchecked'}</span>
@@ -384,12 +392,12 @@ function renderTodayList(
           </span>`;
 
         return `
-          <a href="/c/${tripLogbook.id}" style="display:flex;align-items:center;justify-content:space-between;background:white;border-radius:12px;padding:16px 20px;box-shadow:0 2px 8px rgba(0,0,0,0.04);text-decoration:none;color:#1a1c1e;position:relative;overflow:hidden;transition:transform 0.15s;margin-top:8px" ontouchstart="this.style.transform='scale(0.98)'" ontouchend="this.style.transform='scale(1)'">
-            <div style="position:absolute;left:0;top:0;bottom:0;width:6px;background:${totalDone > 0 ? '#1A6B8A' : '#1A6B8A'}"></div>
+          <a href="/c/${tripLogbook.id}" style="display:flex;align-items:center;justify-content:space-between;background:white;border-radius:12px;padding:16px 20px;text-decoration:none;color:#1a1c1e;position:relative;overflow:hidden;transition:transform 0.15s;margin-top:10px" ontouchstart="this.style.transform='scale(0.98)'" ontouchend="this.style.transform='scale(1)'">
+            <div style="position:absolute;left:0;top:0;bottom:0;width:6px;background:#1A6B8A"></div>
             <div style="display:flex;align-items:center;gap:12px">
               <span class="material-symbols-outlined" style="font-size:24px;color:#1A6B8A">menu_book</span>
               <div>
-                <h3 style="font-weight:700;font-size:0.9375rem">Trip Logbook</h3>
+                <h3 style="font-weight:700;font-size:0.9375rem">Vessel Logbook</h3>
                 ${est ? `<span style="font-size:0.75rem;color:#8E8E93">~${est} min per trip</span>` : ''}
               </div>
             </div>
@@ -401,9 +409,9 @@ function renderTodayList(
       })() : '';
 
       return `
-        <section style="margin-bottom:24px">
+        <section style="margin-bottom:24px;background:#E8EDF0;border-radius:20px;padding:16px 12px 12px">
           <h2 style="font-size:0.6875rem;font-weight:700;letter-spacing:0.15em;color:#8E8E93;text-transform:uppercase;margin-bottom:12px;padding:0 4px">Daily Routine</h2>
-          <div style="display:flex;gap:10px;margin-bottom:12px">
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
             ${squareCards}
           </div>
           ${logbookHtml}
