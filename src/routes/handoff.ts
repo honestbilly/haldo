@@ -1,15 +1,15 @@
+// Handoff notes — rebuilt from Stitch HTML pattern
 import { Hono } from 'hono';
 import { nanoid } from 'nanoid';
 import pool from '../db.js';
 import { getSession } from './session.js';
 import type { SessionData } from '../types.js';
-import { bottomNav } from '../ui.js';
+import { bottomNav, htmlHead } from '../ui.js';
 
 type Env = { Variables: { session: SessionData } };
 
 const app = new Hono<Env>();
 
-// Require session
 app.use('*', async (c, next) => {
   const session = getSession(c as any);
   if (!session) return c.redirect('/');
@@ -17,7 +17,8 @@ app.use('*', async (c, next) => {
   await next();
 });
 
-// GET /handoff — show active handoff notes for this vessel + add/edit form
+const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+
 app.get('/', async (c) => {
   const session = c.get('session');
   const notes = await pool.query(
@@ -32,12 +33,10 @@ app.get('/', async (c) => {
   return c.html(renderHandoff(session, notes.rows, saved));
 });
 
-// POST /handoff — add a new note
 app.post('/', async (c) => {
   const session = c.get('session');
   const body = await c.req.parseBody();
   const note = String(body.note || '').trim();
-
   if (note) {
     await pool.query(
       `INSERT INTO handoff_notes (id, vessel, crew_id, crew_name, role, note)
@@ -45,160 +44,113 @@ app.post('/', async (c) => {
       [nanoid(), session.vessel, session.crew_id, session.crew_name, session.role, note]
     );
   }
-
   return c.redirect('/handoff?saved=1');
 });
 
-// POST /handoff/:id/update — edit a note
 app.post('/:id/update', async (c) => {
   const session = c.get('session');
   const id = c.req.param('id');
   const body = await c.req.parseBody();
   const note = String(body.note || '').trim();
-
   if (note) {
     await pool.query(
       `UPDATE handoff_notes SET note = $1, updated_at = NOW() WHERE id = $2 AND crew_id = $3`,
       [note, id, session.crew_id]
     );
   }
-
   return c.redirect('/handoff?saved=1');
 });
 
-// POST /handoff/:id/resolve — mark note as resolved
 app.post('/:id/resolve', async (c) => {
   const id = c.req.param('id');
-  await pool.query(
-    'UPDATE handoff_notes SET resolved = TRUE, updated_at = NOW() WHERE id = $1',
-    [id]
-  );
+  await pool.query('UPDATE handoff_notes SET resolved = TRUE, updated_at = NOW() WHERE id = $1', [id]);
   return c.redirect('/handoff');
 });
 
-function renderHandoff(session: SessionData, notes: any[], saved: boolean = false): string {
+function renderHandoff(session: SessionData, notes: any[], saved: boolean): string {
   const myNotes = notes.filter(n => n.crew_id === session.crew_id);
   const otherNotes = notes.filter(n => n.crew_id !== session.crew_id);
 
-  const renderNote = (n: any, editable: boolean) => {
-    const time = new Date(n.created_at).toLocaleString('en-US', {
-      month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit'
-    });
-    const roleLabel = n.role === 'captain' ? 'Capt.' : 'Deckhand';
-
-    if (editable) {
-      return `
-        <div class="handoff-note handoff-mine">
-          <div class="handoff-meta">${roleLabel} ${n.crew_display_name || n.crew_name} — ${time}</div>
-          <form action="/handoff/${n.id}/update" method="POST" class="handoff-edit-form">
-            <textarea name="note" class="handoff-edit-input">${n.note}</textarea>
-            <div class="handoff-actions">
-              <button type="submit" class="handoff-btn save">Save</button>
-              <button type="submit" formaction="/handoff/${n.id}/resolve" class="handoff-btn resolve">Done / Resolved</button>
-            </div>
-          </form>
-        </div>`;
-    }
-
-    return `
-      <div class="handoff-note">
-        <div class="handoff-meta">${roleLabel} ${n.crew_display_name || n.crew_name} — ${time}</div>
-        <p class="handoff-text">${n.note}</p>
-        <form action="/handoff/${n.id}/resolve" method="POST" style="display:inline">
-          <button type="submit" class="handoff-btn resolve">Acknowledged</button>
-        </form>
-      </div>`;
+  const timeAgo = (d: Date) => {
+    const mins = Math.round((Date.now() - new Date(d).getTime()) / 60000);
+    if (mins < 60) return `${mins}m ago`;
+    if (mins < 1440) return `${Math.round(mins / 60)}h ago`;
+    return `${Math.round(mins / 1440)}d ago`;
   };
 
-  const otherNotesHtml = otherNotes.length > 0
-    ? otherNotes.map(n => renderNote(n, false)).join('')
-    : '<p class="no-notes">No handoff notes from other crew.</p>';
+  const sectionHeader = (text: string) =>
+    `<h2 style="font-size:0.6875rem;font-weight:700;letter-spacing:0.15em;color:#6e7a74;text-transform:uppercase;margin-bottom:12px">${text}</h2>`;
 
-  const myNotesHtml = myNotes.length > 0
-    ? myNotes.map(n => renderNote(n, true)).join('')
-    : '';
+  const otherNotesHtml = otherNotes.length > 0 ? otherNotes.map(n => {
+    const roleLabel = n.role === 'captain' ? 'Capt.' : 'DH';
+    const name = n.crew_display_name || n.crew_name;
+    return `
+      <article style="background:white;border-radius:12px;padding:20px;box-shadow:0 1px 3px rgba(0,0,0,0.05);margin-bottom:12px">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
+          <span style="background:#E5E8F0;padding:4px 8px;border-radius:4px;font-size:0.625rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#1a1c1e">${roleLabel} ${esc(name)}</span>
+          <span style="font-size:0.625rem;color:#8E8E93;font-weight:500">${timeAgo(n.created_at)}</span>
+        </div>
+        <p style="font-size:0.875rem;line-height:1.6;color:#5b5f67;margin-bottom:16px">${esc(n.note)}</p>
+        <form action="/handoff/${n.id}/resolve" method="POST" style="display:inline">
+          <button type="submit" style="background:#E5E8F0;color:#5b5f67;padding:8px 16px;border:none;border-radius:8px;font-size:0.75rem;font-weight:700;cursor:pointer;transition:all 0.15s;-webkit-tap-highlight-color:transparent" ontouchstart="this.style.transform='scale(0.95)'" ontouchend="this.style.transform='scale(1)'">Acknowledged</button>
+        </form>
+      </article>`;
+  }).join('') : '<p style="color:#8E8E93;font-style:italic;font-size:0.875rem;padding:8px 0">No handoff notes waiting for you.</p>';
 
-  return `<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>Handoff Notes — Haldo</title>
-  <link rel="stylesheet" href="/public/style.css">
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap">
-  <link rel="manifest" href="/public/manifest.json">
-  <meta name="theme-color" content="#1A6B8A">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <link rel="apple-touch-icon" href="/public/apple-touch-icon.png">
-  <link rel="icon" type="image/png" sizes="32x32" href="/public/favicon-32.png">
-  <style>
-    .handoff-page { max-width: 480px; margin: 0 auto; padding: 16px; padding-bottom: 80px; }
-    .handoff-header { text-align: center; margin-bottom: 16px; }
-    .handoff-header h1 { font-family: var(--font-heading); font-size: 1.25rem; color: var(--primary); }
-    .handoff-header p { font-size: 0.8125rem; color: var(--text-muted); }
+  const myNotesHtml = myNotes.map(n => `
+    <div style="background:white;border-radius:12px;padding:20px;box-shadow:0 1px 3px rgba(0,0,0,0.05);border-left:4px solid #70D0EB;margin-bottom:12px">
+      <div style="margin-bottom:12px">
+        <span style="background:rgba(26,107,138,0.05);color:#1A6B8A;padding:4px 8px;border-radius:4px;font-size:0.625rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;font-style:italic">Drafting</span>
+      </div>
+      <form action="/handoff/${n.id}/update" method="POST">
+        <textarea name="note" style="width:100%;background:transparent;border:none;font-size:0.875rem;color:#5b5f67;resize:none;min-height:60px;padding:0;outline:none;font-family:'Inter',sans-serif;line-height:1.6">${esc(n.note)}</textarea>
+        <div style="display:flex;gap:8px;margin-top:12px">
+          <button type="submit" style="background:#1A6B8A;color:white;padding:10px 20px;border:none;border-radius:8px;font-size:0.75rem;font-weight:700;cursor:pointer;transition:all 0.15s" ontouchstart="this.style.transform='scale(0.95)'" ontouchend="this.style.transform='scale(1)'">Save</button>
+          <button type="submit" formaction="/handoff/${n.id}/resolve" style="background:#E5E8F0;color:#5b5f67;padding:10px 20px;border:none;border-radius:8px;font-size:0.75rem;font-weight:700;cursor:pointer;transition:all 0.15s" ontouchstart="this.style.transform='scale(0.95)'" ontouchend="this.style.transform='scale(1)'">Done / Resolved</button>
+        </div>
+      </form>
+    </div>
+  `).join('');
 
-    .handoff-section-title { font-family: var(--font-heading); font-size: 0.75rem; font-weight: 600;
-      color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin: 16px 0 8px; }
+  return `${htmlHead('Handoff Notes')}
+<body style="background:#F2F2F7">
+  <header style="position:fixed;top:0;left:0;right:0;z-index:50;background:rgba(255,255,255,0.8);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);box-shadow:0 1px 3px rgba(0,0,0,0.06);display:flex;justify-content:space-between;align-items:center;padding:0 24px;height:64px">
+    <a href="/today" style="color:#1A6B8A;text-decoration:none;font-weight:600;font-size:0.875rem;display:flex;align-items:center;gap:4px">
+      <span class="material-symbols-outlined" style="font-size:18px">arrow_back</span> Home
+    </a>
+    <span style="font-weight:700;font-size:1rem;color:#1a1c1e">Handoff Notes</span>
+    <span style="font-size:0.8125rem;color:#8E8E93">${session.vessel.toUpperCase()}</span>
+  </header>
 
-    .handoff-note { background: var(--surface); border-radius: var(--radius); padding: 12px;
-      margin-bottom: 8px; border-left: 3px solid var(--primary); }
-    .handoff-mine { border-left-color: var(--secondary); }
-    .handoff-meta { font-size: 0.6875rem; color: var(--text-muted); margin-bottom: 4px; }
-    .handoff-text { font-size: 0.875rem; line-height: 1.5; }
+  <main style="max-width:480px;margin:0 auto;padding:80px 24px 120px">
+    ${saved ? '<div style="padding:12px;background:rgba(52,199,89,0.1);border-radius:12px;margin-bottom:16px;font-size:0.875rem;color:#34C759;text-align:center;font-weight:600;display:flex;align-items:center;justify-content:center;gap:6px"><span class="material-symbols-outlined" style="font-size:18px;font-variation-settings:\'FILL\' 1">check_circle</span> Note saved</div>' : ''}
 
-    .handoff-edit-input { width: 100%; min-height: 48px; border: 1px solid var(--border);
-      border-radius: 6px; padding: 8px; font-family: var(--font-body); font-size: 14px;
-      resize: vertical; background: var(--surface); }
-    .handoff-edit-input:focus { outline: none; border-color: var(--primary); }
-
-    .handoff-actions { display: flex; gap: 8px; margin-top: 6px; }
-    .handoff-btn { padding: 6px 12px; border: none; border-radius: 6px; font-size: 0.75rem;
-      font-weight: 600; cursor: pointer; }
-    .handoff-btn.save { background: var(--primary); color: #fff; }
-    .handoff-btn.resolve { background: var(--surface-container); color: var(--text-muted); }
-
-    .no-notes { font-size: 0.875rem; color: var(--text-muted); font-style: italic; padding: 12px 0; }
-
-    .add-note-form { background: var(--surface); border-radius: var(--radius); padding: 12px; margin-top: 16px; }
-    .add-note-form textarea { width: 100%; min-height: 72px; border: 1px solid var(--border);
-      border-radius: 6px; padding: 8px; font-family: var(--font-body); font-size: 14px;
-      resize: vertical; }
-    .add-note-form textarea:focus { outline: none; border-color: var(--primary); }
-    .add-note-form button { margin-top: 8px; width: 100%; padding: 12px; background: var(--primary);
-      color: #fff; border: none; border-radius: var(--radius); font-weight: 600; font-size: 0.875rem;
-      cursor: pointer; min-height: 48px; }
-  </style>
-</head>
-<body>
-  <div class="handoff-page">
-    <header class="handoff-header">
-      <a href="/today" style="display:block;color:var(--primary);text-decoration:none;font-size:0.875rem;margin-bottom:8px;">← Home</a>
-      <h1>Handoff Notes</h1>
-      <p>${session.vessel.toUpperCase()} — ${session.crew_name}</p>
-    </header>
-
-    ${saved ? `<div style="padding:10px 16px;background:rgba(26,107,138,0.08);border-radius:var(--radius);margin-bottom:12px;font-size:0.875rem;color:var(--primary);text-align:center;">✓ Note saved</div>` : ''}
-
-    ${otherNotes.length > 0 ? `
-      <h2 class="handoff-section-title">Notes from other crew</h2>
+    <!-- Notes from other crew -->
+    <section style="margin-bottom:32px">
+      ${sectionHeader('Notes from other crew')}
       ${otherNotesHtml}
-    ` : `
-      <div class="no-notes">No handoff notes waiting for you.</div>
-    `}
+    </section>
 
+    <!-- Your notes -->
     ${myNotes.length > 0 ? `
-      <h2 class="handoff-section-title">Your notes (editable)</h2>
+    <section style="margin-bottom:32px">
+      ${sectionHeader('Your notes (editable)')}
       ${myNotesHtml}
-    ` : ''}
+    </section>` : ''}
 
-    <form action="/handoff" method="POST" class="add-note-form">
-      <label class="handoff-section-title">Add a handoff note</label>
-      <textarea name="note" placeholder="Leave a note for the next crew... (e.g., 'Low on toilet paper — check forward head')" required></textarea>
-      <button type="submit">Add Note</button>
-    </form>
-
-    <a href="/today" style="display:block;text-align:center;padding:14px;margin-top:16px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);color:var(--primary);text-decoration:none;font-weight:600;font-size:0.875rem;min-height:48px;line-height:20px">← Back to Home</a>
-  </div>
+    <!-- Add note -->
+    <section style="margin-bottom:32px">
+      ${sectionHeader('Add a handoff note')}
+      <form action="/handoff" method="POST">
+        <div style="background:white;border-radius:12px;padding:20px;box-shadow:0 1px 3px rgba(0,0,0,0.05)">
+          <textarea name="note" required placeholder="Leave a note for the next crew..." style="width:100%;min-height:80px;border:none;background:transparent;font-size:0.9375rem;font-family:'Inter',sans-serif;color:#1a1c1e;resize:none;outline:none;line-height:1.6"></textarea>
+        </div>
+        <button type="submit" style="width:100%;height:54px;background:#F36D4F;color:white;border:none;border-radius:12px;font-family:'Manrope',sans-serif;font-size:1.0625rem;font-weight:700;cursor:pointer;margin-top:12px;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 8px 24px rgba(243,109,79,0.25);transition:transform 0.15s" ontouchstart="this.style.transform='scale(0.98)'" ontouchend="this.style.transform='scale(1)'">
+          <span class="material-symbols-outlined" style="font-size:20px">add</span> Add Note
+        </button>
+      </form>
+    </section>
+  </main>
   ${bottomNav('home')}
 </body>
 </html>`;
