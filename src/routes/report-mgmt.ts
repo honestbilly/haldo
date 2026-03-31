@@ -3,7 +3,7 @@ import { Hono } from 'hono';
 import pool from '../db.js';
 import { VESSELS, VESSEL_LABELS, escapeHtml, reportLayout } from '../lib/report-shared.js';
 import { getAllTemplates, loadTemplates, saveTemplate, deleteTemplate } from '../services/templates.js';
-import { generateToken, revokeToken } from './auth.js';
+import { generateToken, revokeToken, revokeAllTokens } from './auth.js';
 
 const app = new Hono();
 
@@ -153,7 +153,7 @@ app.get('/report/templates/:templateId/clone', async (c) => {
 
 app.get('/report/crew', async (c) => {
   const crewList = await pool.query(
-    `SELECT cr.*, at.token, at.last_used_at, at.revoked
+    `SELECT cr.*, at.token, at.last_used_at, at.revoked, at.role as auth_role
      FROM crew cr
      LEFT JOIN auth_tokens at ON cr.id = at.crew_id AND at.revoked = FALSE
      ORDER BY cr.role, cr.name`
@@ -167,6 +167,7 @@ app.get('/report/crew', async (c) => {
     } else if (row.token && !crewMap.get(row.id).token) {
       crewMap.get(row.id).token = row.token;
       crewMap.get(row.id).last_used_at = row.last_used_at;
+      crewMap.get(row.id).auth_role = row.auth_role;
     }
   }
 
@@ -175,33 +176,54 @@ app.get('/report/crew', async (c) => {
 
   const crewRows = Array.from(crewMap.values()).map(cr => {
     const roleLabel = cr.role === 'captain' ? 'Captain' : 'Deckhand';
+    const authLabel = cr.auth_role === 'admin' ? 'Admin' : cr.auth_role === 'manager' ? 'Manager' : '';
+    const authBadge = authLabel
+      ? `<span style="font-size:0.5625rem;font-weight:700;color:${cr.auth_role === 'admin' ? '#FF9500' : '#1A6B8A'};background:${cr.auth_role === 'admin' ? 'rgba(255,149,0,0.1)' : 'rgba(26,107,138,0.08)'};padding:2px 6px;border-radius:999px;text-transform:uppercase;letter-spacing:0.05em">${authLabel}</span>`
+      : '';
     const statusBadge = cr.active
-      ? '<span style="font-size:0.6875rem;background:rgba(26,107,138,0.1);color:#1A6B8A;padding:2px 6px;border-radius:4px">Active</span>'
-      : '<span style="font-size:0.6875rem;background:rgba(186,26,26,0.1);color:#ba1a1a;padding:2px 6px;border-radius:4px">Inactive</span>';
+      ? ''
+      : '<span style="font-size:0.6875rem;background:rgba(255,59,48,0.1);color:#FF3B30;padding:2px 6px;border-radius:4px">Inactive</span>';
 
-    const tokenSection = cr.token
-      ? `<div style="margin-top:8px">
+    // Login link section — always show link if exists, plus option to regenerate
+    let tokenSection = '';
+    if (cr.token) {
+      tokenSection = `
+        <div style="margin-top:10px">
           <div style="font-size:0.6875rem;color:#8E8E93;margin-bottom:4px">Login link (tap to copy):</div>
-          <input type="text" value="${appUrl}/login/${cr.token}" readonly onclick="this.select();navigator.clipboard.writeText(this.value)" style="width:100%;padding:8px 10px;border:1px solid #E5E5EA;border-radius:8px;font-family:monospace;font-size:0.75rem;background:#F2F2F7;cursor:pointer" title="Click to copy">
-          <div style="font-size:0.625rem;color:#8E8E93;margin-top:4px">${cr.last_used_at ? 'Last used: ' + new Date(cr.last_used_at).toLocaleDateString() : 'Never used'}</div>
-        </div>`
-      : `<form action="/report/crew/${cr.id}/generate-token" method="POST" style="margin-top:8px;display:flex;gap:8px;align-items:center">
-          <select name="auth_role" style="height:36px;border:1px solid #E5E5EA;border-radius:8px;padding:0 10px;font-size:0.75rem;background:white;color:#1a1c1e;-webkit-appearance:none">
+          <input type="text" value="${appUrl}/login/${cr.token}" readonly onclick="this.select();navigator.clipboard.writeText(this.value)" style="width:100%;padding:8px 10px;border:1px solid #E5E5EA;border-radius:8px;font-family:monospace;font-size:0.6875rem;background:#F2F2F7;cursor:pointer" title="Click to copy">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px">
+            <span style="font-size:0.625rem;color:#8E8E93">${cr.last_used_at ? 'Last used: ' + new Date(cr.last_used_at).toLocaleDateString() : 'Never used'}</span>
+            <form action="/report/crew/${cr.id}/regenerate-token" method="POST" style="display:flex;gap:6px;align-items:center">
+              <select name="auth_role" style="height:28px;border:1px solid #E5E5EA;border-radius:6px;padding:0 6px;font-size:0.625rem;background:white;-webkit-appearance:none">
+                <option value="crew" ${cr.auth_role === 'crew' ? 'selected' : ''}>Crew</option>
+                <option value="manager" ${cr.auth_role === 'manager' ? 'selected' : ''}>Manager</option>
+                <option value="admin" ${cr.auth_role === 'admin' ? 'selected' : ''}>Admin</option>
+              </select>
+              <button type="submit" style="padding:4px 8px;background:none;border:1px solid #E5E5EA;border-radius:6px;font-size:0.625rem;color:#1A6B8A;font-weight:600;cursor:pointer">Regenerate</button>
+            </form>
+          </div>
+        </div>`;
+    } else {
+      tokenSection = `
+        <form action="/report/crew/${cr.id}/generate-token" method="POST" style="margin-top:10px;display:flex;gap:8px;align-items:center">
+          <select name="auth_role" style="height:40px;border:1px solid #E5E5EA;border-radius:8px;padding:0 12px;font-size:0.8125rem;background:white;color:#1a1c1e;-webkit-appearance:none">
             <option value="crew">Crew</option>
             <option value="manager">Manager</option>
             <option value="admin">Admin</option>
           </select>
-          <button type="submit" style="padding:8px 14px;background:#1A6B8A;color:white;border:none;border-radius:8px;font-size:0.75rem;font-weight:600;cursor:pointer;min-height:36px">Generate Login Link</button>
+          <button type="submit" style="flex:1;padding:10px 14px;background:#1A6B8A;color:white;border:none;border-radius:8px;font-size:0.8125rem;font-weight:600;cursor:pointer;min-height:40px">Generate Login Link</button>
         </form>`;
+    }
 
-    const highlight = generated === cr.id ? 'border:2px solid #1A6B8A;' : '';
+    const highlight = generated === cr.id ? 'border:2px solid #34C759;' : '';
 
     return `
-      <div style="background:#FFFFFF;border-radius:12px;padding:16px 20px;margin-bottom:8px;box-shadow:0 1px 3px rgba(0,0,0,0.04);${highlight}">
+      <div style="background:#FFFFFF;border-radius:12px;padding:16px 20px;margin-bottom:10px;box-shadow:0 1px 3px rgba(0,0,0,0.04);${highlight}">
         <div style="display:flex;justify-content:space-between;align-items:center">
-          <div style="display:flex;align-items:center;gap:8px">
+          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
             <span style="font-weight:700;font-size:0.9375rem">${escapeHtml(cr.name)}</span>
-            <span style="font-size:0.6875rem;font-weight:600;color:white;background:${cr.role === 'captain' ? '#1A6B8A' : '#70D0EB'};padding:2px 8px;border-radius:999px">${roleLabel}</span>
+            <span style="font-size:0.625rem;font-weight:600;color:white;background:${cr.role === 'captain' ? '#1A6B8A' : '#70D0EB'};padding:2px 8px;border-radius:999px">${roleLabel}</span>
+            ${authBadge}
             ${statusBadge}
           </div>
         </div>
@@ -273,6 +295,22 @@ app.post('/report/crew/create', async (c) => {
   await generateToken(crewId, 'crew');
 
   return c.redirect(`/report/crew?created=1&generated=${crewId}`);
+});
+
+// Regenerate token with new auth role (revokes old one)
+app.post('/report/crew/:crewId/regenerate-token', async (c) => {
+  const crewId = c.req.param('crewId');
+  const body = await c.req.parseBody();
+  const authRole = String(body.auth_role || 'crew');
+  const validRoles = ['crew', 'manager', 'admin'];
+  const role = validRoles.includes(authRole) ? authRole : 'crew';
+
+  // Revoke all existing tokens
+  await revokeAllTokens(crewId);
+
+  // Generate new token with the selected role
+  await generateToken(crewId, role);
+  return c.redirect(`/report/crew?generated=${crewId}`);
 });
 
 // Generate token for a crew member (with role selection)
