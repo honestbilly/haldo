@@ -1,0 +1,171 @@
+{
+  "id": "bilge-rat-day",
+  "name": "Bilge Rat Day — Quarterly Deep Inspection",
+  "type": "checklist",
+  "vessel": "squid",
+  "role": "captain",
+  "recurrence": "on-demand",
+  "version": "2026-03-30",
+  "source": "KB: squid-on-board-binder / Monthly Maintenance Checklists + squid-maintenance-checklists",
+  "estimated_minutes": 45,
+  "priority": 95,
+  "display_order": 58,
+  "intro": "Quarterly deep inspection of motors, shaft seals, and below-deck systems. Takes about 45 minutes. Do this roughly every 3 months or when engine hours indicate.",
+  "sections": [
+    {
+      "title": "Motor Inspection",
+      "items": [
+        {
+          "id": "inspect-wiring",
+          "label": "Inspect wiring on both motors",
+          "type": "checkbox"
+        },
+        {
+          "id": "inspect-bearings",
+          "label": "Inspect bearings",
+          "type": "checkbox"
+        },
+        {
+          "id": "inspect-thermometer-gear",
+          "label": "Inspect thermometer gear on gearbox",
+          "type": "checkbox",
+          "help": {
+            "title": "Thermometer gear",
+            "body": "Check the thermometer sensor and its connection on each gearbox. Look for loose fittings, corrosion on contacts, or damaged wiring. Confirm the gauge reads within normal range when engines are cold."
+          }
+        },
+        {
+          "id": "inspect-cooling-hoses",
+          "label": "Inspect cooling hoses and hose clamps",
+          "type": "checkbox"
+        },
+        {
+          "id": "check-leaks-motors",
+          "label": "Look for any leaks",
+          "type": "checkbox"
+        },
+        {
+          "id": "check-corrosion-motors",
+          "label": "Look for corrosion",
+          "type": "checkbox"
+        },
+        {
+          "id": "motor-photo",
+          "label": "Photo of motor compartment (optional)",
+          "type": "photo",
+          "required": false
+        }
+      ]
+    },
+    {
+      "title": "Shaft Seals",
+      "items": [
+        {
+          "id": "atf-leaks",
+          "label": "Look for any ATF leaks",
+          "type": "checkbox",
+          "help": {
+            "title": "ATF leak check",
+            "body": "Automatic transmission fluid (ATF) lubricates the shaft seal. Look for pink/red fluid weeping around the seal housing or dripping into the bilge. A small sheen is normal; active dripping means the seal needs attention."
+          }
+        },
+        {
+          "id": "replace-diapers",
+          "label": "Replace diapers if needed",
+          "type": "checkbox",
+          "help": {
+            "title": "Shaft seal diapers",
+            "body": "The absorbent pads (diapers) under the shaft seals catch small ATF drips and prevent bilge contamination. Replace if saturated or discolored. Keep spares in the dock box."
+          }
+        },
+        {
+          "id": "thrust-bearing-bulkhead",
+          "label": "Ensure water is not leaking into thrust bearing bulkhead compartment",
+          "type": "checkbox",
+          "help": {
+            "title": "Thrust bearing bulkhead",
+            "body": "Open the thrust bearing bulkhead compartment and look for standing water or moisture. Water intrusion here can damage the thrust bearing and cause shaft misalignment. If water is present, identify the source before closing up."
+          }
+        },
+        {
+          "id": "shaft-seals-photo",
+          "label": "Photo of shaft seals (optional)",
+          "type": "photo",
+          "required": false
+        }
+      ]
+    },
+    {
+      "title": "Below Deck Systems",
+      "items": [
+        {
+          "id": "sea-strainer-clamps",
+          "label": "Inspect hose clamps on sea strainers",
+          "type": "checkbox"
+        },
+        {
+          "id": "fuel-hose-fittings",
+          "label": "Inspect fuel hose and fittings",
+          "type": "checkbox"
+        },
+        {
+          "id": "operate-sea-cocks",
+          "label": "Operate sea cocks — close and then open",
+          "type": "checkbox",
+          "help": {
+            "title": "Sea cock exercise",
+            "body": "Sea cocks (through-hull valves) can seize if not exercised regularly. Close each one fully, then reopen. They should move smoothly. If stiff, apply marine grease to the handle mechanism. Never leave a sea cock in the closed position when done — reopen after testing."
+          }
+        },
+        {
+          "id": "check-tankage",
+          "label": "Check tankage in hulls",
+          "type": "checkbox"
+        },
+        {
+          "id": "below-deck-photo",
+          "label": "Photo of below deck systems (optional)",
+          "type": "photo",
+          "required": false
+        }
+      ]
+    },
+    {
+      "title": "Bilge & Machine Space Clean",
+      "items": [
+        {
+          "id": "bilge-wipedown",
+          "label": "Bilge wipedown with dawn/water then bleach water and towel",
+          "type": "checkbox"
+        },
+        {
+          "id": "scrub-wires",
+          "label": "Scrub wires clean",
+          "type": "checkbox"
+        },
+        {
+          "id": "machine-space-deep-clean",
+          "label": "Machine space deep clean",
+          "type": "checkbox"
+        },
+        {
+          "id": "forepeak-clean",
+          "label": "Forepeak clean/organized — bleach water and towel, clean out resting water",
+          "type": "checkbox"
+        },
+        {
+          "id": "bilge-clean-photo",
+          "label": "Photo of bilge/machine space after cleaning (optional)",
+          "type": "photo",
+          "required": false
+        }
+      ]
+    }
+  ],
+  "completion": {
+    "require_all": false,
+    "sign_off": true,
+    "notes_field": true,
+    "notes_prompt": "Any deficiencies found? Describe corrective actions needed."
+  }
+}
