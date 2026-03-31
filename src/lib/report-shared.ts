@@ -292,6 +292,22 @@ export function reportLayout(activeTab: string, content: string): string {
     return `<a href="${href}" style="display:flex;align-items:center;height:44px;padding:0 16px;text-decoration:none;font-weight:${isActive ? '700' : '500'};font-size:0.8125rem;color:${isActive ? '#1A6B8A' : '#8E8E93'};border-bottom:2px solid ${isActive ? '#1A6B8A' : 'transparent'};transition:color 0.15s;white-space:nowrap">${label}</a>`;
   };
 
+  // Sidebar nav items with Material icons
+  const sidebarItems = [
+    { id: 'Activity', label: 'Activity', icon: 'dashboard', href: '/report' },
+    { id: 'Templates', label: 'Templates', icon: 'description', href: '/report/templates' },
+    { id: 'Crew', label: 'Crew', icon: 'group', href: '/report/crew' },
+    { id: 'Tasks', label: 'Tasks', icon: 'checklist', href: '/report/tasks' },
+  ];
+
+  const sidebarHtml = sidebarItems.map(item => {
+    const isActive = activeTab === item.id || (item.id === 'Activity' && (activeTab === 'Today' || activeTab === 'History'));
+    return `<a href="${item.href}" style="display:flex;align-items:center;gap:12px;padding:10px 16px;border-radius:8px;text-decoration:none;font-size:0.875rem;font-weight:${isActive ? '700' : '500'};color:${isActive ? '#1A6B8A' : 'rgba(26,28,30,0.6)'};background:${isActive ? 'white' : 'transparent'};${isActive ? 'box-shadow:0 1px 3px rgba(0,0,0,0.06)' : ''};transition:all 0.15s">
+      <span class="material-symbols-outlined" style="font-size:20px;${isActive ? "font-variation-settings:'FILL' 1" : ''}">${item.icon}</span>
+      ${item.label}
+    </a>`;
+  }).join('');
+
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -305,7 +321,7 @@ export function reportLayout(activeTab: string, content: string): string {
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       font-family: 'Inter', -apple-system, sans-serif;
-      background: #F8F9FA;
+      background: #F3F4F3;
       color: #1a1c1e;
       line-height: 1.5;
       -webkit-font-smoothing: antialiased;
@@ -315,44 +331,49 @@ export function reportLayout(activeTab: string, content: string): string {
       vertical-align: middle;
     }
     a { color: inherit; }
-    .report-page { max-width: 1024px; margin: 0 auto; padding: 0 32px 48px; }
-    @media (max-width: 768px) { .report-page { padding: 0 16px 32px; } }
-
-    /* Stitch table hover */
-    .log-row:hover { background: #F2F4F7; }
+    .log-row { transition: background 0.15s; }
+    .log-row:hover { background: #F8F9FA; }
+    .task-card { transition: box-shadow 0.2s; }
     .task-card:hover { box-shadow: 0 8px 20px rgba(0,0,0,0.06); }
+
+    /* Sidebar layout: sidebar on desktop, stacked on mobile */
+    .mgr-layout { display: flex; gap: 48px; max-width: 1280px; margin: 0 auto; padding: 32px; min-height: 100vh; }
+    .mgr-sidebar { width: 240px; flex-shrink: 0; position: sticky; top: 32px; align-self: flex-start; }
+    .mgr-main { flex: 1; min-width: 0; }
+    @media (max-width: 900px) {
+      .mgr-layout { flex-direction: column; gap: 0; padding: 16px; }
+      .mgr-sidebar { width: 100%; position: static; margin-bottom: 24px; }
+      .mgr-sidebar nav { display: flex; gap: 4px; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+      .mgr-sidebar nav a { white-space: nowrap; }
+      .mgr-sidebar .sidebar-header { display: none; }
+    }
   </style>
 </head>
 <body>
-  <!-- Sticky Header (Stitch pattern: clean bar with nav) -->
-  <header style="position:sticky;top:0;z-index:50;background:rgba(248,249,250,0.9);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-bottom:1px solid #E5E5EA">
-    <div style="max-width:1024px;margin:0 auto;padding:0 32px">
-      <div style="display:flex;justify-content:space-between;align-items:center;height:64px">
-        <div style="display:flex;align-items:center;gap:24px">
-          <a href="/today" style="text-decoration:none;color:#1A6B8A;font-size:0.8125rem;font-weight:600;display:flex;align-items:center;gap:4px">
-            <span class="material-symbols-outlined" style="font-size:16px">arrow_back</span> Crew App
-          </a>
-          <h1 style="font-family:'Manrope',-apple-system,sans-serif;font-size:1.25rem;font-weight:800;color:#1A6B8A;letter-spacing:-0.02em">Haldo Manager</h1>
-        </div>
-        <div style="display:flex;align-items:center;gap:16px">
-          <span style="font-size:0.6875rem;font-weight:500;color:#8E8E93;text-transform:uppercase;letter-spacing:0.15em">${today}</span>
-          <div style="width:32px;height:32px;border-radius:50%;background:#1A6B8A;display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:0.75rem;border:2px solid rgba(26,107,138,0.2)">M</div>
-        </div>
+  <div class="mgr-layout">
+    <!-- Sidebar Navigation (Stitch pattern) -->
+    <aside class="mgr-sidebar">
+      <div class="sidebar-header" style="margin-bottom:32px">
+        <h1 style="font-family:'Manrope',sans-serif;font-size:1.375rem;font-weight:800;color:#1A6B8A;letter-spacing:-0.02em">Haldo Manager</h1>
+        <p style="font-size:0.75rem;color:rgba(26,28,30,0.5);font-weight:500;margin-top:4px">Fleet Overview</p>
       </div>
-
-      <!-- Navigation Tabs -->
-      <nav style="display:flex;gap:0;height:44px;overflow-x:auto;-webkit-overflow-scrolling:touch">
-        ${navTab('Today', '/report', 'Today')}
-        ${navTab('History', '/report/history', 'History')}
-        ${navTab('Templates', '/report/templates', 'Templates')}
-        ${navTab('Crew', '/report/crew', 'Crew')}
-        ${navTab('Tasks', '/report/tasks', 'Tasks')}
+      <nav style="display:flex;flex-direction:column;gap:4px">
+        ${sidebarHtml}
       </nav>
-    </div>
-  </header>
+      <div style="margin-top:32px;padding-top:16px;border-top:1px solid #E5E5EA">
+        <a href="/today" style="display:flex;align-items:center;gap:8px;padding:10px 16px;font-size:0.8125rem;color:rgba(26,28,30,0.5);text-decoration:none;font-weight:500;transition:color 0.15s" onmouseenter="this.style.color='#1A6B8A'" onmouseleave="this.style.color='rgba(26,28,30,0.5)'">
+          <span class="material-symbols-outlined" style="font-size:18px">arrow_back</span> Back to Crew App
+        </a>
+      </div>
+      <div style="margin-top:auto;padding-top:24px">
+        <span style="font-size:0.625rem;font-weight:500;color:rgba(26,28,30,0.3);text-transform:uppercase;letter-spacing:0.15em">${today}</span>
+      </div>
+    </aside>
 
-  <div class="report-page" style="padding-top:32px">
-    ${content}
+    <!-- Main Content -->
+    <main class="mgr-main">
+      ${content}
+    </main>
   </div>
   <script>
     // Client-side search (instant filter across all fields)
