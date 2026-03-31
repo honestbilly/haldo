@@ -921,6 +921,43 @@ body {
 .review-toggle:hover { background: rgba(0, 105, 80, 0.08); }
 .review-summary { margin-top: 8px; }
 
+/* Edit mode — in-place template editing for managers */
+.edit-mode { border-left: 3px solid #F36D4F !important; }
+
+.edit-inline {
+  width: 100%;
+  border: 1px dashed #F36D4F;
+  border-radius: 4px;
+  padding: 6px 8px;
+  font-family: var(--font-body);
+  font-size: 14px;
+  background: rgba(243, 109, 79, 0.04);
+  color: var(--text);
+}
+
+.edit-inline:focus { outline: none; border-color: #F36D4F; background: #fff; }
+
+.edit-label { font-weight: 500; font-size: 0.9375rem; }
+.edit-bold { font-weight: 600; font-size: 0.8125rem; color: var(--primary); }
+
+.edit-textarea {
+  min-height: 48px;
+  resize: vertical;
+  margin-top: 4px;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+}
+
+.edit-section-title {
+  font-family: var(--font-heading);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  border-color: var(--text-muted);
+}
+
 /* Sign off */
 .sign-off {
   display: flex;

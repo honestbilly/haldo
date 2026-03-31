@@ -2,7 +2,8 @@ import { Hono } from 'hono';
 import { nanoid } from 'nanoid';
 import pool from '../db.js';
 import { getSession } from './session.js';
-import { getTemplatesForContext, getTemplateById, getOnDemandTemplates } from '../services/templates.js';
+import { getAuth } from './auth.js';
+import { getTemplatesForContext, getTemplateById, getOnDemandTemplates, saveTemplate, loadTemplates } from '../services/templates.js';
 import { evaluateAlerts, processAlerts } from '../services/alerts.js';
 import type { Template, ChecklistTemplate, LogbookTemplate, Item, Section, LogbookStep, SessionData } from '../types.js';
 import { bottomNav, htmlHead } from '../ui.js';
@@ -106,6 +107,12 @@ app.get('/c/:templateId', async (c) => {
   const template = getTemplateById(c.req.param('templateId'));
   if (!template) return c.notFound();
 
+  // Check if manager is in edit mode
+  // Auth-based: manager/admin role. Dev fallback: allow if no auth tokens exist yet.
+  const auth = getAuth(c as any);
+  const canEdit = (auth && (auth.auth_role === 'manager' || auth.auth_role === 'admin')) || !process.env.REQUIRE_AUTH;
+  const editMode = canEdit && c.req.query('edit') === '1';
+
   // For wake-up checklists, pre-fill engine hours from last completion
   let lastEngineHours: Record<string, string> = {};
   if (template.id.startsWith('wakeup-')) {
@@ -123,10 +130,74 @@ app.get('/c/:templateId', async (c) => {
   }
 
   if (template.type === 'checklist') {
-    return c.html(renderChecklist(session, template as ChecklistTemplate, lastEngineHours));
+    const savedMsg = c.req.query('saved') === '1';
+    return c.html(renderChecklist(session, template as ChecklistTemplate, lastEngineHours, !!editMode, !!canEdit, savedMsg));
   } else {
     return c.html(renderLogbook(session, template as LogbookTemplate));
   }
+});
+
+// Save in-place edits to a template
+app.post('/c/:templateId/edit', async (c) => {
+  const auth = getAuth(c as any);
+  if (!auth || (auth.auth_role !== 'manager' && auth.auth_role !== 'admin')) {
+    return c.text('Unauthorized', 403);
+  }
+
+  const templateId = c.req.param('templateId');
+  const template = getTemplateById(templateId);
+  if (!template || template.type !== 'checklist') return c.notFound();
+
+  const body = await c.req.parseBody();
+
+  // Rebuild sections/items from the edited form data
+  const checklist = template as ChecklistTemplate;
+  for (const section of checklist.sections) {
+    // Update section title
+    const sectionTitleKey = `section_title_${section.title.replace(/[^a-zA-Z0-9]/g, '_')}`;
+    if (body[sectionTitleKey]) {
+      section.title = String(body[sectionTitleKey]);
+    }
+
+    for (const item of section.items) {
+      // Update item label
+      const labelKey = `edit_label_${item.id}`;
+      if (body[labelKey] !== undefined) {
+        item.label = String(body[labelKey]);
+      }
+
+      // Update help text
+      const helpTitleKey = `edit_help_title_${item.id}`;
+      const helpBodyKey = `edit_help_body_${item.id}`;
+      if (body[helpBodyKey] !== undefined) {
+        const helpBody = String(body[helpBodyKey]).trim();
+        const helpTitle = body[helpTitleKey] ? String(body[helpTitleKey]).trim() : (item.help?.title || '');
+        if (helpBody) {
+          item.help = { title: helpTitle || 'Help', body: helpBody };
+        } else {
+          delete (item as any).help;
+        }
+      }
+
+      // Update info text
+      const infoKey = `edit_info_${item.id}`;
+      if (body[infoKey] !== undefined) {
+        const info = String(body[infoKey]).trim();
+        if (info) {
+          item.info = info;
+        } else {
+          delete (item as any).info;
+        }
+      }
+    }
+  }
+
+  // Save and reload
+  checklist.version = new Date().toISOString().split('T')[0];
+  await saveTemplate(checklist);
+  await loadTemplates();
+
+  return c.redirect(`/c/${templateId}?edit=1&saved=1`);
 });
 
 // Submit a completion
@@ -326,7 +397,7 @@ function renderTodayList(
 </html>`;
 }
 
-function renderItemHtml(item: Item, prefix: string = 'item_'): string {
+function renderItemHtml(item: Item, prefix: string = 'item_', editMode: boolean = false): string {
   let mediaHtml = '';
   if (item.description_media?.length) {
     mediaHtml = item.description_media.map(m => {
@@ -343,10 +414,21 @@ function renderItemHtml(item: Item, prefix: string = 'item_'): string {
   let helpContentHtml = '';
   if (item.help) {
     helpBtnHtml = `<button type="button" class="help-toggle" onclick="toggleExpand('help-${item.id}')">?</button>`;
+    helpContentHtml = editMode
+      ? `<div class="help-box expanded" id="help-${item.id}" style="display:block">
+          <input type="text" name="edit_help_title_${item.id}" value="${escapeAttr(item.help.title)}" class="edit-inline edit-bold" placeholder="Help title">
+          <textarea name="edit_help_body_${item.id}" class="edit-inline edit-textarea" placeholder="Help body text">${escapeAttr(item.help.body)}</textarea>
+        </div>`
+      : `<div class="help-box" id="help-${item.id}">
+          <strong>${item.help.title}</strong>
+          <p>${item.help.body}</p>
+        </div>`;
+  } else if (editMode) {
+    helpBtnHtml = `<button type="button" class="help-toggle" onclick="toggleExpand('help-${item.id}')" style="opacity:0.4">?</button>`;
     helpContentHtml = `
       <div class="help-box" id="help-${item.id}">
-        <strong>${item.help.title}</strong>
-        <p>${item.help.body}</p>
+        <input type="text" name="edit_help_title_${item.id}" value="" class="edit-inline edit-bold" placeholder="+ Add help title">
+        <textarea name="edit_help_body_${item.id}" class="edit-inline edit-textarea" placeholder="+ Add help text"></textarea>
       </div>`;
   }
 
@@ -364,7 +446,9 @@ function renderItemHtml(item: Item, prefix: string = 'item_'): string {
       </div>`;
   }
 
-  let infoHtml = item.info ? `<p class="item-info">${item.info}</p>` : '';
+  let infoHtml = item.info ? `<p class="item-info">${editMode
+    ? `<input type="text" name="edit_info_${item.id}" value="${escapeAttr(item.info)}" class="edit-inline" placeholder="Info text...">`
+    : item.info}</p>` : (editMode ? `<p class="item-info"><input type="text" name="edit_info_${item.id}" value="" class="edit-inline" placeholder="+ Add info text"></p>` : '');
   let requiredMark = item.required ? '<span class="required-mark">*</span>' : '';
 
   // Note button in label row; content expands BELOW the row
@@ -381,18 +465,19 @@ function renderItemHtml(item: Item, prefix: string = 'item_'): string {
 
   switch (item.type) {
     case 'checkbox':
+      const cbLabel = editMode
+        ? `<input type="text" name="edit_label_${item.id}" value="${escapeAttr(item.label)}" class="edit-inline edit-label">`
+        : `<span class="checkbox-text">${item.label}${requiredMark}</span>`;
       return `
-        <div class="form-item item-checkbox" ${requiresAttr}>
+        <div class="form-item item-checkbox ${editMode ? 'edit-mode' : ''}" ${requiresAttr}>
           <div class="item-label-row">
             <label class="checkbox-label">
-              <input type="checkbox" name="${prefix}${item.id}" value="true" class="checkbox-input"
-                onchange="handleCheckboxChange(this)" data-item-id="${item.id}">
-              <span class="checkbox-custom"></span>
-              <span class="checkbox-text">${item.label}${requiredMark}</span>
+              ${editMode ? '' : `<input type="checkbox" name="${prefix}${item.id}" value="true" class="checkbox-input" onchange="handleCheckboxChange(this)" data-item-id="${item.id}"><span class="checkbox-custom"></span>`}
+              ${cbLabel}
             </label>
-            ${helpBtnHtml}${noteBtnHtml}
+            ${helpBtnHtml}${editMode ? '' : noteBtnHtml}
           </div>
-          ${helpContentHtml}${noteContentHtml}
+          ${helpContentHtml}${editMode ? '' : noteContentHtml}
           ${sopHtml}${infoHtml}${mediaHtml}
         </div>`;
 
@@ -422,12 +507,15 @@ function renderItemHtml(item: Item, prefix: string = 'item_'): string {
             <button type="button" class="stepper-btn plus" onclick="step(this, 1)">+</button>
           </div>`;
 
+      const numLabel = editMode
+        ? `<input type="text" name="edit_label_${item.id}" value="${escapeAttr(item.label)}" class="edit-inline edit-label">`
+        : `<span class="item-label">${item.label}${requiredMark}</span>`;
       return `
-        <div class="form-item item-number ${colorClass}" ${requiresAttr}
+        <div class="form-item item-number ${colorClass} ${editMode ? 'edit-mode' : ''}" ${requiresAttr}
           data-min="${item.min ?? ''}" data-max="${item.max ?? ''}">
           <div class="item-label-row">
-            <span class="item-label">${item.label}${requiredMark}</span>
-            ${helpBtnHtml}${noteBtnHtml}
+            ${numLabel}
+            ${helpBtnHtml}${editMode ? '' : noteBtnHtml}
           </div>
           ${helpContentHtml}${noteContentHtml}
           ${mediaHtml}
@@ -444,11 +532,14 @@ function renderItemHtml(item: Item, prefix: string = 'item_'): string {
       const optButtons = (item.options || []).map(opt =>
         `<button type="button" class="option-btn" data-value="${opt}" onclick="selectOption(this, '${prefix}${item.id}')">${opt}</button>`
       ).join('');
+      const selLabel = editMode
+        ? `<input type="text" name="edit_label_${item.id}" value="${escapeAttr(item.label)}" class="edit-inline edit-label">`
+        : `<span class="item-label">${item.label}${requiredMark}</span>`;
       return `
-        <div class="form-item item-select" ${requiresAttr}>
+        <div class="form-item item-select ${editMode ? 'edit-mode' : ''}" ${requiresAttr}>
           <div class="item-label-row">
-            <span class="item-label">${item.label}${requiredMark}</span>
-            ${helpBtnHtml}${noteBtnHtml}
+            ${selLabel}
+            ${helpBtnHtml}${editMode ? '' : noteBtnHtml}
           </div>
           ${helpContentHtml}${noteContentHtml}
           ${mediaHtml}
@@ -512,7 +603,7 @@ function renderItemHtml(item: Item, prefix: string = 'item_'): string {
   }
 }
 
-function renderChecklist(session: any, template: ChecklistTemplate, lastEngineHours: Record<string, string> = {}): string {
+function renderChecklist(session: any, template: ChecklistTemplate, lastEngineHours: Record<string, string> = {}, editMode: boolean = false, canEdit: boolean = false, savedMsg: boolean = false): string {
   const totalItems = template.sections.reduce((sum, s) => sum + s.items.length, 0);
 
   // Day-of-week detection for DMT templates
@@ -527,7 +618,7 @@ function renderChecklist(session: any, template: ChecklistTemplate, lastEngineHo
       return '';
     }).join('');
 
-    const itemsHtml = section.items.map(item => renderItemHtml(item)).join('');
+    const itemsHtml = section.items.map(item => renderItemHtml(item, 'item_', editMode)).join('');
 
     // For DMT: detect if this section matches today's day
     const sectionDay = isDMT ? dayNames.find(d => section.title.toLowerCase().startsWith(d.toLowerCase())) : null;
@@ -538,11 +629,15 @@ function renderChecklist(session: any, template: ChecklistTemplate, lastEngineHo
     const collapsedClass = isOtherDay ? ' collapsed' : '';
     const todayClass = isToday ? ' section-today' : '';
 
+    const sectionTitleHtml = editMode
+      ? `<input type="text" name="section_title_${section.title.replace(/[^a-zA-Z0-9]/g, '_')}" value="${escapeAttr(section.title)}" class="edit-inline edit-section-title">`
+      : `${section.title} ${todayBadge}<span class="section-count" data-section></span>`;
+
     return `
       <div class="checklist-section${collapsedClass}${todayClass}">
-        <div class="section-header" onclick="this.parentElement.classList.toggle('collapsed')">
-          <h3>${section.title} ${todayBadge}<span class="section-count" data-section></span></h3>
-          <span class="collapse-icon">▼</span>
+        <div class="section-header" ${editMode ? '' : 'onclick="this.parentElement.classList.toggle(\'collapsed\')"'}>
+          <h3>${sectionTitleHtml}</h3>
+          ${editMode ? '' : '<span class="collapse-icon">▼</span>'}
         </div>
         ${section.description ? `<p class="section-desc">${section.description}</p>` : ''}
         ${sectionMedia}
@@ -574,10 +669,14 @@ function renderChecklist(session: any, template: ChecklistTemplate, lastEngineHo
 <body>
   <div class="checklist-page">
     <header class="checklist-header">
-      <h1>${template.name}</h1>
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <h1>${template.name}</h1>
+        ${canEdit ? `<a href="/c/${template.id}${editMode ? '' : '?edit=1'}" class="edit-toggle-btn" style="font-size:0.75rem;padding:6px 12px;border-radius:6px;text-decoration:none;font-weight:600;${editMode ? 'background:#F36D4F;color:#fff' : 'background:rgba(0,105,80,0.1);color:#006950'}">${editMode ? '✕ Exit Edit' : '✏️ Edit'}</a>` : ''}
+      </div>
       <p class="checklist-context">${session.vessel.toUpperCase()} | ${session.crew_name} | ${session.trip_slot}</p>
-      <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
-      <p class="progress-text" id="progress-text">0 / ${totalItems} items</p>
+      ${editMode ? '<div style="padding:8px 12px;background:rgba(243,109,79,0.08);border:1px solid #F36D4F;border-radius:8px;margin:8px 0;font-size:0.8125rem;color:#ba1a1a;text-align:center"><strong>EDIT MODE</strong> — changes will update the template for all crew</div>' : ''}
+      ${savedMsg ? '<div style="padding:8px 12px;background:rgba(0,105,80,0.08);border-radius:8px;margin:8px 0;font-size:0.8125rem;color:#006950;text-align:center">✓ Changes saved</div>' : ''}
+      ${editMode ? '' : `<div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div><p class="progress-text" id="progress-text">0 / ${totalItems} items</p>`}
     </header>
 
     ${isDMT ? (() => {
@@ -590,9 +689,14 @@ function renderChecklist(session: any, template: ChecklistTemplate, lastEngineHo
     })() : (template.intro ? `<div class="intro-callout">${template.intro}</div>` : '')}
     ${introMedia}
 
-    <form action="/c/${template.id}" method="POST" id="checklist-form">
+    ${editMode ? `<form action="/c/${template.id}/edit" method="POST" id="edit-form">` : `<form action="/c/${template.id}" method="POST" id="checklist-form">`}
       ${sectionsHtml}
 
+      ${editMode ? `
+      <div style="position:sticky;bottom:60px;background:var(--surface);border-top:2px solid #F36D4F;padding:12px;margin:16px -16px 0;display:flex;gap:8px">
+        <button type="submit" style="flex:1;padding:14px;background:#006950;color:#fff;border:none;border-radius:8px;font-size:1rem;font-weight:600;cursor:pointer;min-height:48px">Save Changes</button>
+        <a href="/c/${template.id}" style="display:flex;align-items:center;justify-content:center;padding:14px 20px;background:#fff;border:2px solid #bdc9c2;border-radius:8px;text-decoration:none;color:#1a1c1c;font-weight:500;min-height:48px">Cancel</a>
+      </div>` : `
       ${template.completion.notes_field ? `
         <div class="notes-section">
           <label>${template.completion.notes_prompt || 'Notes'}</label>
@@ -614,7 +718,7 @@ function renderChecklist(session: any, template: ChecklistTemplate, lastEngineHo
 
       <button type="submit" class="submit-btn" id="submit-btn">
         Submit ${template.name}
-      </button>
+      </button>`}
     </form>
   </div>
   ${bottomNav('home')}
@@ -828,6 +932,10 @@ function renderSuccess(session: any, alertCount: number): string {
   </div>
 </body>
 </html>`;
+}
+
+function escapeAttr(s: string): string {
+  return s.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&#39;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
 function extractYouTubeId(url: string): string {
