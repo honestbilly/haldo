@@ -394,17 +394,38 @@
         },
         {
           "id": "handoff-note",
-          "label": "Handoff note for next crew?",
+          "label": "Leave a note for tomorrow's crew?",
           "type": "select",
-          "options": ["No", "Yes"]
+          "options": ["No", "Yes — leave a note"]
         },
         {
           "id": "handoff-note-text",
-          "label": "Handoff note",
+          "label": "Note for next crew",
           "type": "text",
-          "placeholder": "This will show on tomorrow's home screen...",
+          "placeholder": "e.g. Freezer temp was high, check it first thing...",
           "requires": "handoff-note",
-          "info": "Will appear in the next crew's handoff notes on their home page"
+          "info": "This will appear on the next crew's home screen as a handoff note under the vessel name."
+        },
+        {
+          "id": "has-issue",
+          "label": "Report a maintenance issue?",
+          "type": "select",
+          "options": ["No", "Yes — report issue"]
+        },
+        {
+          "id": "issue-title",
+          "label": "What's the issue?",
+          "type": "text",
+          "placeholder": "e.g. Stereo not working on port side",
+          "required": true,
+          "requires": "has-issue"
+        },
+        {
+          "id": "issue-details",
+          "label": "Details",
+          "type": "text",
+          "placeholder": "Any additional context...",
+          "requires": "has-issue"
         }
       ]
     },

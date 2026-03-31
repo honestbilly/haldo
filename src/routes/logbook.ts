@@ -241,10 +241,21 @@ function renderVesselLog(session: any, template: LogbookTemplate, crewList: Arra
 
       <!-- End of Day Section -->
       <div style="background:white;border-radius:16px;padding:20px;box-shadow:0 2px 8px rgba(0,0,0,0.04);margin-bottom:24px">
-        <h3 style="font-family:'Manrope',sans-serif;font-weight:700;font-size:1rem;color:#8E8E93;margin-bottom:16px;display:flex;align-items:center;gap:8px">
+        <h3 style="font-family:'Manrope',sans-serif;font-weight:700;font-size:1rem;color:#8E8E93;margin-bottom:4px;display:flex;align-items:center;gap:8px">
           <span class="material-symbols-outlined" style="font-size:20px">nightlight</span> End of Day
         </h3>
+        <p style="font-size:0.75rem;color:#8E8E93;margin-bottom:16px">USCG drills, notes for the next crew</p>
         ${eodStep ? renderItems(eodStep.items, '') : ''}
+        <div style="margin-top:16px;display:flex;flex-direction:column;gap:8px">
+          <div style="padding:12px 16px;background:rgba(112,208,235,0.08);border-radius:10px;display:flex;align-items:flex-start;gap:8px">
+            <span class="material-symbols-outlined" style="font-size:18px;color:#70D0EB;flex-shrink:0;margin-top:1px">sticky_note_2</span>
+            <span style="font-size:0.75rem;color:#5b5f67;line-height:1.4"><strong>Handoff notes</strong> appear on the <strong>next crew's home screen</strong> when they check in to ${session.vessel.toUpperCase()}.</span>
+          </div>
+          <div style="padding:12px 16px;background:rgba(243,109,79,0.06);border-radius:10px;display:flex;align-items:flex-start;gap:8px">
+            <span class="material-symbols-outlined" style="font-size:18px;color:#F36D4F;flex-shrink:0;margin-top:1px">build</span>
+            <span style="font-size:0.75rem;color:#5b5f67;line-height:1.4"><strong>Issue reports</strong> go to management's inbox for triage and task assignment.</span>
+          </div>
+        </div>
       </div>
 
       <!-- Sign Off & Submit -->

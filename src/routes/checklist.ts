@@ -215,6 +215,29 @@ app.post('/c/:templateId', async (c) => {
     });
   }
 
+  // Route handoff note from vessel log to handoff system
+  const handoffNoteChoice = values['handoff-note'];
+  const handoffNoteText = String(values['handoff-note-text'] || '').trim();
+  if ((handoffNoteChoice === 'Yes' || handoffNoteChoice === 'Yes — leave a note') && handoffNoteText) {
+    await pool.query(
+      `INSERT INTO handoff_notes (id, vessel, crew_id, crew_name, role, note)
+       VALUES ($1, $2, $3, $4, $5, $6)`,
+      [nanoid(), session.vessel, session.crew_id, session.crew_name, session.role, handoffNoteText]
+    );
+  }
+
+  // Route issue report from vessel log to submissions system
+  const hasIssue = values['has-issue'];
+  const issueTitle = String(values['issue-title'] || '').trim();
+  if ((hasIssue === 'Yes' || hasIssue === 'Yes — report issue') && issueTitle) {
+    const issueDetails = String(values['issue-details'] || '').trim();
+    await pool.query(
+      `INSERT INTO submissions (id, crew_id, vessel, category, title, details, status)
+       VALUES ($1, $2, $3, 'maintenance', $4, $5, 'new')`,
+      [nanoid(), session.crew_id, session.vessel, issueTitle, issueDetails || null]
+    );
+  }
+
   return c.redirect(`/complete/${completionId}?alerts=${triggered.length}`);
 });
 
