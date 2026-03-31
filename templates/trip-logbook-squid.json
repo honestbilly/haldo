@@ -27,7 +27,7 @@
           "id": "trip-slot",
           "label": "Trip slot",
           "type": "select",
-          "options": ["AM (9-1)", "PM (2-6)"],
+          "options": ["AM", "PM", "Sunset"],
           "required": true
         }
       ]

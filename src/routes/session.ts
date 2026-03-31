@@ -163,8 +163,9 @@ function renderLanding(
       <div class="form-group">
         <label>Trip</label>
         <div class="button-group" id="trip-buttons">
-          <button type="button" class="select-btn" data-value="AM">AM Trip</button>
-          <button type="button" class="select-btn" data-value="PM">PM Trip</button>
+          <button type="button" class="select-btn" data-value="AM">AM</button>
+          <button type="button" class="select-btn" data-value="PM">PM</button>
+          <button type="button" class="select-btn" data-value="Sunset">Sunset</button>
         </div>
         <input type="hidden" name="trip_slot" id="trip-slot-input" required>
       </div>

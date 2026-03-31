@@ -91,12 +91,8 @@ export function renderLogbook(session: any, template: LogbookTemplate): string {
       if (captainInput && !captainInput.value) captainInput.value = '${session.crew_name}';
 
       // Auto-select trip slot
-      const slotBtns = document.querySelectorAll('[data-value="AM (9-1)"], [data-value="PM (2-6)"]');
-      slotBtns.forEach(btn => {
-        if (btn.dataset.value.startsWith('${session.trip_slot}')) {
-          btn.click();
-        }
-      });
+      const slotBtn = document.querySelector('[data-value="${session.trip_slot}"]');
+      if (slotBtn) slotBtn.click();
     });
   </script>
   ${bottomNav('home')}
@@ -128,7 +124,7 @@ export function renderSuccess(session: any, alertCount: number): string {
       : `<p class="all-good">All good — everything checks out.</p>`
     }
     <a href="/today" class="primary-btn">Back to Today's List</a>
-    <a href="/logout" class="switch-link">Switch crew member</a>
+    <a href="/" class="switch-link">Switch vessel / trip</a>
   </div>
 </body>
 </html>`;

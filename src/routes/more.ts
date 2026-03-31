@@ -52,8 +52,8 @@ app.get('/', async (c) => {
         <span style="color:var(--text-muted);">→</span>
       </a>
 
-      <a href="/logout" style="display:flex;align-items:center;justify-content:space-between;padding:16px;background:var(--surface);text-decoration:none;color:var(--text);border-radius:0 0 var(--radius) var(--radius);border:1px solid var(--border);border-top:0;">
-        <span>👤 Switch Crew Member</span>
+      <a href="/" style="display:flex;align-items:center;justify-content:space-between;padding:16px;background:var(--surface);text-decoration:none;color:var(--text);border-radius:0 0 var(--radius) var(--radius);border:1px solid var(--border);border-top:0;">
+        <span>🚤 Switch Vessel / Trip</span>
         <span style="color:var(--text-muted);">→</span>
       </a>
     </div>

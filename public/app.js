@@ -85,9 +85,30 @@ function selectOption(btn, inputName) {
     });
   }
 
-  // Check if below threshold (for select items with alert_below)
-  // This is handled server-side, but we can add visual feedback
   updateProgress();
+
+  // In logbook wizard: auto-advance if this is the last unfilled item in the step
+  if (typeof wizardNav === 'function' && typeof currentStep !== 'undefined') {
+    var step = btn.closest('.wizard-step');
+    if (step) {
+      var allItems = step.querySelectorAll('.form-item');
+      var allFilled = true;
+      allItems.forEach(function(item) {
+        if (item.style.display === 'none') return;
+        var cb = item.querySelector('.checkbox-input');
+        if (cb) { if (!cb.checked) allFilled = false; return; }
+        var hid = item.querySelector('input[type="hidden"]');
+        if (hid) { if (!hid.value) allFilled = false; return; }
+        var txt = item.querySelector('.text-input, input[type="text"], input[type="date"]');
+        if (txt) { if (!txt.value.trim()) allFilled = false; return; }
+        var stepper = item.querySelector('.stepper-input');
+        if (stepper) { if (stepper.value === '') allFilled = false; return; }
+      });
+      if (allFilled) {
+        setTimeout(function() { wizardNav(1); }, 300);
+      }
+    }
+  }
 }
 
 // --- Checkbox change handler (for requires/conditional) ---
