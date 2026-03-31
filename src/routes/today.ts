@@ -214,7 +214,10 @@ function renderTodayList(
 <body>
   <div class="today-page">
     <header class="today-header">
-      <h1>${session.crew_name} — ${session.vessel.toUpperCase()}</h1>
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <h1>${session.crew_name} — ${session.vessel.toUpperCase()}</h1>
+        <a href="/" style="font-size:0.75rem;color:var(--primary);text-decoration:none;padding:6px 10px;border:1px solid var(--border);border-radius:6px;white-space:nowrap">Switch</a>
+      </div>
       <p>${session.trip_slot} Trip | ${(() => { const [y,m,d] = session.trip_date.split('-').map(Number); return new Date(y, m-1, d).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }); })()}</p>
     </header>
     ${renderWeatherCard(weather)}

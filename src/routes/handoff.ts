@@ -46,7 +46,7 @@ app.post('/', async (c) => {
     );
   }
 
-  return c.redirect('/handoff');
+  return c.redirect('/handoff?saved=1');
 });
 
 // POST /handoff/:id/update — edit a note
@@ -195,8 +195,10 @@ function renderHandoff(session: SessionData, notes: any[], saved: boolean = fals
       <textarea name="note" placeholder="Leave a note for the next crew... (e.g., 'Low on toilet paper — check forward head')" required></textarea>
       <button type="submit">Add Note</button>
     </form>
+
+    <a href="/today" style="display:block;text-align:center;padding:14px;margin-top:16px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);color:var(--primary);text-decoration:none;font-weight:600;font-size:0.875rem;min-height:48px;line-height:20px">← Back to Home</a>
   </div>
-  ${bottomNav('submit')}
+  ${bottomNav('home')}
 </body>
 </html>`;
 }

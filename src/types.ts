@@ -106,8 +106,8 @@ export interface LogbookTemplate {
   version: string;
   source: string;
   estimated_minutes?: number;
-  captain_steps: number[];
-  mate_steps: number[];
+  captain_steps?: number[];
+  mate_steps?: number[];
   steps: LogbookStep[];
   completion: CompletionConfig;
 }

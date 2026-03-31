@@ -4,9 +4,13 @@ import type { LogbookTemplate } from '../types.js';
 
 export function renderLogbook(session: any, template: LogbookTemplate): string {
   const role = session.role as 'captain' | 'deckhand';
-  const visibleSteps = role === 'captain' ? template.captain_steps : template.mate_steps;
+  // Default to all steps if captain_steps/mate_steps not defined (e.g. on-demand drills)
+  const allStepNums = template.steps.map(s => s.step);
+  const visibleSteps = role === 'captain'
+    ? (template.captain_steps ?? allStepNums)
+    : (template.mate_steps ?? allStepNums);
 
-  if (visibleSteps.length === 0) {
+  if (!visibleSteps || visibleSteps.length === 0) {
     return `<!DOCTYPE html><html><body><p>This logbook is not available for your role.</p><a href="/today">Back</a></body></html>`;
   }
 
