@@ -132,16 +132,31 @@ app.get('/report', async (c) => {
   // -- Alerts --
   const alertsHtml = alerts.rows.length > 0
     ? alerts.rows.map((a: any) => `
-        <div style="display:flex;justify-content:space-between;align-items:center;padding:16px;background:#FFFFFF;border-left:4px solid #F36D4F;border-radius:8px;margin-bottom:8px">
-          <div style="flex:1">
-            <div style="font-weight:600;color:#F36D4F">${escapeHtml(a.item_label)}: ${escapeHtml(String(a.current_value))} / ${escapeHtml(String(a.threshold_value))} minimum</div>
-            <div style="font-size:0.8125rem;color:#6e7a74;margin-top:4px">${(a.vessel || '').toUpperCase()} &middot; ${escapeHtml(a.crew_name || '')} &middot; ${escapeHtml(a.template_id)} &middot; ${new Date(a.created_at).toLocaleTimeString()}</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:16px;background:white;border-left:4px solid #F36D4F;border-radius:0 8px 8px 0;box-shadow:0 4px 12px rgba(0,0,0,0.03);transition:background 0.15s;cursor:pointer" onmouseenter="this.style.background='#FAFBFC'" onmouseleave="this.style.background='white'">
+          <div style="display:flex;align-items:center;gap:16px;flex:1">
+            <span class="material-symbols-outlined" style="font-size:22px;color:#F36D4F;font-variation-settings:'FILL' 1;flex-shrink:0">warning</span>
+            <div>
+              <div style="display:flex;align-items:center;gap:8px;font-size:0.875rem">
+                <span style="font-weight:700">${(a.vessel || '').toUpperCase()}</span>
+                <span style="color:#c7c7cc">|</span>
+                <span style="font-weight:500;color:#1A6B8A">${escapeHtml(a.crew_name || '')}</span>
+                <span style="color:#c7c7cc">|</span>
+                <span style="font-weight:500">${escapeHtml(a.template_id)}</span>
+              </div>
+              <p style="font-size:0.8125rem;color:#5b5f67;margin-top:4px">${escapeHtml(a.item_label)}: ${escapeHtml(String(a.current_value))} / ${escapeHtml(String(a.threshold_value))} minimum</p>
+            </div>
           </div>
-          <form action="/report/alerts/${a.id}/acknowledge" method="POST" style="display:inline">
-            <button type="submit" style="padding:8px 16px;background:#1A6B8A;color:white;border:none;border-radius:8px;font-size:0.8125rem;cursor:pointer">Acknowledge</button>
-          </form>
+          <div style="display:flex;align-items:center;gap:16px;flex-shrink:0">
+            <span style="font-size:0.75rem;font-weight:500;color:#8E8E93">${new Date(a.created_at).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}</span>
+            <form action="/report/alerts/${a.id}/acknowledge" method="POST" style="display:inline">
+              <button type="submit" style="padding:8px 16px;background:#E5E8F0;color:#1a1c1e;border:none;border-radius:8px;font-size:0.75rem;font-weight:700;cursor:pointer;transition:background 0.15s" onmouseenter="this.style.background='#D5D8E0'" onmouseleave="this.style.background='#E5E8F0'">Acknowledge</button>
+            </form>
+          </div>
         </div>`).join('')
-    : '<p style="text-align:center;padding:24px;color:#1A6B8A;font-weight:500">All clear &mdash; no alerts.</p>';
+    : `<div style="text-align:center;padding:32px;color:#1A6B8A;font-weight:500;display:flex;align-items:center;justify-content:center;gap:8px">
+        <span class="material-symbols-outlined" style="font-size:20px;color:#34C759;font-variation-settings:'FILL' 1">check_circle</span>
+        All clear — no alerts.
+      </div>`;
 
   // -- Vessel-Grouped Timeline --
   const vesselSections = VESSELS
@@ -212,22 +227,36 @@ app.get('/report', async (c) => {
   return c.html(reportLayout('Today', `
     ${dayNavHtml}
 
-    <div style="margin-bottom:16px">
-      <input type="text" id="report-search" placeholder="Search logs... (e.g., oil, engine hours, incident)" style="width:100%;padding:10px 16px;border:2px solid #bdc9c2;border-radius:8px;font-family:'Inter',-apple-system,sans-serif;font-size:0.9375rem;background:#FFFFFF;box-sizing:border-box" onfocus="this.style.borderColor='#1A6B8A'" onblur="this.style.borderColor='#bdc9c2'">
+    <!-- Search (Stitch pattern: clean input with icon) -->
+    <div style="position:relative;margin-bottom:20px">
+      <span class="material-symbols-outlined" style="position:absolute;left:16px;top:50%;transform:translateY(-50%);font-size:20px;color:#8E8E93">search</span>
+      <input type="text" id="report-search" placeholder="Search logs... (e.g., oil, engine hours, incident)" style="width:100%;padding:12px 16px 12px 44px;border:none;border-radius:12px;font-family:'Inter',-apple-system,sans-serif;font-size:0.875rem;background:white;box-shadow:0 1px 3px rgba(0,0,0,0.04);box-sizing:border-box;outline:none" onfocus="this.style.boxShadow='0 0 0 2px #1A6B8A'" onblur="this.style.boxShadow='0 1px 3px rgba(0,0,0,0.04)'">
     </div>
 
     ${filterBarHtml}
 
-    <h2 style="font-family:'Manrope',-apple-system,sans-serif;font-size:1.125rem;font-weight:600;margin:24px 0 12px">Needs Attention ${alerts.rows.length > 0 ? `<span style="display:inline-block;padding:2px 8px;border-radius:12px;font-size:0.75rem;font-weight:600;background:rgba(243,109,79,0.1);color:#F36D4F">${alerts.rows.length}</span>` : ''}</h2>
-    <div id="alerts-section">
-      ${alertsHtml}
-    </div>
+    <!-- Alerts Section (Stitch pattern: left border rows) -->
+    <section style="margin-bottom:32px">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+        <h3 style="font-family:'Manrope',-apple-system,sans-serif;font-size:1.0625rem;font-weight:700;letter-spacing:-0.01em">Alerts</h3>
+        ${alerts.rows.length > 0 ? `<span style="background:#F36D4F;color:white;font-size:0.625rem;font-weight:700;padding:2px 8px;border-radius:999px">${alerts.rows.length}</span>` : ''}
+      </div>
+      <div style="display:flex;flex-direction:column;gap:4px">
+        ${alertsHtml}
+      </div>
+    </section>
 
-    <h2 style="font-family:'Manrope',-apple-system,sans-serif;font-size:1.125rem;font-weight:600;margin:24px 0 12px">${isRange ? 'Logs' : "Today's Logs"} ${incidentSummary}</h2>
-    <div id="completion-list">
-      ${vesselSections}
-      ${emptyState}
-    </div>
+    <!-- Activity Log (Stitch pattern: clean table-like rows) -->
+    <section>
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+        <h3 style="font-family:'Manrope',-apple-system,sans-serif;font-size:1.0625rem;font-weight:700;letter-spacing:-0.01em">${isRange ? 'Logs' : "Today's Logs"}</h3>
+        ${incidentSummary}
+      </div>
+      <div id="completion-list">
+        ${vesselSections}
+        ${emptyState}
+      </div>
+    </section>
   `));
 });
 
