@@ -98,29 +98,27 @@ app.get('/today', async (c) => {
   );
   const handoffCount = parseInt(handoffResult.rows[0].count);
 
-  // If captain, get deckhand's checklist status for today
-  let deckhandStatus: { template_name: string; template_id: string; done: boolean; crew_name: string | null }[] = [];
-  if (session.role === 'captain') {
-    const otherRole = 'deckhand';
-    const deckhandTemplates = getTemplatesForContext(session.vessel, otherRole, tripDate);
-    // Get all deckhand completions for today on this vessel
-    const deckhandComps = await pool.query(
-      `SELECT co.template_id, co.completed_at, cr.name as crew_name FROM completions co
-       JOIN crew cr ON co.crew_id = cr.id
-       WHERE co.trip_date = $1 AND co.vessel = $2 AND cr.role = $3`,
-      [session.trip_date, session.vessel, otherRole]
-    );
-    const deckCompSet = new Set(deckhandComps.rows.map((r: any) => r.template_id));
-    const deckCrewName = deckhandComps.rows.length > 0 ? deckhandComps.rows[0].crew_name : null;
-    deckhandStatus = deckhandTemplates.map(t => ({
-      template_name: t.name.replace(/\s*—\s*(Captain|Deckhand|Mate)$/i, ''),
-      template_id: t.id,
-      done: deckCompSet.has(t.id),
-      crew_name: deckCrewName,
-    }));
-  }
+  // Get the other role's checklist status for today (captain sees deckhand, deckhand sees captain)
+  const otherRole = session.role === 'captain' ? 'deckhand' : 'captain';
+  const otherRoleLabel = session.role === 'captain' ? 'Deckhand' : 'Captain';
+  const otherTemplates = getTemplatesForContext(session.vessel, otherRole, tripDate);
+  const otherComps = await pool.query(
+    `SELECT co.template_id, co.completed_at, cr.name as crew_name FROM completions co
+     JOIN crew cr ON co.crew_id = cr.id
+     WHERE co.trip_date = $1 AND co.vessel = $2 AND cr.role = $3`,
+    [session.trip_date, session.vessel, otherRole]
+  );
+  const otherCompSet = new Set(otherComps.rows.map((r: any) => r.template_id));
+  const otherCrewName = otherComps.rows.length > 0 ? otherComps.rows[0].crew_name : null;
+  const crewmateStatus = otherTemplates.map(t => ({
+    template_name: t.name.replace(/\s*—\s*(Captain|Deckhand|Mate)$/i, ''),
+    template_id: t.id,
+    done: otherCompSet.has(t.id),
+    crew_name: otherCrewName,
+    role_label: otherRoleLabel,
+  }));
 
-  return c.html(renderTodayList(session, templates, onDemand, completedMap, handoffCount, deckhandStatus));
+  return c.html(renderTodayList(session, templates, onDemand, completedMap, handoffCount, crewmateStatus));
 });
 
 // Render a checklist or logbook form
@@ -321,7 +319,7 @@ function renderTodayList(
   onDemand: Template[],
   completedMap: Map<string, any[]>,
   handoffCount: number = 0,
-  deckhandStatus: { template_name: string; template_id: string; done: boolean; crew_name: string | null }[] = []
+  crewmateStatus: { template_name: string; template_id: string; done: boolean; crew_name: string | null; role_label: string }[] = []
 ): string {
   const renderCard = (t: Template, pinned: boolean = false) => {
     const comps = completedMap.get(t.id) || [];
@@ -434,14 +432,14 @@ function renderTodayList(
 
     ${onDemandHtml}
 
-    ${deckhandStatus.length > 0 ? `
+    ${crewmateStatus.length > 0 ? `
     <div style="margin-top:16px;margin-bottom:16px">
-      <h3 class="on-demand-header" onclick="document.getElementById('deckhand-status').classList.toggle('collapsed')" style="cursor:pointer;display:flex;align-items:center;justify-content:space-between">
-        <span>Deckhand Status${deckhandStatus[0].crew_name ? ` — ${deckhandStatus[0].crew_name}` : ''}</span>
+      <h3 class="on-demand-header" onclick="document.getElementById('crewmate-status').classList.toggle('collapsed')" style="cursor:pointer;display:flex;align-items:center;justify-content:space-between">
+        <span>${crewmateStatus[0].role_label} Status${crewmateStatus[0].crew_name ? ` — ${crewmateStatus[0].crew_name}` : ''}</span>
         <span class="collapse-icon" style="font-size:0.75rem;color:var(--text-muted)">▼</span>
       </h3>
-      <div id="deckhand-status" class="collapsed">
-        ${deckhandStatus.map(ds => `
+      <div id="crewmate-status" class="collapsed">
+        ${crewmateStatus.map(ds => `
           <div style="display:flex;align-items:center;gap:8px;padding:8px 12px;font-size:0.8125rem;color:${ds.done ? 'var(--primary)' : 'var(--text-muted)'}">
             <span style="font-size:1rem">${ds.done ? '✓' : '○'}</span>
             <span>${ds.template_name}</span>
