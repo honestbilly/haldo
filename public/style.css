@@ -937,20 +937,41 @@ body.edit-mode-active::before {
   z-index: 9999;
 }
 
-.form-item.edit-mode { border-left: 3px solid #F59E0B !important; }
+.form-item.edit-mode { border-left: 3px solid #F59E0B !important; cursor: pointer; }
+.form-item.edit-mode::after {
+  content: '✏️ tap to edit';
+  display: block;
+  font-size: 0.625rem;
+  color: #D97706;
+  text-align: right;
+  margin-top: 4px;
+  opacity: 0.6;
+}
+.form-item.edit-mode.field-unlocked::after { content: none; }
+.form-item.edit-mode.field-unlocked { border-left-color: #D97706 !important; background: #FFFBEB; }
 
 .edit-inline {
   width: 100%;
-  border: 1px dashed #F36D4F;
+  border: 1px solid transparent;
   border-radius: 4px;
   padding: 6px 8px;
   font-family: var(--font-body);
   font-size: 14px;
-  background: rgba(243, 109, 79, 0.04);
+  background: transparent;
   color: var(--text);
+  pointer-events: none;
+  opacity: 0.9;
 }
 
-.edit-inline:focus { outline: none; border-color: #F36D4F; background: #fff; }
+/* Unlocked state — after tap */
+.edit-inline.unlocked {
+  border: 2px solid #F59E0B;
+  background: #FFFBEB;
+  pointer-events: auto;
+  opacity: 1;
+}
+
+.edit-inline.unlocked:focus { outline: none; border-color: #D97706; background: #fff; }
 
 .edit-label { font-weight: 500; font-size: 0.9375rem; }
 .edit-bold { font-weight: 600; font-size: 0.8125rem; color: var(--primary); }

@@ -696,7 +696,7 @@ function renderChecklist(session: any, template: ChecklistTemplate, lastEngineHo
       <p class="checklist-context">${session.vessel.toUpperCase()} | ${session.crew_name} | ${session.trip_slot}</p>
       ${editMode ? `<div style="padding:10px 12px;background:#FFF8E1;border:2px solid #F59E0B;border-radius:8px;margin:8px 0;font-size:0.8125rem;color:#92400E;text-align:center">
         <strong>⚠️ EDIT MODE</strong> — changes update the template for all crew<br>
-        <span style="font-size:0.6875rem">Auto-exits in <span id="edit-timer">5:00</span> if no save</span>
+        <span style="font-size:0.6875rem">Auto-exits in <span id="edit-timer">2:00</span> if no save. Tap a field to edit it.</span>
       </div>` : ''}
       ${savedMsg ? '<div style="padding:8px 12px;background:rgba(0,105,80,0.08);border-radius:8px;margin:8px 0;font-size:0.8125rem;color:#006950;text-align:center">✓ Changes saved</div>' : ''}
       ${editMode ? '' : `<div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div><p class="progress-text" id="progress-text">0 / ${totalItems} items</p>`}
@@ -721,6 +721,23 @@ function renderChecklist(session: any, template: ChecklistTemplate, lastEngineHo
         <a href="/c/${template.id}" style="display:flex;align-items:center;justify-content:center;padding:14px 20px;background:#fff;border:2px solid #bdc9c2;border-radius:8px;text-decoration:none;color:#1a1c1c;font-weight:500;min-height:48px">Cancel</a>
       </div>
       <script>
+        // Tap-to-unlock: fields start locked, tap the item card to enable editing
+        document.querySelectorAll('.form-item.edit-mode').forEach(function(item) {
+          item.addEventListener('click', function(e) {
+            if (item.classList.contains('field-unlocked')) return;
+            item.classList.add('field-unlocked');
+            item.querySelectorAll('.edit-inline').forEach(function(field) {
+              field.classList.add('unlocked');
+              field.style.pointerEvents = 'auto';
+            });
+            // Focus the first input
+            var first = item.querySelector('.edit-inline.unlocked');
+            if (first) first.focus();
+            // Reset timeout on interaction
+            editTimeout = 120;
+          });
+        });
+
         // Confirmation before save
         function confirmSave() {
           if (confirm('Save changes to this template? This will update it for ALL crew members.')) {
@@ -728,8 +745,15 @@ function renderChecklist(session: any, template: ChecklistTemplate, lastEngineHo
           }
         }
 
-        // Auto-exit edit mode after 5 minutes
-        var editTimeout = 300; // seconds
+        // Reset timeout on any input activity
+        document.addEventListener('input', function(e) {
+          if (e.target && e.target.classList && e.target.classList.contains('edit-inline')) {
+            editTimeout = 120;
+          }
+        });
+
+        // Auto-exit edit mode after 2 minutes
+        var editTimeout = 120; // seconds
         var timerEl = document.getElementById('edit-timer');
         var editInterval = setInterval(function() {
           editTimeout--;
