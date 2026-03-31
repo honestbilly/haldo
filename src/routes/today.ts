@@ -347,7 +347,7 @@ function renderTodayList(
 
     <!-- Daily Routine: 3 square cards + trip logbook below -->
     ${(() => {
-      // Always show all 3 routine cards — gray out if no template for this vessel
+      // 3 square cards — always show all 3, gray out if no template
       const routineCards = [
         { prefix: 'wakeup', icon: 'coffee', label: 'Wake Up' },
         { prefix: 'between', icon: 'restaurant', label: 'Between' },
@@ -368,7 +368,6 @@ function renderTodayList(
               <span class="material-symbols-outlined" style="font-size:20px;color:${isDone ? '#34C759' : '#c7c7cc'};${isDone ? "font-variation-settings:'FILL' 1" : ''}">${isDone ? 'check_circle' : 'radio_button_unchecked'}</span>
             </a>`;
         }
-        // No template for this vessel — show grayed placeholder
         return `
           <div style="flex:1;background:white;border-radius:16px;padding:16px 8px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:8px;min-height:100px;opacity:0.35">
             <span class="material-symbols-outlined" style="font-size:28px;color:#c7c7cc">${rc.icon}</span>
@@ -377,40 +376,50 @@ function renderTodayList(
           </div>`;
       }).join('');
 
-      // Vessel Logbook with dual-trip (AM/PM) status indicator
+      // Vessel Log — single daily status: Not Started / In Progress / Complete
       const tripLogbook = templates.find(t => t.type === 'logbook' && t.id.startsWith('trip-logbook'));
       const logbookHtml = tripLogbook ? (() => {
         const comps = completedMap.get(tripLogbook.id) || [];
-        const amDone = comps.some(c => c.trip_slot === 'AM');
-        const pmDone = comps.some(c => c.trip_slot === 'PM');
-        const est = (tripLogbook as LogbookTemplate).estimated_minutes;
+        const hasAny = comps.length > 0;
+        // Determine status
+        let statusIcon: string;
+        let statusLabel: string;
+        let statusColor: string;
+        let barColor: string;
 
-        const tripIndicator = (slot: string, done: boolean) =>
-          `<span style="display:flex;align-items:center;gap:4px;font-size:0.6875rem;font-weight:600;color:${done ? '#34C759' : '#c7c7cc'}">
-            <span class="material-symbols-outlined" style="font-size:14px;${done ? "font-variation-settings:'FILL' 1;color:#34C759" : 'color:#c7c7cc'}">${done ? 'check_circle' : 'radio_button_unchecked'}</span>
-            ${slot}
-          </span>`;
+        if (hasAny) {
+          statusIcon = 'check_circle';
+          statusLabel = 'Complete';
+          statusColor = '#34C759';
+          barColor = '#34C759';
+        } else {
+          // Check localStorage for in-progress (we can't from server, so default to Not Started)
+          statusIcon = 'radio_button_unchecked';
+          statusLabel = 'Not Started';
+          statusColor = '#c7c7cc';
+          barColor = '#1A6B8A';
+        }
 
         return `
           <a href="/c/${tripLogbook.id}" style="display:flex;align-items:center;justify-content:space-between;background:white;border-radius:12px;padding:16px 20px;text-decoration:none;color:#1a1c1e;position:relative;overflow:hidden;transition:transform 0.15s;margin-top:10px" ontouchstart="this.style.transform='scale(0.98)'" ontouchend="this.style.transform='scale(1)'">
-            <div style="position:absolute;left:0;top:0;bottom:0;width:6px;background:#1A6B8A"></div>
+            <div style="position:absolute;left:0;top:0;bottom:0;width:6px;background:${barColor}"></div>
             <div style="display:flex;align-items:center;gap:12px">
               <span class="material-symbols-outlined" style="font-size:24px;color:#1A6B8A">menu_book</span>
               <div>
-                <h3 style="font-weight:700;font-size:0.9375rem">Vessel Logbook</h3>
-                ${est ? `<span style="font-size:0.75rem;color:#8E8E93">~${est} min per trip</span>` : ''}
+                <h3 style="font-weight:700;font-size:0.9375rem">Vessel Log</h3>
+                <span style="font-size:0.75rem;color:#8E8E93">Daily vessel record</span>
               </div>
             </div>
-            <div style="display:flex;gap:12px;align-items:center">
-              ${tripIndicator('AM', amDone)}
-              ${tripIndicator('PM', pmDone)}
+            <div style="display:flex;align-items:center;gap:6px">
+              <span class="material-symbols-outlined" style="font-size:18px;color:${statusColor};${hasAny ? "font-variation-settings:'FILL' 1" : ''}">${statusIcon}</span>
+              <span style="font-size:0.6875rem;font-weight:600;color:${statusColor}">${statusLabel}</span>
             </div>
           </a>`;
       })() : '';
 
       return `
         <section style="margin-bottom:24px;background:#E8EDF0;border-radius:20px;padding:16px 12px 12px">
-          <h2 style="font-size:0.6875rem;font-weight:700;letter-spacing:0.15em;color:#8E8E93;text-transform:uppercase;margin-bottom:12px;padding:0 4px">Daily Routine</h2>
+          <h2 style="font-size:0.6875rem;font-weight:700;letter-spacing:0.15em;color:#8E8E93;text-transform:uppercase;margin-bottom:12px;padding:0 4px">Daily Logs</h2>
           <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
             ${squareCards}
           </div>
