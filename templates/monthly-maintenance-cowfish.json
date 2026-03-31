@@ -1,0 +1,133 @@
+{
+  "id": "monthly-maintenance-cowfish",
+  "name": "Monthly Maintenance — Cowfish",
+  "type": "checklist",
+  "vessel": "cowfish",
+  "role": "captain",
+  "recurrence": "monthly",
+  "trigger_dates": [1],
+  "supersedes": ["daily-maintenance-captain-cowfish", "daily-maintenance-deckhand-cowfish"],
+  "version": "2026-03-30",
+  "source": "KB: 1.3 Cowfish - God Doc / Consumables table + Engine Info table",
+  "estimated_minutes": 45,
+  "priority": 80,
+  "display_order": 70,
+  "intro": "First of the month maintenance for Cowfish. This checklist supersedes any daily maintenance tasks. Engines are 2024 Suzuki DF115BG (starboard) and DF115BZG (port). Check engine hours and complete any service interval items that are due.",
+  "sections": [
+    {
+      "title": "General Monthly Checks",
+      "items": [
+        {
+          "id": "tool-inventory",
+          "label": "Tool kit inventory — verify mousing/safety wire, hydraulic fluid and fill tube, emergency oil, fuel filters in spares kit",
+          "type": "checkbox"
+        },
+        {
+          "id": "zinc-inspection",
+          "label": "Inspect zincs (mounting bracket and lower unit) — replace if >50% eroded",
+          "type": "checkbox",
+          "help": {
+            "title": "Cowfish zinc part numbers",
+            "body": "Mounting bracket zinc: 55320-94900\nLower unit zinc: 55321-90J01\nSource: 1.3 Cowfish - God Doc, Consumables"
+          }
+        },
+        {
+          "id": "bilge-pump-check",
+          "label": "Inspect bilge pumps — confirm operational",
+          "type": "checkbox",
+          "help": {
+            "title": "Bilge pump details",
+            "body": "Atwood Sahara MK 2. Available at Cubanito's or special order from West Marine. Installation needs: 3x ring terminal heat shrink connectors AWG 16-22 with #8 ring/hole, Phillips screwdriver. Bonus: dielectric grease. Match black to black, white-stripe to white."
+          }
+        },
+        {
+          "id": "consumables-inventory",
+          "label": "Inventory consumables and dock box — restock as needed",
+          "type": "checkbox"
+        }
+      ]
+    },
+    {
+      "title": "Engine Hour Thresholds — Suzuki DF115BG/BZG",
+      "description": "If an engine hour quota is reached, these tasks take PRIORITY over weekly maintenance items. Check engine hours and complete any that are due.",
+      "items": [
+        {
+          "id": "engine-hours-port",
+          "label": "Current engine hours — Port (DF115BZG, S/N 11505Z-540012)",
+          "type": "number",
+          "unit": "hours"
+        },
+        {
+          "id": "engine-hours-stbd",
+          "label": "Current engine hours — Starboard (DF115BG, S/N 11505F-540252)",
+          "type": "number",
+          "unit": "hours"
+        },
+        {
+          "id": "every-100-hours",
+          "label": "Every 100 hrs: Change engine oil & filter, grease shifter",
+          "type": "checkbox",
+          "help": {
+            "title": "100-hour service — Suzuki DF115BG/BZG",
+            "body": "Oil: Quicksilver Semi-Synthetic 25W-40, 5.5L per engine\nOil filter: Suzuki 16510-61A31 / Sierra 18-7905-2 (West Marine)\n\nSHIFTER GREASE: Grease the shifter with grease gun at every oil change. Critical to safety — do not skip.\nSource: 1.3 Cowfish - God Doc, Consumables"
+          }
+        },
+        {
+          "id": "every-200-hours",
+          "label": "Every 200 hrs: Replace oil filter, water pump impeller inspection",
+          "type": "checkbox",
+          "help": {
+            "title": "200-hour service — Suzuki DF115BG/BZG",
+            "body": "Oil filter: Suzuki 16510-61A31 / Sierra 18-7905-2 — replace at 200 hours max\nWater pump impeller: Replace every 200 hours or 12 months (whichever comes first). Inspect housing for wear, cracks, or distortion — replace housing if damaged.\nImpeller kit number: [NEEDS VERIFICATION — not yet in God Doc]\nLower unit oil: SAE #90 hypoid gear oil or Suzuki gear oil, 1050 ml (37 US imp. oz)\nSource: 1.3 Cowfish - God Doc, Consumables"
+          }
+        },
+        {
+          "id": "every-1000-hours",
+          "label": "Every 1000 hrs: Replace high pressure fuel filter (mechanic required)",
+          "type": "checkbox",
+          "help": {
+            "title": "1000-hour service — Suzuki DF115BG/BZG",
+            "body": "High pressure fuel filter replacement — requires mechanic.\nSchedule with your marine mechanic in advance.\nSource: 1.3 Cowfish - God Doc, Consumables"
+          }
+        },
+        {
+          "id": "shifter-grease-reminder",
+          "label": "Confirm shifter was greased at last oil change — Critical to safety",
+          "type": "checkbox",
+          "help": {
+            "title": "Shifter grease — CRITICAL",
+            "body": "Grease the shifter with a grease gun at every oil change. This is critical to safety — failure to grease can cause the shifter to seize or malfunction, potentially losing ability to shift in/out of gear.\nSource: 1.3 Cowfish - God Doc, Engine oil row note"
+          }
+        }
+      ]
+    },
+    {
+      "title": "Prop & Drive Reference",
+      "description": "Visual check during monthly maintenance. Note any damage.",
+      "items": [
+        {
+          "id": "prop-inspection",
+          "label": "Inspect props for dings, bends, or fishing line wrap",
+          "type": "checkbox",
+          "help": {
+            "title": "Cowfish prop specs",
+            "body": "Port prop: Suzuki SS 3Lx14x20 — COUNTER ROTATING (left hand spin)\nStarboard prop: 3Rx14x21 [NEEDS VERIFICATION — stamps unclear per God Doc]\nSource: 1.3 Cowfish - God Doc, Props section"
+          }
+        },
+        {
+          "id": "prop-condition-photo",
+          "label": "Photo of prop condition (optional)",
+          "type": "photo",
+          "placeholder": "Document any prop damage or zinc erosion",
+          "max_photos": 2
+        }
+      ]
+    }
+  ],
+  "completion": {
+    "require_all": false,
+    "sign_off": true,
+    "notes_field": true,
+    "notes_prompt": "Engine hour status? Parts ordered? Shifter grease completed? Any issues requiring follow-up?"
+  }
+}

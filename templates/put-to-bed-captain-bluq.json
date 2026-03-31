@@ -1,0 +1,120 @@
+{
+  "id": "put-to-bed-captain-bluq",
+  "name": "Put Blu Q to Bed — Captain",
+  "type": "checklist",
+  "vessel": "blu-q",
+  "role": "captain",
+  "recurrence": "daily",
+  "version": "2026-03-30",
+  "source": "KB: haldo-kb-harvest §1E Put to Bed — Captain; 4.1 Waking up and Putting Blu Q to Bed, Evening > Captain",
+  "estimated_minutes": 20,
+  "priority": 10,
+  "display_order": 50,
+  "intro": "End-of-day shutdown for Blu Q. Captain handles lines, rinse, engines, and rig. Rinsing away salt is critical to mitigate corrosion on rigging and aluminum. Coordinate dock hose with deckhand.",
+  "sections": [
+    {
+      "title": "Lines & Securing",
+      "items": [
+        {
+          "id": "overnight-lines",
+          "label": "Put on overnight lines — slack black stern line to allow tide changes",
+          "type": "checkbox",
+          "help": {
+            "title": "Overnight lines",
+            "body": "The black stern line is a backup line if the main stern breaks. Keep it slack to allow for tide changes overnight."
+          }
+        },
+        {
+          "id": "captain-ensures-mate",
+          "label": "Captain ensures deckhand completed duties",
+          "type": "checkbox"
+        }
+      ]
+    },
+    {
+      "title": "Rinse & Clean",
+      "items": [
+        {
+          "id": "hose-aluminum",
+          "label": "Grab hose and begin hosing all aluminum beams, anchor, ladder, chain",
+          "type": "checkbox"
+        },
+        {
+          "id": "hose-rigging",
+          "label": "Hose stainless steel rigging wires, turnbuckles, diamond shrouds, sail hanks/cars",
+          "type": "checkbox",
+          "help": {
+            "title": "Why rinse rigging?",
+            "body": "Rinsing away salt is very important to mitigate corrosion on stainless steel rigging components. Do not skip this step."
+          }
+        },
+        {
+          "id": "spray-motors",
+          "label": "Spray down the motors and trim motors",
+          "type": "checkbox"
+        },
+        {
+          "id": "flush-motors",
+          "label": "Flush motors for about 3 minutes",
+          "type": "checkbox"
+        },
+        {
+          "id": "help-scrub",
+          "label": "Help scrub or rinse after scrub (depends on day)",
+          "type": "checkbox"
+        },
+        {
+          "id": "shut-water",
+          "label": "Shut off water valve below the meter and lock the hose",
+          "type": "checkbox"
+        }
+      ]
+    },
+    {
+      "title": "Sail & Rig",
+      "items": [
+        {
+          "id": "coil-sheets",
+          "label": "Coil down sheets",
+          "type": "checkbox"
+        },
+        {
+          "id": "helm-cover",
+          "label": "Cover GPS and put on blue fabric helm cover",
+          "type": "checkbox"
+        }
+      ]
+    },
+    {
+      "title": "End of Day",
+      "items": [
+        {
+          "id": "logbook",
+          "label": "Do log book, note anything important",
+          "type": "checkbox"
+        },
+        {
+          "id": "message-next-captain",
+          "label": "Message the following captain any status updates",
+          "type": "checkbox"
+        },
+        {
+          "id": "split-tips",
+          "label": "Captain splits tips once all work is done including deckhands",
+          "type": "checkbox"
+        },
+        {
+          "id": "crew-leaves",
+          "label": "Crew leaves together, last off shuts gate",
+          "type": "checkbox"
+        }
+      ]
+    }
+  ],
+  "completion": {
+    "require_all": true,
+    "sign_off": true,
+    "notes_field": true,
+    "notes_prompt": "Anything the next captain needs to know? Maintenance issues, engine concerns, guest feedback?"
+  }
+}

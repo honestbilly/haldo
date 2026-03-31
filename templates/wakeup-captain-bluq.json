@@ -1,0 +1,170 @@
+{
+  "id": "wakeup-captain-bluq",
+  "name": "Wake Up Blu Q — Captain",
+  "type": "checklist",
+  "vessel": "blu-q",
+  "role": "captain",
+  "recurrence": "daily",
+  "version": "2026-03-30",
+  "source": "KB: haldo-kb-harvest §1A Wake Up — Captain; 4.1 Waking up and Putting Blu Q to Bed; Blu Q Daily Log Book",
+  "estimated_minutes": 20,
+  "priority": 100,
+  "display_order": 10,
+  "intro": "Morning startup checklist for Blu Q. Check weather, tides, and wind for reefing before arriving. Pump out is daily — tank is tiny. Communicate with crew on fuel status and trip plan.",
+  "sections": [
+    {
+      "title": "Dock & Fuel",
+      "items": [
+        {
+          "id": "pump-out",
+          "label": "Pump out boat (gloves under steps)",
+          "type": "checkbox",
+          "help": {
+            "title": "Pump out details",
+            "body": "Pump out needs to be done every day — the holding tank is tiny. Gloves are stored under the steps."
+          }
+        },
+        {
+          "id": "check-fuel",
+          "label": "Check fuel and fuel up if necessary",
+          "type": "checkbox"
+        },
+        {
+          "id": "check-oil",
+          "label": "Check oil level",
+          "type": "checkbox"
+        },
+        {
+          "id": "fuel-disc-check",
+          "label": "Check secondary fuel filter for water in fuel — ensure red disc at bottom",
+          "type": "checkbox",
+          "help": {
+            "title": "Fuel disc check",
+            "body": "Look at the secondary fuel filter. The red disc should be visible at the bottom, confirming no water in the fuel. If disc is not at bottom or water is visible, the fuel filter needs attention."
+          }
+        },
+        {
+          "id": "hulls-clear",
+          "label": "Hulls clear of water",
+          "type": "checkbox"
+        },
+        {
+          "id": "pull-in-boat",
+          "label": "Pull in boat for boarding with black stern line and breast line",
+          "type": "checkbox"
+        },
+        {
+          "id": "strike-overnight-lines",
+          "label": "Strike overnight lines — starboard bow and stern lines",
+          "type": "checkbox",
+          "help": {
+            "title": "Overnight lines",
+            "body": "The overnight lines are the starboard bow line and stern line. Strike (remove) them to prepare for departure. The black stern line and breast line are used for boarding position."
+          }
+        }
+      ]
+    },
+    {
+      "title": "Electrical & Systems",
+      "items": [
+        {
+          "id": "12v-panel",
+          "label": "Turn on switches on 12v panel in helm",
+          "type": "checkbox"
+        },
+        {
+          "id": "bilge-pumps",
+          "label": "Bilge pumps set to auto and working",
+          "type": "checkbox"
+        },
+        {
+          "id": "run-bilge-pumps",
+          "label": "Run bilge pumps for a little",
+          "type": "checkbox"
+        },
+        {
+          "id": "start-engines",
+          "label": "Start engines, cycle through gears",
+          "type": "checkbox"
+        },
+        {
+          "id": "maintenance-calendar",
+          "label": "Check maintenance calendar for what is to be done today",
+          "type": "checkbox"
+        },
+        {
+          "id": "check-dmt",
+          "label": "Check DMT (daily maintenance task)",
+          "type": "checkbox",
+          "info": "Your DMT checklist shows today's specific task. Complete it separately — this checkbox confirms you're aware of it."
+        }
+      ]
+    },
+    {
+      "title": "Sail & Rig",
+      "items": [
+        {
+          "id": "rig-centered",
+          "label": "Rig centered, boom not on bimini",
+          "type": "checkbox"
+        },
+        {
+          "id": "clear-covers",
+          "label": "Clear covers off helm and sailbag",
+          "type": "checkbox"
+        },
+        {
+          "id": "check-reefing",
+          "label": "Check tides and wind for reefing",
+          "type": "checkbox"
+        },
+        {
+          "id": "muster-crew",
+          "label": "Muster with crew for training, weather and plan the trip, reef sail if needed",
+          "type": "checkbox"
+        }
+      ]
+    },
+    {
+      "title": "Guest Prep",
+      "items": [
+        {
+          "id": "clean-head",
+          "label": "Verify head is super clean",
+          "type": "checkbox"
+        },
+        {
+          "id": "snorkel-kayak-gear",
+          "label": "Snorkel and kayak gear checked",
+          "type": "checkbox"
+        },
+        {
+          "id": "rez-software",
+          "label": "Check rez software for roster, waivers, trip notes",
+          "type": "checkbox"
+        },
+        {
+          "id": "music",
+          "label": "Music set to Honest Eco Playlist — NO commercials",
+          "type": "checkbox"
+        },
+        {
+          "id": "boat-ready",
+          "label": "Boat ready for boarding 30 minutes prior to departure",
+          "type": "checkbox"
+        },
+        {
+          "id": "greet-guests",
+          "label": "As guests arrive, say hello, relay boarding time, offer shore head",
+          "type": "checkbox"
+        }
+      ]
+    }
+  ],
+  "completion": {
+    "require_all": true,
+    "sign_off": true,
+    "notes_field": true,
+    "notes_prompt": "Any issues found during startup? Anything to flag for the deckhand or next captain?"
+  }
+}

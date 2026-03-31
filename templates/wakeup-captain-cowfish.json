@@ -1,0 +1,95 @@
+{
+  "id": "wakeup-captain-cowfish",
+  "name": "Wake Up Cowfish — Captain",
+  "type": "checklist",
+  "vessel": "cowfish",
+  "role": "captain",
+  "recurrence": "daily",
+  "version": "2026-03-30",
+  "source": "KB: 2.3 On Board Binder - Cowfish / Waking Her Up (partially captured from .docx)",
+  "estimated_minutes": 15,
+  "priority": 100,
+  "display_order": 10,
+  "intro": "Morning startup checklist for Cowfish. Note: this template may be incomplete — the Cowfish binder .docx was only partially captured during the KB harvest. Items marked [NEEDS VERIFICATION] should be confirmed against the physical binder.",
+  "sections": [
+    {
+      "title": "Engine & Systems",
+      "items": [
+        {
+          "id": "battery-switch",
+          "label": "Open middle aft hatch — turn battery switch ON",
+          "type": "checkbox"
+        },
+        {
+          "id": "trim-and-steering",
+          "label": "Trim engines down and check steering",
+          "type": "checkbox"
+        },
+        {
+          "id": "start-engines",
+          "label": "Start engines",
+          "type": "checkbox"
+        },
+        {
+          "id": "bump-gears",
+          "label": "Bump engines forward and reverse (test gear engagement)",
+          "type": "checkbox"
+        },
+        {
+          "id": "vhf-radio",
+          "label": "VHF radio on channel 16",
+          "type": "checkbox",
+          "help": {
+            "title": "VHF channel reference",
+            "body": "Channel 16 is the international distress, safety, and calling frequency. Monitor throughout the day. Switch to working channels for non-emergency communication."
+          }
+        }
+      ]
+    },
+    {
+      "title": "Fuel & Checks",
+      "items": [
+        {
+          "id": "check-fuel",
+          "label": "Check fuel gauge — fill at Conch Harbor if under 1/2 tank",
+          "type": "checkbox",
+          "help": {
+            "title": "Fuel threshold",
+            "body": "Fill up at Conch Harbor if the fuel gauge reads below 1/2 tank. Coordinate with crew if a fuel stop is needed so they can adjust the boarding timeline."
+          }
+        },
+        {
+          "id": "shutoff-engines",
+          "label": "Shut off engines (after systems test, before boarding)",
+          "type": "checkbox"
+        }
+      ]
+    },
+    {
+      "title": "Boarding Prep",
+      "items": [
+        {
+          "id": "slack-lines",
+          "label": "Slack lines for boarding",
+          "type": "checkbox"
+        },
+        {
+          "id": "safety-speech",
+          "label": "Safety speech to guests",
+          "type": "checkbox"
+        },
+        {
+          "id": "start-engines-depart",
+          "label": "Start engines for departure",
+          "type": "checkbox"
+        }
+      ]
+    }
+  ],
+  "completion": {
+    "require_all": true,
+    "sign_off": true,
+    "notes_field": true,
+    "notes_prompt": "Any issues found during startup? Anything to flag for the deckhand or next captain?"
+  }
+}

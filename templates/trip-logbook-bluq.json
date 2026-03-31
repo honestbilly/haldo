@@ -1,0 +1,274 @@
+{
+  "id": "trip-logbook-bluq",
+  "name": "Trip Logbook — Blu Q",
+  "type": "logbook",
+  "vessel": "blu-q",
+  "role": "captain",
+  "recurrence": "per-trip",
+  "version": "2026-03-30",
+  "source": "KB: haldo-kb-harvest §1G Trip Logbook; Blu Q Daily Log Book (modified 2025-11-06)",
+  "estimated_minutes": 5,
+  "priority": 50,
+  "display_order": 30,
+  "captain_steps": [1, 2, 3, 4, 5, 6, 7],
+  "mate_steps": [],
+  "steps": [
+    {
+      "step": 1,
+      "title": "Trip Confirmation",
+      "items": [
+        {
+          "id": "trip-date",
+          "label": "Trip date",
+          "type": "text",
+          "required": true
+        },
+        {
+          "id": "trip-slot",
+          "label": "Trip slot",
+          "type": "select",
+          "options": ["AM (9-1)", "PM (2-6)"],
+          "required": true
+        },
+        {
+          "id": "conditions-wind",
+          "label": "Conditions Forecast — Wind",
+          "type": "text",
+          "placeholder": "Wind speed and direction"
+        },
+        {
+          "id": "conditions-tide",
+          "label": "Conditions Forecast — Tide (H/L)",
+          "type": "text",
+          "placeholder": "High/Low tide times"
+        }
+      ]
+    },
+    {
+      "step": 2,
+      "title": "Crew Roster",
+      "items": [
+        {
+          "id": "master",
+          "label": "Master (captain)",
+          "type": "text",
+          "required": true
+        },
+        {
+          "id": "deckhand",
+          "label": "Deckhand",
+          "type": "text",
+          "required": true
+        }
+      ]
+    },
+    {
+      "step": 3,
+      "title": "Passengers",
+      "items": [
+        {
+          "id": "am-pax",
+          "label": "AM Pax",
+          "type": "number",
+          "min": 0,
+          "max": 50,
+          "unit": "pax"
+        },
+        {
+          "id": "pm-pax",
+          "label": "PM Pax",
+          "type": "number",
+          "min": 0,
+          "max": 50,
+          "unit": "pax"
+        },
+        {
+          "id": "waivers-confirmed",
+          "label": "All waivers confirmed",
+          "type": "checkbox",
+          "required": true
+        }
+      ]
+    },
+    {
+      "step": 4,
+      "title": "Safety",
+      "items": [
+        {
+          "id": "safety-orientation",
+          "label": "Safety orientation completed (life jackets, fire extinguishers, MOB ring, slips/trips/falls)",
+          "type": "checkbox",
+          "required": true,
+          "help": {
+            "title": "Required USCG safety briefing",
+            "body": "Must cover: life jackets, fire extinguishers, MOB ring and procedure, when to stay seated (takeoff/landing), keep hands/head inside during docking, slips/trips/falls — how to walk safely (hold on, don't run/jump/climb)."
+          }
+        },
+        {
+          "id": "boat-orientation",
+          "label": "Boat orientation completed (head, water, snacks, where to go)",
+          "type": "checkbox"
+        },
+        {
+          "id": "incident-occurred",
+          "label": "Any incidents on this trip?",
+          "type": "select",
+          "options": ["No incidents", "Minor incident", "Major incident"],
+          "info": "Select 'No incidents' if nothing to report."
+        },
+        {
+          "id": "incident-details",
+          "label": "Incident details",
+          "type": "text",
+          "placeholder": "Describe what happened, who was involved, and actions taken...",
+          "requires": "incident-occurred",
+          "help": {
+            "title": "USCG Reporting",
+            "body": "If this incident involves injury, vessel damage, or a person overboard, the captain MUST contact the U.S. Coast Guard immediately. VHF Channel 16 or call (305) 535-4300."
+          }
+        }
+      ]
+    },
+    {
+      "step": 5,
+      "title": "Operations",
+      "items": [
+        {
+          "id": "snorkel-kayak-gear",
+          "label": "Snorkel and kayak gear checked",
+          "type": "checkbox"
+        },
+        {
+          "id": "rig-centered",
+          "label": "Rig centered, boom not on bimini",
+          "type": "checkbox"
+        },
+        {
+          "id": "covers-cleared",
+          "label": "Clear covers off helm and sailbag",
+          "type": "checkbox"
+        },
+        {
+          "id": "sail-conditions",
+          "label": "Sail conditions / reefing notes",
+          "type": "text",
+          "placeholder": "Reefed? Full sail? Conditions under sail?"
+        },
+        {
+          "id": "snorkel-location",
+          "label": "Snorkel location",
+          "type": "text",
+          "placeholder": "Where did you snorkel?"
+        },
+        {
+          "id": "dolphin-location",
+          "label": "Dolphin location",
+          "type": "text",
+          "placeholder": "Where were dolphins spotted?"
+        },
+        {
+          "id": "kayak-deployed",
+          "label": "Kayaks deployed?",
+          "type": "select",
+          "options": ["Yes", "No"]
+        },
+        {
+          "id": "engine-hours-eod",
+          "label": "Engine hours (EOD)",
+          "type": "number",
+          "min": 0,
+          "max": 99999,
+          "unit": "hours"
+        },
+        {
+          "id": "gas-added-burned",
+          "label": "Gas added/burned today",
+          "type": "text",
+          "placeholder": "e.g., 10 gal burned, 20 gal added"
+        },
+        {
+          "id": "weather-conditions",
+          "label": "Weather / sea conditions",
+          "type": "text"
+        }
+      ]
+    },
+    {
+      "step": 6,
+      "title": "Merchandise",
+      "items": [
+        {
+          "id": "merch-sold",
+          "label": "Was merch sold today?",
+          "type": "select",
+          "options": ["Yes", "No"]
+        },
+        {
+          "id": "merch-hat",
+          "label": "Hats sold",
+          "type": "number",
+          "unit": "qty"
+        },
+        {
+          "id": "merch-tshirt",
+          "label": "T-Shirts sold",
+          "type": "number",
+          "unit": "qty"
+        },
+        {
+          "id": "merch-sunshirt",
+          "label": "Sun Shirts sold",
+          "type": "number",
+          "unit": "qty"
+        },
+        {
+          "id": "merch-sweatshirt",
+          "label": "Sweatshirts sold",
+          "type": "number",
+          "unit": "qty"
+        },
+        {
+          "id": "merch-payment",
+          "label": "How were items paid for?",
+          "type": "multi_select",
+          "options": ["Cash", "Card", "Venmo", "Zelle", "Added to tab", "No sales today"]
+        }
+      ]
+    },
+    {
+      "step": 7,
+      "title": "Review",
+      "items": [
+        {
+          "id": "captain-dmt",
+          "label": "Captain: What DMT completed?",
+          "type": "text",
+          "placeholder": "Daily maintenance task completed by captain"
+        },
+        {
+          "id": "mate-dmt",
+          "label": "Deckhand: What DMT completed?",
+          "type": "text",
+          "placeholder": "Daily maintenance task completed by deckhand"
+        },
+        {
+          "id": "trip-notes",
+          "label": "Notes — locations, conditions, dolphin sightings, anything notable",
+          "type": "text",
+          "placeholder": "List locations, conditions for each trip, location of dolphins, anything else notable from the trips."
+        },
+        {
+          "id": "issues-notes",
+          "label": "Issues or notes for next captain",
+          "type": "text"
+        }
+      ]
+    }
+  ],
+  "completion": {
+    "require_all": false,
+    "sign_off": true,
+    "notes_field": true,
+    "notes_prompt": "Any additional notes for the record?"
+  }
+}

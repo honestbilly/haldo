@@ -1,0 +1,107 @@
+{
+  "id": "wakeup-deckhand-bluq",
+  "name": "Wake Up Blu Q — Deckhand",
+  "type": "checklist",
+  "vessel": "blu-q",
+  "role": "deckhand",
+  "recurrence": "daily",
+  "version": "2026-03-30",
+  "source": "KB: haldo-kb-harvest §1B Wake Up — Deckhand; 4.1 Waking up and Putting Blu Q to Bed, Morning > Deckhand Duties",
+  "estimated_minutes": 20,
+  "priority": 100,
+  "display_order": 10,
+  "intro": "Morning prep checklist for Blu Q deckhand. Stock provisions, clean boat, and prep for guests. Coordinate with captain on trip plan and gear needs.",
+  "sections": [
+    {
+      "title": "Provisions",
+      "items": [
+        {
+          "id": "confirm-provisions",
+          "label": "Confirm what provisions are needed",
+          "type": "checkbox"
+        },
+        {
+          "id": "stock-coolers",
+          "label": "Go to Date & Thyme and stock coolers for day — rotate food/oldest first",
+          "type": "checkbox"
+        },
+        {
+          "id": "ice-water",
+          "label": "Ice coolers and drinking water — make sure drinking water was filled",
+          "type": "checkbox"
+        },
+        {
+          "id": "inspect-fruit",
+          "label": "Inspect fruit bowl for gnarly apples/oranges",
+          "type": "checkbox"
+        },
+        {
+          "id": "stow-dishes",
+          "label": "Stow dishes that dried overnight",
+          "type": "checkbox"
+        }
+      ]
+    },
+    {
+      "title": "Cleaning",
+      "items": [
+        {
+          "id": "sponge-bilges",
+          "label": "Sponge bilges",
+          "type": "checkbox"
+        },
+        {
+          "id": "stock-tp-paper",
+          "label": "Ensure toilet paper and paper towels are stocked",
+          "type": "checkbox"
+        },
+        {
+          "id": "clean-head",
+          "label": "Make sure head is sparkling clean",
+          "type": "checkbox"
+        },
+        {
+          "id": "clean-tables",
+          "label": "Clean tables and cup holders",
+          "type": "checkbox"
+        },
+        {
+          "id": "stow-towels",
+          "label": "Stow any towels or wetsuits that were hung",
+          "type": "checkbox"
+        },
+        {
+          "id": "dry-boat",
+          "label": "Dry boat before boarding as needed",
+          "type": "checkbox"
+        }
+      ]
+    },
+    {
+      "title": "Guest Prep",
+      "items": [
+        {
+          "id": "check-fareharbor",
+          "label": "Check Fareharbor for notes, be sure you have enough gear and supplies",
+          "type": "checkbox"
+        },
+        {
+          "id": "maintenance-calendar",
+          "label": "Check maintenance calendar for daily task",
+          "type": "checkbox"
+        },
+        {
+          "id": "shoe-bin",
+          "label": "Put out shoe bin",
+          "type": "checkbox"
+        }
+      ]
+    }
+  ],
+  "completion": {
+    "require_all": true,
+    "sign_off": true,
+    "notes_field": true,
+    "notes_prompt": "Any issues found during prep? Anything to flag for the captain or next deckhand?"
+  }
+}

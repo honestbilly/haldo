@@ -1,0 +1,77 @@
+{
+  "id": "wakeup-deckhand-cowfish",
+  "name": "Wake Up Cowfish — Deckhand",
+  "type": "checklist",
+  "vessel": "cowfish",
+  "role": "deckhand",
+  "recurrence": "daily",
+  "version": "2026-03-30",
+  "source": "KB: 2.3 On Board Binder - Cowfish / Waking Her Up (partially captured from .docx)",
+  "estimated_minutes": 20,
+  "priority": 100,
+  "display_order": 10,
+  "intro": "Morning deckhand prep for Cowfish. Provisions, cleaning, and guest-readiness. Note: this template may be incomplete — the Cowfish binder .docx was only partially captured during the KB harvest.",
+  "sections": [
+    {
+      "title": "Provisions",
+      "items": [
+        {
+          "id": "check-cooler",
+          "label": "Check cooler for ice and leftovers from yesterday",
+          "type": "checkbox"
+        },
+        {
+          "id": "provision-date-thyme",
+          "label": "Provision from Date & Thyme",
+          "type": "checkbox"
+        },
+        {
+          "id": "get-ice",
+          "label": "Get ice at Dockmasters",
+          "type": "checkbox"
+        },
+        {
+          "id": "ice-in-cooler",
+          "label": "Place ice bag in cooler",
+          "type": "checkbox"
+        },
+        {
+          "id": "check-water-bottles",
+          "label": "Check water bottles",
+          "type": "checkbox"
+        },
+        {
+          "id": "fill-freshwater-tank",
+          "label": "Fill freshwater tank on port side gunwale",
+          "type": "checkbox"
+        }
+      ]
+    },
+    {
+      "title": "Cleaning & Prep",
+      "items": [
+        {
+          "id": "spray-deck",
+          "label": "Bring hose onboard and spray deck",
+          "type": "checkbox"
+        },
+        {
+          "id": "fill-sanitizer-bucket",
+          "label": "Fill snorkel sanitizer bucket",
+          "type": "checkbox"
+        },
+        {
+          "id": "stow-gear",
+          "label": "Stow gear for guests boarding",
+          "type": "checkbox"
+        }
+      ]
+    }
+  ],
+  "completion": {
+    "require_all": true,
+    "sign_off": true,
+    "notes_field": true,
+    "notes_prompt": "Any provisioning issues? Items out of stock? Anything to flag for the captain?"
+  }
+}

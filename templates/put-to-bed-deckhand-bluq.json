@@ -1,0 +1,117 @@
+{
+  "id": "put-to-bed-deckhand-bluq",
+  "name": "Put Blu Q to Bed — Deckhand",
+  "type": "checklist",
+  "vessel": "blu-q",
+  "role": "deckhand",
+  "recurrence": "daily",
+  "version": "2026-03-30",
+  "source": "KB: haldo-kb-harvest §1F Put to Bed — Deckhand; 4.1 Waking up and Putting Blu Q to Bed, Evening > Deckhand",
+  "estimated_minutes": 25,
+  "priority": 10,
+  "display_order": 50,
+  "intro": "End-of-day cleanup for Blu Q deckhand. Handle guest departure, cleaning, head treatment, trash, and food stowage. Scrub deck with Dawn and deck brush.",
+  "sections": [
+    {
+      "title": "Guest Departure",
+      "items": [
+        {
+          "id": "guests-disembark",
+          "label": "Guests disembark and put away any gear",
+          "type": "checkbox"
+        }
+      ]
+    },
+    {
+      "title": "Cleaning",
+      "items": [
+        {
+          "id": "wash-dishes",
+          "label": "Wash dishes and stow in correct drying racks",
+          "type": "checkbox"
+        },
+        {
+          "id": "clean-water-bottles",
+          "label": "Clean, sanitize and fill water bottles",
+          "type": "checkbox"
+        },
+        {
+          "id": "fill-yeti",
+          "label": "Fill Yeti water jug with filtered water",
+          "type": "checkbox"
+        },
+        {
+          "id": "scrub-deck",
+          "label": "Scrub deck with Dawn, deck brush, using a trash or recycle can",
+          "type": "checkbox"
+        },
+        {
+          "id": "rinse-deck",
+          "label": "Rinse deck after scrubbing",
+          "type": "checkbox"
+        },
+        {
+          "id": "hang-mats",
+          "label": "Hang floor mats and anything that needs to dry",
+          "type": "checkbox"
+        },
+        {
+          "id": "stow-halyard",
+          "label": "Stow main halyard / make all lines taut with preventers if needed",
+          "type": "checkbox"
+        }
+      ]
+    },
+    {
+      "title": "Head & Trash",
+      "items": [
+        {
+          "id": "clean-head",
+          "label": "Wash and clean head and sink area",
+          "type": "checkbox"
+        },
+        {
+          "id": "empty-head-trash",
+          "label": "Empty head trash",
+          "type": "checkbox"
+        },
+        {
+          "id": "blue-treatment",
+          "label": "Put 2 oz of Blue in head and flush a gallon of fresh water from hose or bucket",
+          "type": "checkbox"
+        },
+        {
+          "id": "collect-trash",
+          "label": "Collect all trash and get trash ready to be emptied",
+          "type": "checkbox"
+        },
+        {
+          "id": "hose-trash-cans",
+          "label": "After emptying trash, hose them out",
+          "type": "checkbox"
+        }
+      ]
+    },
+    {
+      "title": "Food & Supplies",
+      "items": [
+        {
+          "id": "food-leftovers",
+          "label": "Food leftovers go into Yeti coolers to ensure packaged food is not submerged in water",
+          "type": "checkbox"
+        },
+        {
+          "id": "food-inventory",
+          "label": "Check food inventory and pass on the information to following crew",
+          "type": "checkbox"
+        }
+      ]
+    }
+  ],
+  "completion": {
+    "require_all": true,
+    "sign_off": true,
+    "notes_field": true,
+    "notes_prompt": "Any cleaning issues? Supplies running low? Anything to flag for the next deckhand?"
+  }
+}

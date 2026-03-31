@@ -1,0 +1,189 @@
+{
+  "id": "snorkel-inventory-bluq",
+  "name": "Snorkel Gear Inventory & Maintenance — Blu Q",
+  "type": "checklist",
+  "vessel": "blu-q",
+  "role": "deckhand",
+  "recurrence": "weekly",
+  "trigger_day": "tuesday",
+  "version": "2026-03-30",
+  "source": "KB: haldo-kb-harvest §1H Snorkel Inventory; SQUID Maintenance Checklists (COI-standard counts); BluQ Daily Maintenance Tasks",
+  "estimated_minutes": 10,
+  "priority": 90,
+  "display_order": 60,
+  "intro": "Tuesday snorkel inventory. Count all gear — only count complete, working sets. Pull damaged items into the repair bin. Restock from office or dock box if below minimum. Flag damaged gear with the (+) note button and a photo. Also check fin bag on trampoline.",
+  "sections": [
+    {
+      "title": "Masks & Snorkels",
+      "items": [
+        {
+          "id": "adult-masks",
+          "label": "Adult Cressi mask & snorkel (bite tabs working!)",
+          "type": "number",
+          "min": 14,
+          "max": 18,
+          "unit": "sets",
+          "help": {
+            "title": "How to count",
+            "body": "Count complete sets only — mask AND snorkel together. Check that bite tabs are intact and flexible. If a bite tab is cracked or stiff, pull that set and put it in the repair bin. Don't count it."
+          },
+          "alert_below_min": {
+            "message": "Adult masks below minimum ({value}/14). Restock from office.",
+            "notify": ["manager"],
+            "severity": "warning"
+          }
+        },
+        {
+          "id": "junior-masks",
+          "label": "Junior Cressi mask + adult snorkel (bite tabs working!)",
+          "type": "number",
+          "min": 8,
+          "max": 10,
+          "unit": "sets",
+          "alert_below_min": {
+            "message": "Junior masks below minimum ({value}/8). Restock from office.",
+            "notify": ["manager"],
+            "severity": "warning"
+          }
+        },
+        {
+          "id": "kids-masks",
+          "label": "Kid's mask & snorkel (bite tabs working!)",
+          "type": "number",
+          "min": 4,
+          "max": 6,
+          "unit": "sets"
+        }
+      ]
+    },
+    {
+      "title": "Fins",
+      "items": [
+        {
+          "id": "large-fins",
+          "label": "Large pairs fins",
+          "type": "number",
+          "min": 10,
+          "max": 12,
+          "unit": "pairs",
+          "help": {
+            "title": "Fin sizing",
+            "body": "Large fins fit most adult men. Check straps for cracks. Pull any pair with a broken strap and put in repair bin."
+          }
+        },
+        {
+          "id": "sm-fins",
+          "label": "S/M pairs fins",
+          "type": "number",
+          "min": 9,
+          "max": 12,
+          "unit": "pairs"
+        },
+        {
+          "id": "xs-fins",
+          "label": "XS/kids pairs fins",
+          "type": "number",
+          "min": 9,
+          "max": 12,
+          "unit": "pairs"
+        },
+        {
+          "id": "fin-bag-tramp",
+          "label": "Fin bag on trampoline stocked — at least 6 XL and 6 medium pairs",
+          "type": "checkbox",
+          "help": {
+            "title": "Trampoline fin bag",
+            "body": "Ensure the fin bag on the trampoline is stocked with at least 6 XL and 6 medium fin pairs for quick guest access."
+          }
+        }
+      ]
+    },
+    {
+      "title": "Consumables & Accessories",
+      "items": [
+        {
+          "id": "foam-belts",
+          "label": "Foam belts (+ spare buckles)",
+          "type": "number",
+          "min": 16,
+          "max": 20,
+          "unit": "belts"
+        },
+        {
+          "id": "defog",
+          "label": "Defog solution",
+          "type": "select",
+          "options": ["Empty", "Quarter", "Half", "Three-quarters", "Full"],
+          "alert_below": "Half",
+          "alert_message": "Defog running low. Restock.",
+          "help": {
+            "title": "Defog usage",
+            "body": "Apply defog and rinse out BEFORE distributing gear. Guests should receive pre-defogged masks. If defog was not applied, correct the behavior."
+          }
+        },
+        {
+          "id": "baby-shampoo",
+          "label": "Baby Shampoo",
+          "type": "select",
+          "options": ["Empty", "Quarter", "Half", "Three-quarters", "Full"],
+          "alert_below": "Half",
+          "alert_message": "Baby shampoo is low. Restock.",
+          "info": "Alternative to defog — some guests prefer it"
+        },
+        {
+          "id": "whitening-toothpaste",
+          "label": "Whitening Toothpaste",
+          "type": "select",
+          "options": ["Empty", "Quarter", "Half", "Three-quarters", "Full"],
+          "alert_below": "Half",
+          "alert_message": "Whitening toothpaste is low. Restock."
+        },
+        {
+          "id": "saniq",
+          "label": "SaniQ sanitizer",
+          "type": "select",
+          "options": ["Empty", "Quarter", "Half", "Three-quarters", "Full"],
+          "alert_below": "Half",
+          "alert_message": "SaniQ sanitizer is low. Restock."
+        },
+        {
+          "id": "water-bottles",
+          "label": "Water bottles",
+          "type": "number",
+          "min": 16,
+          "max": 20,
+          "unit": "bottles"
+        },
+        {
+          "id": "kids-jackets",
+          "label": "Kids sport life jackets",
+          "type": "number",
+          "min": 3,
+          "max": 5,
+          "unit": "jackets"
+        },
+        {
+          "id": "mask-buckles",
+          "label": "Extra mask buckles",
+          "type": "number",
+          "min": 5,
+          "max": 10,
+          "unit": "buckles"
+        },
+        {
+          "id": "gear-condition-photo",
+          "label": "Photo of any damaged gear",
+          "type": "photo",
+          "placeholder": "Take photo of damaged items (optional)",
+          "max_photos": 3
+        }
+      ]
+    }
+  ],
+  "completion": {
+    "require_all": true,
+    "sign_off": true,
+    "notes_field": true,
+    "notes_prompt": "Any gear that needs repair? Anything unusual?"
+  }
+}
