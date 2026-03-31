@@ -394,9 +394,9 @@
         },
         {
           "id": "handoff-note",
-          "label": "Leave a note for tomorrow's crew?",
+          "label": "Leave a Handoff Note for the Next Crew",
           "type": "select",
-          "options": ["No", "Yes — leave a note"]
+          "options": ["No", "Yes"]
         },
         {
           "id": "handoff-note-text",
@@ -408,9 +408,9 @@
         },
         {
           "id": "has-issue",
-          "label": "Report a maintenance issue?",
+          "label": "Report an Issue for Triage",
           "type": "select",
-          "options": ["No", "Yes — report issue"]
+          "options": ["No", "Yes"]
         },
         {
           "id": "issue-title",
