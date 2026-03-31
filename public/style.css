@@ -30,7 +30,14 @@
   --font-body: 'Inter', -apple-system, sans-serif;
 }
 
-@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=Inter:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap');
+
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  font-size: 24px;
+  vertical-align: middle;
+}
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -1428,7 +1435,8 @@ body.edit-mode-active::before {
 .photo-btn input[type="file"] { display: none; }
 
 /* ============================================================
-   Bottom Navigation — persistent on all crew pages
+   Bottom Navigation — Stitch iOS pattern with Material Symbols
+   Fixed, backdrop blur, 84px with safe area padding
    ============================================================ */
 
 .bottom-nav {
@@ -1439,9 +1447,11 @@ body.edit-mode-active::before {
   display: flex;
   justify-content: space-around;
   align-items: center;
-  height: 64px;
-  background: var(--surface);
-  border-top: 1px solid var(--border);
+  height: 84px;
+  background: rgba(255, 255, 255, 0.80);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 -4px 12px rgba(0, 40, 40, 0.04);
   z-index: 1000;
   padding-bottom: env(safe-area-inset-bottom, 0);
   -webkit-tap-highlight-color: transparent;
@@ -1452,53 +1462,42 @@ body.edit-mode-active::before {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  flex: 1;
-  height: 100%;
+  padding: 6px 16px;
+  border-radius: var(--radius);
   text-decoration: none;
-  color: var(--text-muted);
-  font-size: 0.625rem;
+  color: #8E8E93;
+  font-size: 10px;
   font-weight: 500;
   gap: 2px;
-  transition: color 0.15s;
+  transition: all 0.2s;
+  -webkit-tap-highlight-color: transparent;
 }
 
-.nav-tab.nav-active { color: var(--primary); }
-.nav-tab:hover { color: var(--primary); }
+.nav-tab:active { transform: scale(0.9); }
 
-.nav-icon {
-  font-size: 1.25rem;
+.nav-tab.nav-active {
+  color: var(--primary);
+  background: rgba(26, 107, 138, 0.08);
+}
+
+.nav-tab .material-symbols-outlined {
+  font-size: 24px;
   line-height: 1;
-  position: relative;
-}
-
-.nav-badge {
-  position: absolute;
-  top: -6px;
-  right: -10px;
-  background: var(--accent);
-  color: #fff;
-  font-size: 0.5625rem;
-  font-weight: 700;
-  min-width: 16px;
-  height: 16px;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0 4px;
 }
 
 .nav-label {
   font-family: var(--font-body);
-  letter-spacing: 0.02em;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  margin-top: 2px;
 }
 
-/* Add padding to page content so it doesn't hide behind bottom nav */
+/* Add padding to page content so it doesn't hide behind bottom nav (84px + safe area) */
 .today-page,
 .checklist-page,
 .logbook-page,
 .handoff-page {
-  padding-bottom: 80px;
+  padding-bottom: 100px;
 }
 
 /* Resume banner (when restoring auto-saved form data) */
@@ -1529,21 +1528,24 @@ body.edit-mode-active::before {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 0;
-  margin-bottom: 8px;
+  padding: 16px 0;
+  margin-bottom: 12px;
 }
 
 .back-link {
   color: var(--primary);
   text-decoration: none;
   font-size: 0.875rem;
-  font-weight: 500;
+  font-weight: 600;
   min-width: 60px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 
 .page-title {
   font-family: var(--font-heading);
-  font-size: 1.125rem;
+  font-size: 1.25rem;
   font-weight: 700;
   text-align: center;
   flex: 1;
@@ -1551,11 +1553,13 @@ body.edit-mode-active::before {
 
 .vessel-badge {
   font-size: 0.6875rem;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--primary);
-  background: rgba(0, 105, 80, 0.08);
-  padding: 2px 8px;
+  background: rgba(26, 107, 138, 0.08);
+  padding: 4px 10px;
   border-radius: 10px;
   min-width: 60px;
   text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }

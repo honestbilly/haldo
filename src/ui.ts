@@ -1,26 +1,30 @@
 // Shared UI components for Haldo
-// Reference: docs/modules/gizmo/haldo-navigation.md (rev 2)
+// Stitch design system: iOS Maritime with Material Symbols icons
 
 /**
- * Persistent bottom navigation bar for all crew pages.
- * 3 tabs for crew, 4th MGMT tab for managers.
- * @param active - which tab is currently active: 'home' | 'submit' | 'more' | 'mgmt'
- * @param isManager - if true, show the MGMT tab
+ * Bottom tab bar — iOS style with Material Symbols Outlined icons.
+ * Fixed position, backdrop blur, 84px height with safe area padding.
+ * Active tab: filled icon on tinted pill background.
  */
-export function bottomNav(active: string, isManager: boolean = false): string {
+export function bottomNav(active: string): string {
   const tabs = [
-    { id: 'home', label: 'Home', icon: '🏠', href: '/today' },
-    { id: 'tasks', label: 'Tasks', icon: '🔧', href: '/tasks/queue' },
-    { id: 'weather', label: 'Weather', icon: '🌤️', href: '/weather' },
-    { id: 'submit', label: 'Note', icon: '📝', href: '/submit' },
-    { id: 'more', label: 'More', icon: '•••', href: '/more' },
+    { id: 'home',    label: 'Home',    icon: 'home',        href: '/today' },
+    { id: 'tasks',   label: 'Tasks',   icon: 'checklist',   href: '/tasks/queue' },
+    { id: 'weather', label: 'Weather', icon: 'wb_sunny',    href: '/weather' },
+    { id: 'submit',  label: 'Note',    icon: 'description', href: '/submit' },
+    { id: 'more',    label: 'More',    icon: 'more_horiz',  href: '/more' },
   ];
 
   const tabsHtml = tabs.map(t => {
     const isActive = t.id === active;
+    const activeClass = isActive
+      ? 'nav-tab nav-active'
+      : 'nav-tab';
+    const fillStyle = isActive ? "font-variation-settings: 'FILL' 1, 'wght' 600;" : '';
+
     return `
-      <a href="${t.href}" class="nav-tab ${isActive ? 'nav-active' : ''}">
-        <span class="nav-icon">${t.icon}</span>
+      <a href="${t.href}" class="${activeClass}">
+        <span class="material-symbols-outlined" style="${fillStyle}">${t.icon}</span>
         <span class="nav-label">${t.label}</span>
       </a>`;
   }).join('');
@@ -33,13 +37,14 @@ export function bottomNav(active: string, isManager: boolean = false): string {
 
 /**
  * Standard HTML head tags for all crew pages.
+ * Includes Material Symbols font link.
  */
 export function htmlHead(title: string): string {
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
   <title>${title} — Haldo</title>
   <link rel="stylesheet" href="/public/style.css">
   <link rel="manifest" href="/public/manifest.json">
@@ -52,12 +57,15 @@ export function htmlHead(title: string): string {
 }
 
 /**
- * Page header with back button and vessel badge.
+ * Page header with back arrow and vessel badge — Stitch pattern.
  */
 export function pageHeader(title: string, vessel: string, backHref: string = '/today'): string {
   return `
     <header class="page-header">
-      <a href="${backHref}" class="back-link">← Home</a>
+      <a href="${backHref}" class="back-link">
+        <span class="material-symbols-outlined" style="font-size:20px">arrow_back</span>
+        Home
+      </a>
       <h1 class="page-title">${title}</h1>
       <span class="vessel-badge">${vessel.toUpperCase()}</span>
     </header>`;
