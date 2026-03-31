@@ -1,15 +1,15 @@
-// Crew-facing task views: detail, claim, status update
+// Crew-facing task views: queue, detail, claim, status update
+// Rebuilt from Stitch HTML patterns
 import { Hono } from 'hono';
 import pool from '../db.js';
 import { getSession } from './session.js';
-import { htmlHead, bottomNav, pageHeader } from '../ui.js';
+import { htmlHead, bottomNav } from '../ui.js';
 import type { SessionData } from '../types.js';
 
 type Env = { Variables: { session: SessionData } };
 
 const app = new Hono<Env>();
 
-// Middleware: require session
 app.use('*', async (c, next) => {
   const session = getSession(c as any);
   if (!session) return c.redirect('/');
@@ -17,18 +17,20 @@ app.use('*', async (c, next) => {
   await next();
 });
 
-const PRIORITY_COLORS: Record<string, string> = {
-  low: '#6e7a74', medium: '#1a1c1c', high: '#F36D4F', urgent: '#ba1a1a',
+const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+
+const PRIORITY_ICON: Record<string, string> = {
+  urgent: '<span class="material-symbols-outlined" style="font-size:20px;color:#FF3B30;font-variation-settings:\'FILL\' 1">error</span>',
+  high: '<span class="material-symbols-outlined" style="font-size:20px;color:#FF9500;font-variation-settings:\'FILL\' 1">warning</span>',
+  medium: '',
+  low: '',
 };
 
-const STATUS_LABELS: Record<string, { label: string; color: string }> = {
-  'pending': { label: 'In Queue', color: '#6e7a74' },
-  'in-progress': { label: 'In Progress', color: '#1A6B8A' },
-  'blocked': { label: 'Blocked', color: '#F36D4F' },
-  'completed': { label: 'Done', color: '#1A6B8A' },
+const PRIORITY_BORDER: Record<string, string> = {
+  urgent: '#FF3B30', high: '#FF9500', medium: '#70D0EB', low: '#c7c7cc',
 };
 
-// ─── Task Queue (browse/claim unassigned tasks) ─────────────
+// ─── Task Queue ─────────────────────────────────────────────
 
 app.get('/queue', async (c) => {
   const session = c.get('session');
@@ -44,39 +46,52 @@ app.get('/queue', async (c) => {
   );
   const tasks = result.rows;
 
-  const escHtml = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-
   const taskCards = tasks.map((t: any) => {
-    const priorityIcon = t.priority === 'urgent' ? '🔴 ' : t.priority === 'high' ? '⚠ ' : '';
-    const dueStr = t.due_date ? `Due ${new Date(t.due_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}` : '';
-    const estStr = t.estimated_minutes ? `~${t.estimated_minutes}min` : '';
-    const meta = [t.vessel ? t.vessel.toUpperCase() : 'Any', dueStr, estStr].filter(Boolean).join(' · ');
+    const icon = PRIORITY_ICON[t.priority] || '';
+    const borderColor = PRIORITY_BORDER[t.priority] || '#70D0EB';
+    const dueStr = t.due_date ? `<div style="display:flex;align-items:center;gap:4px"><span class="material-symbols-outlined" style="font-size:14px">calendar_today</span> Due ${new Date(t.due_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</div>` : '';
+    const estStr = t.estimated_minutes ? `<div style="display:flex;align-items:center;gap:4px"><span class="material-symbols-outlined" style="font-size:14px">schedule</span> ~${t.estimated_minutes}min</div>` : '';
 
     return `
-      <a href="/tasks/${t.id}" style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;background:var(--surface);border-radius:var(--radius);margin-bottom:6px;text-decoration:none;color:var(--text);border-left:4px solid #70D0EB;min-height:48px">
-        <div>
-          <div style="font-weight:500;font-size:0.875rem">${priorityIcon}${escHtml(t.title)}</div>
-          ${meta ? `<div style="font-size:0.6875rem;color:var(--text-muted)">${meta}</div>` : ''}
+      <a href="/tasks/${t.id}" style="display:block;text-decoration:none;color:#1a1c1e;position:relative;background:white;border-radius:12px;box-shadow:0 8px 24px rgba(26,28,31,0.06);overflow:hidden;min-height:54px;border-left:4px solid ${borderColor};margin-bottom:12px;transition:transform 0.15s" ontouchstart="this.style.transform='scale(0.98)'" ontouchend="this.style.transform='scale(1)'">
+        <div style="padding:16px">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
+            <div style="display:flex;align-items:center;gap:8px">
+              ${icon}
+              <h3 style="font-weight:700;font-size:0.9375rem;line-height:1.3">${esc(t.title)}</h3>
+            </div>
+            <span style="font-size:0.625rem;font-weight:900;text-transform:uppercase;letter-spacing:0.1em;color:#8E8E93">${t.vessel ? t.vessel.toUpperCase() : 'ANY'}</span>
+          </div>
+          <div style="display:flex;flex-wrap:wrap;gap:16px;font-size:0.75rem;font-weight:500;color:#5b5f67;margin-bottom:12px">
+            ${dueStr}${estStr}
+          </div>
+          <div style="display:flex;justify-content:flex-end">
+            <span style="color:#1A6B8A;font-weight:700;font-size:0.875rem;display:flex;align-items:center;gap:4px">
+              Claim <span class="material-symbols-outlined" style="font-size:18px">arrow_forward</span>
+            </span>
+          </div>
         </div>
-        <span style="font-size:0.75rem;color:var(--primary);font-weight:500">Claim →</span>
       </a>`;
   }).join('');
 
   return c.html(`${htmlHead('Task Queue')}
-<body>
-  <div style="max-width:480px;margin:0 auto;padding:16px;padding-bottom:80px">
-    ${pageHeader('Available Tasks', session.vessel)}
+<body style="background:#F2F2F7">
+  <header style="position:fixed;top:0;left:0;right:0;z-index:50;background:rgba(255,255,255,0.8);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);box-shadow:0 1px 3px rgba(0,0,0,0.06);display:flex;justify-content:space-between;align-items:center;padding:0 24px;height:64px">
+    <a href="/today" style="color:#1A6B8A;text-decoration:none;font-weight:600;font-size:0.875rem;display:flex;align-items:center;gap:4px">
+      <span class="material-symbols-outlined" style="font-size:18px">arrow_back</span> Home
+    </a>
+    <span style="font-weight:700;font-size:1rem;color:#1a1c1e">Available Tasks</span>
+    <span style="font-size:0.6875rem;font-weight:700;color:#1A6B8A;background:rgba(26,107,138,0.08);padding:4px 10px;border-radius:10px;text-transform:uppercase;letter-spacing:0.05em">${session.vessel.toUpperCase()}</span>
+  </header>
 
-    <p style="font-size:0.8125rem;color:var(--text-muted);margin-bottom:16px">Tasks that need someone to pick them up. Tap to see details and claim.</p>
+  <main style="padding:80px 24px 120px;max-width:480px;margin:0 auto">
+    <p style="font-size:0.9375rem;color:#5b5f67;margin-bottom:24px;line-height:1.5">Tasks that need someone to pick them up. Tap to see details and claim.</p>
 
     ${tasks.length === 0
-      ? '<p style="text-align:center;color:var(--text-muted);padding:40px 0">No tasks available right now.</p>'
+      ? '<div style="text-align:center;color:#8E8E93;padding:48px 0"><span class="material-symbols-outlined" style="font-size:48px;display:block;margin-bottom:12px;color:#c7c7cc">task_alt</span>No tasks available right now.</div>'
       : taskCards}
-
-    <a href="/today" style="display:block;text-align:center;padding:14px;margin-top:12px;color:var(--primary);text-decoration:none;font-size:0.875rem;font-weight:500">← Back to Home</a>
-  </div>
-  ${bottomNav('home')}
-  <script src="/public/app.js"></script>
+  </main>
+  ${bottomNav('tasks')}
 </body></html>`);
 });
 
@@ -94,7 +109,7 @@ app.get('/:id', async (c) => {
   );
   const task = result.rows[0];
   if (!task) {
-    return c.html(`${htmlHead('Task Not Found')}<body><div style="max-width:480px;margin:0 auto;padding:16px"><p>Task not found.</p><a href="/today" style="color:#1A6B8A">← Home</a></div>${bottomNav('home')}</body></html>`);
+    return c.html(`${htmlHead('Not Found')}<body style="background:#F2F2F7"><div style="max-width:480px;margin:0 auto;padding:80px 24px;text-align:center"><span class="material-symbols-outlined" style="font-size:48px;color:#c7c7cc">search_off</span><p style="margin-top:12px;color:#8E8E93">Task not found.</p><a href="/today" style="color:#1A6B8A;font-weight:600;display:block;margin-top:16px">← Home</a></div>${bottomNav('tasks')}</body></html>`);
   }
 
   const isMyTask = task.assigned_to === session.crew_id;
@@ -102,90 +117,113 @@ app.get('/:id', async (c) => {
   const vesselMatch = !task.vessel || task.vessel === session.vessel;
   const saved = c.req.query('saved') === '1';
 
-  const status = STATUS_LABELS[task.status] || STATUS_LABELS['pending'];
-  const priorityColor = PRIORITY_COLORS[task.priority] || '#1a1c1c';
-  const priorityLabel = task.priority.charAt(0).toUpperCase() + task.priority.slice(1);
+  const priorityColors: Record<string, { color: string; bg: string }> = {
+    urgent: { color: '#FF3B30', bg: 'rgba(255,59,48,0.1)' },
+    high: { color: '#FF9500', bg: 'rgba(255,149,0,0.1)' },
+    medium: { color: '#5b5f67', bg: 'rgba(91,95,103,0.08)' },
+    low: { color: '#8E8E93', bg: 'rgba(142,142,147,0.08)' },
+  };
+  const pc = priorityColors[task.priority] || priorityColors.medium;
   const dueStr = task.due_date ? new Date(task.due_date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }) : null;
 
-  const escHtml = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  // Status badge
+  const statusMap: Record<string, { label: string; color: string; bg: string }> = {
+    'pending': { label: isUnassigned ? 'UNCLAIMED' : 'TO DO', color: '#8E8E93', bg: 'rgba(142,142,147,0.1)' },
+    'in-progress': { label: 'IN PROGRESS', color: '#1A6B8A', bg: 'rgba(26,107,138,0.1)' },
+    'blocked': { label: 'BLOCKED', color: '#FF3B30', bg: 'rgba(255,59,48,0.1)' },
+    'completed': { label: 'DONE', color: '#34C759', bg: 'rgba(52,199,89,0.1)' },
+  };
+  const st = statusMap[task.status] || statusMap.pending;
 
-  // Action buttons
+  // Action button
   let actionHtml = '';
   if (isUnassigned && vesselMatch && task.status === 'pending') {
     actionHtml = `
-      <form action="/tasks/${task.id}/claim" method="POST" style="margin-top:16px">
-        <button type="submit" style="width:100%;padding:14px;background:#1A6B8A;color:white;border:none;border-radius:8px;font-size:0.9375rem;font-weight:600;cursor:pointer;min-height:48px">I'll Take This</button>
+      <form action="/tasks/${task.id}/claim" method="POST" style="margin-top:24px">
+        <button type="submit" style="width:100%;height:54px;background:#1A6B8A;color:white;border:none;border-radius:12px;font-family:'Manrope',sans-serif;font-size:1.0625rem;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 8px 24px rgba(26,107,138,0.25);transition:transform 0.15s" ontouchstart="this.style.transform='scale(0.98)'" ontouchend="this.style.transform='scale(1)'">
+          <span class="material-symbols-outlined" style="font-size:20px">person_add</span> I'll Take This
+        </button>
       </form>`;
   } else if (isMyTask && task.status === 'pending') {
     actionHtml = `
-      <form action="/tasks/${task.id}/status" method="POST" style="margin-top:16px">
+      <form action="/tasks/${task.id}/status" method="POST" style="margin-top:24px">
         <input type="hidden" name="status" value="in-progress">
-        <button type="submit" style="width:100%;padding:14px;background:#1A6B8A;color:white;border:none;border-radius:8px;font-size:0.9375rem;font-weight:600;cursor:pointer;min-height:48px">Start Working</button>
+        <button type="submit" style="width:100%;height:54px;background:#1A6B8A;color:white;border:none;border-radius:12px;font-family:'Manrope',sans-serif;font-size:1.0625rem;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 8px 24px rgba(26,107,138,0.25);transition:transform 0.15s" ontouchstart="this.style.transform='scale(0.98)'" ontouchend="this.style.transform='scale(1)'">
+          <span class="material-symbols-outlined" style="font-size:20px">play_arrow</span> Start Working
+        </button>
       </form>`;
   } else if (isMyTask && task.status === 'in-progress') {
     actionHtml = `
-      <form action="/tasks/${task.id}/status" method="POST" style="margin-top:16px">
+      <form action="/tasks/${task.id}/status" method="POST" style="margin-top:24px">
         <input type="hidden" name="status" value="completed">
-        <button type="submit" style="width:100%;padding:14px;background:#1A6B8A;color:white;border:none;border-radius:8px;font-size:0.9375rem;font-weight:600;cursor:pointer;min-height:48px">✓ Mark Complete</button>
+        <button type="submit" style="width:100%;height:54px;background:#F36D4F;color:white;border:none;border-radius:12px;font-family:'Manrope',sans-serif;font-size:1.0625rem;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 8px 24px rgba(243,109,79,0.3);transition:transform 0.15s" ontouchstart="this.style.transform='scale(0.98)'" ontouchend="this.style.transform='scale(1)'">
+          <span class="material-symbols-outlined" style="font-size:20px;font-variation-settings:'FILL' 1">check_circle</span> Mark Complete
+        </button>
       </form>`;
   }
 
   return c.html(`${htmlHead('Task Detail')}
-<body>
-  <div style="max-width:480px;margin:0 auto;padding:16px;padding-bottom:80px">
-    ${pageHeader('Task', session.vessel)}
+<body style="background:#F2F2F7">
+  <header style="position:fixed;top:0;left:0;right:0;z-index:50;background:rgba(255,255,255,0.8);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);box-shadow:0 1px 3px rgba(0,0,0,0.06);display:flex;justify-content:space-between;align-items:center;padding:0 24px;height:64px">
+    <a href="/today" style="color:#1A6B8A;text-decoration:none;font-weight:600;font-size:0.875rem;display:flex;align-items:center;gap:4px">
+      <span class="material-symbols-outlined" style="font-size:18px">arrow_back</span> Home
+    </a>
+    <span style="font-weight:700;font-size:1rem;color:#1a1c1e">Task</span>
+    <span style="font-size:0.6875rem;font-weight:700;color:#1A6B8A;background:rgba(26,107,138,0.08);padding:4px 10px;border-radius:10px;text-transform:uppercase;letter-spacing:0.05em">${task.vessel ? task.vessel.toUpperCase() : 'ANY'}</span>
+  </header>
 
-    ${saved ? '<div style="padding:10px;background:rgba(26,107,138,0.08);border-radius:8px;margin-bottom:12px;font-size:0.875rem;color:#1A6B8A;text-align:center">✓ Updated</div>' : ''}
+  <main style="padding:80px 24px 120px;max-width:480px;margin:0 auto">
+    ${saved ? '<div style="padding:12px;background:rgba(52,199,89,0.1);border-radius:12px;margin-bottom:16px;font-size:0.875rem;color:#34C759;text-align:center;font-weight:600;display:flex;align-items:center;justify-content:center;gap:6px"><span class="material-symbols-outlined" style="font-size:18px;font-variation-settings:\'FILL\' 1">check_circle</span> Updated</div>' : ''}
 
-    <!-- Task card -->
-    <div style="background:var(--surface);border-radius:12px;padding:16px;border:1px solid var(--border);margin-bottom:12px">
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
-        <h2 style="font-family:var(--font-heading);font-size:1.125rem;font-weight:700;flex:1">${escHtml(task.title)}</h2>
-        <span style="font-size:0.6875rem;padding:3px 10px;border-radius:12px;background:${status.color === '#1A6B8A' ? 'rgba(26,107,138,0.1)' : status.color === '#F36D4F' ? 'rgba(243,109,79,0.12)' : 'rgba(110,122,116,0.1)'};color:${status.color};font-weight:500;white-space:nowrap;margin-left:8px">${status.label}</span>
+    <!-- Main Card -->
+    <section style="background:white;border-radius:16px;padding:24px;box-shadow:0 2px 12px rgba(0,0,0,0.06);margin-bottom:16px">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px">
+        <h1 style="font-family:'Manrope',sans-serif;font-size:1.375rem;font-weight:800;color:#1a1c1e;flex:1;line-height:1.3">${esc(task.title)}</h1>
+        <span style="font-size:0.5625rem;font-weight:800;padding:4px 10px;border-radius:999px;background:${st.bg};color:${st.color};text-transform:uppercase;letter-spacing:0.08em;white-space:nowrap;margin-left:12px">${st.label}</span>
       </div>
 
-      ${task.description ? `<div style="font-size:0.9375rem;line-height:1.6;margin-bottom:12px;color:var(--text)">${escHtml(task.description)}</div>` : ''}
+      ${task.description ? `<p style="font-size:0.9375rem;line-height:1.6;color:#1a1c1e;margin-bottom:16px">${esc(task.description)}</p>` : ''}
 
-      <div style="display:grid;grid-template-columns:1fr 1fr${task.estimated_minutes ? ' 1fr' : ''};gap:8px;margin-bottom:12px">
-        <div style="background:rgba(26,107,138,0.03);padding:8px 10px;border-radius:6px">
-          <div style="font-size:0.6875rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em">Priority</div>
-          <div style="font-size:0.875rem;font-weight:500;color:${priorityColor}">${priorityLabel}</div>
+      <!-- Info Grid -->
+      <div style="display:grid;grid-template-columns:1fr 1fr${task.estimated_minutes ? ' 1fr' : ''};gap:8px;margin-bottom:${task.assigned_to || dueStr ? '12px' : '0'}">
+        <div style="background:#F2F2F7;padding:12px;border-radius:10px">
+          <div style="font-size:0.625rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:#8E8E93;margin-bottom:4px">Priority</div>
+          <div style="font-size:0.9375rem;font-weight:600;color:${pc.color}">${task.priority.charAt(0).toUpperCase() + task.priority.slice(1)}</div>
         </div>
-        <div style="background:rgba(26,107,138,0.03);padding:8px 10px;border-radius:6px">
-          <div style="font-size:0.6875rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em">Vessel</div>
-          <div style="font-size:0.875rem;font-weight:500">${task.vessel ? task.vessel.toUpperCase() : 'Any'}</div>
+        <div style="background:#F2F2F7;padding:12px;border-radius:10px">
+          <div style="font-size:0.625rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:#8E8E93;margin-bottom:4px">Vessel</div>
+          <div style="font-size:0.9375rem;font-weight:600">${task.vessel ? task.vessel.toUpperCase() : 'Any'}</div>
         </div>
-        ${task.estimated_minutes ? `<div style="background:rgba(26,107,138,0.03);padding:8px 10px;border-radius:6px">
-          <div style="font-size:0.6875rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em">Est. Time</div>
-          <div style="font-size:0.875rem;font-weight:500">~${task.estimated_minutes} min</div>
+        ${task.estimated_minutes ? `<div style="background:#F2F2F7;padding:12px;border-radius:10px">
+          <div style="font-size:0.625rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:#8E8E93;margin-bottom:4px">Est. Time</div>
+          <div style="font-size:0.9375rem;font-weight:600">~${task.estimated_minutes} min</div>
         </div>` : ''}
       </div>
 
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-        <div style="background:rgba(26,107,138,0.03);padding:8px 10px;border-radius:6px">
-          <div style="font-size:0.6875rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em">Assigned To</div>
-          <div style="font-size:0.875rem;font-weight:500">${task.assignee_name || (isUnassigned ? '<span style="color:var(--text-muted);font-style:italic">Unclaimed</span>' : 'Unknown')}</div>
+      ${task.assigned_to || dueStr ? `<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <div style="background:#F2F2F7;padding:12px;border-radius:10px">
+          <div style="font-size:0.625rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:#8E8E93;margin-bottom:4px">Assigned To</div>
+          <div style="font-size:0.9375rem;font-weight:600">${task.assignee_name || (isUnassigned ? '<span style="color:#8E8E93;font-style:italic;font-weight:400">Unclaimed</span>' : 'Unknown')}</div>
         </div>
-        ${dueStr ? `<div style="background:rgba(26,107,138,0.03);padding:8px 10px;border-radius:6px">
-          <div style="font-size:0.6875rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em">Due</div>
-          <div style="font-size:0.875rem;font-weight:500">${dueStr}</div>
+        ${dueStr ? `<div style="background:#F2F2F7;padding:12px;border-radius:10px">
+          <div style="font-size:0.625rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:#8E8E93;margin-bottom:4px">Due</div>
+          <div style="font-size:0.9375rem;font-weight:600">${dueStr}</div>
         </div>` : ''}
-      </div>
-    </div>
+      </div>` : ''}
+    </section>
 
     <!-- Notes -->
     ${task.notes ? `
-    <div style="background:var(--surface);border-radius:12px;padding:16px;border:1px solid var(--border);margin-bottom:12px">
-      <h3 style="font-size:0.8125rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px">Notes</h3>
-      <div style="font-size:0.9375rem;line-height:1.6;white-space:pre-wrap">${escHtml(task.notes)}</div>
-    </div>` : ''}
+    <section style="background:white;border-radius:16px;padding:24px;box-shadow:0 2px 12px rgba(0,0,0,0.06);margin-bottom:16px">
+      <h3 style="font-size:0.6875rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:#8E8E93;margin-bottom:8px">
+        <span class="material-symbols-outlined" style="font-size:16px;vertical-align:middle;margin-right:4px">note</span> Notes
+      </h3>
+      <div style="font-size:0.9375rem;line-height:1.6;white-space:pre-wrap;color:#1a1c1e">${esc(task.notes)}</div>
+    </section>` : ''}
 
     ${actionHtml}
-
-    <a href="/today" style="display:block;text-align:center;padding:14px;margin-top:12px;color:var(--primary);text-decoration:none;font-size:0.875rem;font-weight:500">← Back to Home</a>
-  </div>
-  ${bottomNav('home')}
-  <script src="/public/app.js"></script>
+  </main>
+  ${bottomNav('tasks')}
 </body></html>`);
 });
 
@@ -194,14 +232,11 @@ app.get('/:id', async (c) => {
 app.post('/:id/claim', async (c) => {
   const session = c.get('session');
   const taskId = c.req.param('id');
-
-  // Only claim if currently unassigned
   await pool.query(
     `UPDATE assigned_tasks SET assigned_to = $1, updated_at = NOW()
      WHERE id = $2 AND assigned_to IS NULL`,
     [session.crew_id, taskId]
   );
-
   return c.redirect(`/tasks/${taskId}?saved=1`);
 });
 
