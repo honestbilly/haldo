@@ -4,7 +4,7 @@ import { Hono } from 'hono';
 import { nanoid } from 'nanoid';
 import pool from '../db.js';
 import { VESSELS, VESSEL_LABELS, escapeHtml, reportLayout } from '../lib/report-shared.js';
-import { previewSchedule } from '../services/templates.js';
+import { previewSchedule, getAllTemplates, saveTemplate, loadTemplates } from '../services/templates.js';
 
 const app = new Hono();
 
@@ -48,6 +48,7 @@ function subNav(active: string): string {
     { id: 'list', label: 'Task List', href: '/report/tasks' },
     { id: 'inbox', label: 'Inbox', href: '/report/inbox' },
     { id: 'schedule', label: 'Schedule', href: '/report/schedule' },
+    { id: 'library', label: 'Library', href: '/report/library' },
   ];
   return `<div style="display:flex;gap:12px;margin-bottom:20px;padding-bottom:8px;border-bottom:1px solid #bdc9c2">
     ${tabs.map(t => `<a href="${t.href}" style="padding:6px 12px;border-radius:6px;font-size:0.8125rem;font-weight:500;text-decoration:none;${active === t.id ? 'background:#006950;color:white' : 'background:rgba(0,105,80,0.06);color:#006950'}">${t.label}</a>`).join('')}
