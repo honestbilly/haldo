@@ -356,15 +356,21 @@ function renderTodayList(
   const dmtHtml = dmt ? renderCard(dmt, true) : '';
   const items = regularTemplates.map(t => renderCard(t)).join('');
 
+  // Assigned tasks: first expanded, rest collapsed
   const onDemandHtml = onDemand.length > 0 ? `
     <div class="on-demand-section">
       <h3 class="on-demand-header" onclick="this.nextElementSibling.classList.toggle('collapsed')">
         Assigned Tasks <span class="on-demand-count">${onDemand.length}</span>
         <span class="collapse-icon">▼</span>
       </h3>
-      <div class="on-demand-list collapsed">
-        <p class="on-demand-info">Maintenance and service tasks. Start one when needed.</p>
-        ${onDemand.map(t => renderCard(t)).join('')}
+      <div class="on-demand-list">
+        ${onDemand.length > 0 ? renderCard(onDemand[0]) : ''}
+        ${onDemand.length > 1 ? `
+          <div class="on-demand-rest collapsed" id="more-tasks">
+            ${onDemand.slice(1).map(t => renderCard(t)).join('')}
+          </div>
+          <button type="button" onclick="document.getElementById('more-tasks').classList.toggle('collapsed');this.textContent=this.textContent.includes('more')?'Show less':'${onDemand.length - 1} more tasks'" class="show-more-btn" style="width:100%;padding:8px;background:none;border:1px dashed var(--border);border-radius:var(--radius);color:var(--text-muted);font-size:0.75rem;cursor:pointer;margin-top:4px">${onDemand.length - 1} more tasks</button>
+        ` : ''}
       </div>
     </div>` : '';
 
@@ -389,10 +395,10 @@ function renderTodayList(
       <p>${session.trip_slot} Trip | ${(() => { const [y,m,d] = session.trip_date.split('-').map(Number); return new Date(y, m-1, d).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }); })()}</p>
     </header>
     ${handoffCount > 0 ? `
-    <a href="/handoff" class="handoff-banner">
-      <span class="handoff-icon">📝</span>
-      <span>${handoffCount} handoff note${handoffCount > 1 ? 's' : ''} from crew</span>
-      <span class="handoff-arrow">→</span>
+    <a href="/handoff" class="handoff-banner" style="display:flex;align-items:center;gap:10px;padding:12px 16px;background:#FFF8E1;border:1px solid #F59E0B;border-radius:var(--radius);text-decoration:none;color:#92400E;margin-bottom:12px;min-height:48px">
+      <span style="font-size:1.1rem">📝</span>
+      <span style="flex:1;font-weight:500;font-size:0.875rem">${handoffCount} handoff note${handoffCount > 1 ? 's' : ''} from crew</span>
+      <span style="color:#D97706">→</span>
     </a>` : ''}
 
     ${dmtHtml}
@@ -401,14 +407,12 @@ function renderTodayList(
       ${items || '<p class="empty-state">No checklists scheduled for today.</p>'}
     </div>
 
-    <a href="/log" style="display:block;padding:14px 16px;background:var(--surface);border:1px dashed var(--border);border-radius:var(--radius);text-decoration:none;color:var(--primary);font-weight:500;text-align:center;margin-bottom:16px;min-height:48px;display:flex;align-items:center;justify-content:center;gap:8px">
-      <span style="font-size:1.1rem">+</span> Add Log Entry
-    </a>
-
     ${onDemandHtml}
-    <div class="today-actions">
-      <a href="/report" class="action-link mgmt-link">MGMT Dashboard</a>
-      <a href="/logout" class="switch-link">Switch crew member</a>
+
+    <div style="display:flex;justify-content:flex-end;margin-bottom:16px">
+      <a href="/log" style="display:inline-flex;align-items:center;gap:6px;padding:10px 14px;background:var(--surface);border:1px dashed var(--border);border-radius:var(--radius);text-decoration:none;color:var(--text-muted);font-size:0.8125rem;font-weight:500;min-height:40px">
+        <span style="color:var(--primary);font-weight:700">+</span> Log
+      </a>
     </div>
   </div>
   ${bottomNav('home')}
@@ -836,6 +840,10 @@ function renderFreeFormLog(session: any): string {
       <h1 style="font-family:var(--font-heading);font-size:1.25rem;margin-top:4px">Add Log Entry</h1>
       <p style="font-size:0.8125rem;color:var(--text-muted)">${session.vessel.toUpperCase()} — ${session.crew_name}</p>
     </header>
+
+    <div style="padding:10px 12px;background:rgba(112,208,235,0.1);border-radius:var(--radius);margin-bottom:12px;font-size:0.8125rem;color:#1a1c1c;line-height:1.5">
+      Log an event that is <strong>not associated with a trip departure</strong>. Examples: engine replacement, dock repair, safety incident between trips, equipment delivery, coast guard visit.
+    </div>
 
     <form action="/log" method="POST" style="padding-bottom:80px">
       <div class="form-item" style="background:var(--surface);border-radius:var(--radius);padding:16px;margin-bottom:12px">

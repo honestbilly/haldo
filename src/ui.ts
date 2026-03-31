@@ -10,7 +10,7 @@
 export function bottomNav(active: string, isManager: boolean = false): string {
   const tabs = [
     { id: 'home', label: 'Home', icon: '🏠', href: '/today' },
-    { id: 'submit', label: 'Submit', icon: '✉️', href: '/submit' },
+    { id: 'submit', label: 'Note', icon: '📝', href: '/submit' },
     { id: 'more', label: 'More', icon: '⚙️', href: '/more' },
   ];
 
