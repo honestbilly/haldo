@@ -19,17 +19,9 @@
           "id": "spring-lines",
           "label": "Adjust spring lines to return boat to overnight position",
           "type": "checkbox",
-          "sop": {
-            "title": "Returning SQUID to Overnight Position",
-            "steps": [
-              "Untie the stern line from the dock cleat",
-              "Walk the boat back along the dock until the bow is past the boarding steps",
-              "Re-tie the stern spring line to the aft dock cleat",
-              "Adjust the bow spring line so the boat sits 2–3 feet back from the boarding area",
-              "Verify the anchor is NOT hanging over or contacting the boarding steps",
-              "Check that fenders are positioned to protect the hull at the new position"
-            ],
-            "source": "squid-on-board-binder / §4 — Putting SQUID to Bed"
+          "help": {
+            "title": "Overnight position",
+            "body": "Move the boat back so the anchor doesn't beat up the boarding steps. Adjust spring lines accordingly."
           }
         },
         {
