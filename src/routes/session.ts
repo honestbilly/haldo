@@ -24,29 +24,21 @@ app.get('/', async (c) => {
     return c.redirect('/today');
   }
 
-  // Check if they have an auth cookie (logged in via admin link)
   const auth = getAuth(c as any);
   const today = new Date().toISOString().split('T')[0];
 
   if (auth) {
-    // Authenticated crew — only need to pick vessel + date
+    // Authenticated crew — only need vessel + date
     return c.html(renderVesselPicker(auth, today));
   }
 
-  // No auth cookie — fall back to full form (legacy / dev mode)
+  // No auth cookie — show vessel + date + role + name (no trip slot)
   const crewResult = await pool.query<CrewRow>(
     'SELECT id, name, role, vessel FROM crew WHERE active = TRUE ORDER BY role, name'
   );
-  const tripResult = await pool.query(
-    'SELECT vessel, default_slots FROM trip_config'
-  );
-
   const crew = crewResult.rows;
-  const tripConfigs = Object.fromEntries(
-    tripResult.rows.map(r => [r.vessel, r.default_slots])
-  );
 
-  return c.html(renderLanding(crew, tripConfigs, today));
+  return c.html(renderVesselPickerWithCrew(crew, today));
 });
 
 // Create session
@@ -200,6 +192,157 @@ function renderVesselPicker(auth: any, today: string): string {
 </html>`;
 }
 
+// No-auth vessel picker: vessel + date + role + name (NO trip slot)
+function renderVesselPickerWithCrew(crew: CrewRow[], today: string): string {
+  const vessels = [
+    { id: 'squid', label: 'SQUID', color: '#1A6B8A' },
+    { id: 'blu-q', label: 'Blu Q', color: '#0D5470' },
+    { id: 'cowfish', label: 'Cowfish', color: '#2E86AB' },
+    { id: 'scout', label: 'Scout', color: '#3A7CA5' },
+    { id: 'java-cat', label: 'Java Cat', color: '#4A90A4' },
+  ];
+  const crewJson = JSON.stringify(crew);
+
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+  <title>Haldo — Check In</title>
+  <link rel="stylesheet" href="/public/style.css">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap">
+  <meta name="theme-color" content="#1A6B8A">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <style>.select-btn.active { background: #1A6B8A !important; color: white !important; border-color: #1A6B8A !important; }</style>
+</head>
+<body style="background:#F2F2F7">
+  <header style="text-align:center;padding:48px 0 24px">
+    <h1 style="font-family:'Manrope',sans-serif;font-size:2.5rem;font-weight:800;color:#1A6B8A;letter-spacing:-0.02em">Haldo</h1>
+    <p style="font-size:0.875rem;color:#8E8E93;font-weight:500;margin-top:4px">Honest Eco Crew Operations</p>
+  </header>
+
+  <main style="max-width:480px;margin:0 auto;padding:0 24px 48px">
+    <form action="/session" method="POST" id="landing-form">
+      <!-- Vessel -->
+      <section style="margin-bottom:24px">
+        <h2 style="font-size:0.8125rem;font-weight:600;color:#8E8E93;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px;text-align:center">Which boat are you on?</h2>
+        <div style="display:flex;flex-direction:column;gap:10px" id="vessel-buttons">
+          ${vessels.map(v => `
+            <button type="button" class="select-btn" data-value="${v.id}" style="width:100%;height:58px;background:${v.color};color:white;border:none;border-radius:16px;font-family:'Manrope',sans-serif;font-size:1.0625rem;font-weight:700;cursor:pointer;transition:all 0.15s;opacity:0.85;letter-spacing:0.02em" onclick="selectVessel(this,'${v.id}')">
+              ${v.label}
+            </button>`).join('')}
+        </div>
+        <input type="hidden" name="vessel" id="vessel-input" required>
+      </section>
+
+      <!-- Date -->
+      <section style="margin-bottom:24px">
+        <h2 style="font-size:0.8125rem;font-weight:600;color:#8E8E93;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px;text-align:center">Date</h2>
+        <div style="background:white;border-radius:12px;padding:4px;box-shadow:0 1px 3px rgba(0,0,0,0.05)">
+          <input type="date" name="trip_date" id="trip_date" value="${today}" style="width:100%;height:54px;background:transparent;border:none;border-radius:12px;padding:0 20px;font-size:1rem;font-weight:500;color:#1a1c1e;outline:none;text-align:center">
+        </div>
+      </section>
+
+      <!-- Role -->
+      <section style="margin-bottom:24px">
+        <h2 style="font-size:0.8125rem;font-weight:600;color:#8E8E93;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px;text-align:center">Your role</h2>
+        <div style="background:white;border-radius:12px;padding:12px;box-shadow:0 1px 3px rgba(0,0,0,0.05)">
+          <div class="button-group" id="role-buttons" style="display:flex;gap:8px">
+            <button type="button" class="select-btn" data-value="captain" style="flex:1;height:54px;background:#F2F2F7;color:#1A6B8A;border:2px solid rgba(26,107,138,0.1);border-radius:999px;font-weight:700;font-size:0.875rem;display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer">
+              <span class="material-symbols-outlined" style="font-size:20px;font-variation-settings:'FILL' 1">anchor</span> Captain
+            </button>
+            <button type="button" class="select-btn" data-value="deckhand" style="flex:1;height:54px;background:#F2F2F7;color:#1A6B8A;border:2px solid rgba(26,107,138,0.1);border-radius:999px;font-weight:700;font-size:0.875rem;display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer">
+              <span class="material-symbols-outlined" style="font-size:20px">handshake</span> Deckhand
+            </button>
+          </div>
+          <input type="hidden" name="role" id="role-input" required>
+        </div>
+      </section>
+
+      <!-- Name -->
+      <section style="margin-bottom:32px">
+        <h2 style="font-size:0.8125rem;font-weight:600;color:#8E8E93;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px;text-align:center">Who are you?</h2>
+        <div style="background:white;border-radius:12px;padding:12px;box-shadow:0 1px 3px rgba(0,0,0,0.05)">
+          <select name="crew_id" id="crew-select" required style="width:100%;height:54px;background:#E5E8F0;border:none;border-radius:16px;padding:0 20px;font-size:1rem;font-weight:500;color:#1a1c1e;outline:none;-webkit-appearance:none;appearance:none">
+            <option value="">Select your name...</option>
+          </select>
+        </div>
+      </section>
+
+      <button type="submit" id="submit-btn" disabled style="width:100%;height:58px;background:#1A6B8A;color:white;border:none;border-radius:16px;font-family:'Manrope',sans-serif;font-size:1.125rem;font-weight:700;cursor:pointer;opacity:0.3;transition:all 0.2s">
+        Let's Go →
+      </button>
+    </form>
+  </main>
+
+  <script>
+    var crew = ${crewJson};
+
+    function selectVessel(btn, value) {
+      document.querySelectorAll('#vessel-buttons .select-btn').forEach(function(b) {
+        b.style.opacity = '0.5'; b.style.transform = 'scale(0.97)'; b.style.boxShadow = 'none';
+      });
+      btn.style.opacity = '1'; btn.style.transform = 'scale(1.02)';
+      btn.style.boxShadow = '0 8px 24px rgba(0,0,0,0.2)';
+      document.getElementById('vessel-input').value = value;
+      checkReady();
+    }
+
+    // Button group selection (role)
+    document.querySelectorAll('.button-group').forEach(function(group) {
+      group.querySelectorAll('.select-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+          group.querySelectorAll('.select-btn').forEach(function(b) { b.classList.remove('active'); });
+          btn.classList.add('active');
+          var input = group.nextElementSibling;
+          if (input) input.value = btn.dataset.value;
+          updateCrewDropdown();
+          checkReady();
+        });
+      });
+    });
+
+    function updateCrewDropdown() {
+      var role = document.getElementById('role-input').value;
+      var select = document.getElementById('crew-select');
+      select.innerHTML = '<option value="">Select your name...</option>';
+      if (!role) return;
+      var matching = crew.filter(function(c) { return c.role === role; });
+      var other = crew.filter(function(c) { return c.role !== role; });
+      matching.forEach(function(c) {
+        var opt = document.createElement('option');
+        opt.value = c.id; opt.textContent = c.name;
+        select.appendChild(opt);
+      });
+      if (other.length > 0) {
+        var sep = document.createElement('option');
+        sep.disabled = true; sep.textContent = '── Other crew ──';
+        select.appendChild(sep);
+        other.forEach(function(c) {
+          var opt = document.createElement('option');
+          opt.value = c.id; opt.textContent = c.name + ' (' + c.role + ')';
+          select.appendChild(opt);
+        });
+      }
+    }
+
+    document.getElementById('crew-select').addEventListener('change', checkReady);
+
+    function checkReady() {
+      var vessel = document.getElementById('vessel-input').value;
+      var role = document.getElementById('role-input').value;
+      var crewVal = document.getElementById('crew-select').value;
+      var btn = document.getElementById('submit-btn');
+      var ready = vessel && role && crewVal;
+      btn.disabled = !ready;
+      btn.style.opacity = ready ? '1' : '0.3';
+    }
+  </script>
+</body>
+</html>`;
+}
+
+// Legacy landing (unused — kept for reference)
 function renderLanding(
   crew: CrewRow[],
   tripConfigs: Record<string, string[]>,
