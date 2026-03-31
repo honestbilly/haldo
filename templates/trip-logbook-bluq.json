@@ -49,16 +49,23 @@
       "title": "Crew Roster",
       "items": [
         {
-          "id": "master",
-          "label": "Master (captain)",
+          "id": "captain-name",
+          "label": "Captain",
           "type": "text",
+          "info": "Auto-filled from your session"
+        },
+        {
+          "id": "deckhand-name",
+          "label": "Deckhand",
+          "type": "select",
+          "options": ["Hadden", "Bryan", "Jackie", "Charlie"],
           "required": true
         },
         {
-          "id": "deckhand",
-          "label": "Deckhand",
+          "id": "deckhand-other",
+          "label": "Other / relief crew (if not listed above)",
           "type": "text",
-          "required": true
+          "placeholder": "Name of relief deckhand"
         }
       ]
     },

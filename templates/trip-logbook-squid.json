@@ -37,11 +37,23 @@
       "title": "Crew Roster",
       "items": [
         {
-          "id": "crew-on-board",
-          "label": "Crew on board",
-          "type": "multi_select",
-          "options": ["Jess", "Chase", "Kristen", "Alexa", "Libbie", "Dan", "Andrew", "Hadden", "Bryan", "Jackie", "Charlie"],
+          "id": "captain-name",
+          "label": "Captain",
+          "type": "text",
+          "info": "Auto-filled from your session"
+        },
+        {
+          "id": "deckhand-name",
+          "label": "Deckhand",
+          "type": "select",
+          "options": ["Hadden", "Bryan", "Jackie", "Charlie"],
           "required": true
+        },
+        {
+          "id": "deckhand-other",
+          "label": "Other / relief crew (if not listed above)",
+          "type": "text",
+          "placeholder": "Name of relief deckhand"
         }
       ]
     },

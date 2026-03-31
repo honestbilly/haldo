@@ -87,8 +87,15 @@ export function renderLogbook(session: any, template: LogbookTemplate): string {
       const tripDateInput = document.querySelector('[name="item_trip-date"]');
       if (tripDateInput && !tripDateInput.value) tripDateInput.value = '${session.trip_date}';
 
+      // Auto-fill captain name and make it read-only (they're the one filling it out)
       const captainInput = document.querySelector('[name="item_captain-name"]');
-      if (captainInput && !captainInput.value) captainInput.value = '${session.crew_name}';
+      if (captainInput) {
+        captainInput.value = '${session.crew_name}';
+        captainInput.readOnly = true;
+        captainInput.style.background = '#f0faf6';
+        captainInput.style.color = '#006950';
+        captainInput.style.fontWeight = '600';
+      }
 
       // Auto-select trip slot
       const slotBtn = document.querySelector('[data-value="${session.trip_slot}"]');
