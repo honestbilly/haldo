@@ -17,14 +17,23 @@ export function getSession(c: any): SessionData | null {
   }
 }
 
-// Landing page — vessel, date, trip slot, name selection
+// Landing page — vessel picker only (crew identity from auth cookie)
 app.get('/', async (c) => {
   const session = getSession(c);
   if (session) {
     return c.redirect('/today');
   }
 
-  // Get active crew and trip configs for the form
+  // Check if they have an auth cookie (logged in via admin link)
+  const auth = getAuth(c as any);
+  const today = new Date().toISOString().split('T')[0];
+
+  if (auth) {
+    // Authenticated crew — only need to pick vessel + date
+    return c.html(renderVesselPicker(auth, today));
+  }
+
+  // No auth cookie — fall back to full form (legacy / dev mode)
   const crewResult = await pool.query<CrewRow>(
     'SELECT id, name, role, vessel FROM crew WHERE active = TRUE ORDER BY role, name'
   );
@@ -37,8 +46,6 @@ app.get('/', async (c) => {
     tripResult.rows.map(r => [r.vessel, r.default_slots])
   );
 
-  const today = new Date().toISOString().split('T')[0];
-
   return c.html(renderLanding(crew, tripConfigs, today));
 });
 
@@ -46,60 +53,68 @@ app.get('/', async (c) => {
 app.post('/session', async (c) => {
   const body = await c.req.parseBody();
   const vessel = String(body.vessel || '');
-  const role = String(body.role || '');
-  let crew_id = String(body.crew_id || '');
-  const custom_name = String(body.custom_name || '').trim();
   const trip_date = String(body.trip_date || new Date().toISOString().split('T')[0]);
-  const trip_slot = String(body.trip_slot || 'AM');
 
-  if (!vessel || !role) {
-    return c.redirect('/');
-  }
+  if (!vessel) return c.redirect('/');
 
+  // Check for auth cookie (logged-in crew)
+  const auth = getAuth(c as any);
+
+  let role: string;
+  let crew_id: string;
   let crew_name: string;
+  let authRole: string;
 
-  // Handle "Someone else..." — create ad-hoc crew record
-  if (crew_id === '__custom__' && custom_name) {
-    const { nanoid } = await import('nanoid');
-    const newId = nanoid();
-    await pool.query(
-      'INSERT INTO crew (id, name, role, vessel) VALUES ($1, $2, $3, $4)',
-      [newId, custom_name, role, vessel]
-    );
-    crew_id = newId;
-    crew_name = custom_name;
-  } else if (crew_id && crew_id !== '__custom__') {
-    // Look up existing crew name
-    const result = await pool.query<CrewRow>(
-      'SELECT name FROM crew WHERE id = $1 AND active = TRUE',
-      [crew_id]
-    );
-    if (result.rows.length === 0) {
+  if (auth) {
+    // Authenticated crew — identity from auth cookie
+    role = auth.role || 'deckhand';
+    crew_id = auth.crew_id;
+    crew_name = auth.crew_name;
+    authRole = auth.auth_role || 'crew';
+  } else {
+    // Legacy flow — role and crew from form
+    role = String(body.role || '');
+    crew_id = String(body.crew_id || '');
+    const custom_name = String(body.custom_name || '').trim();
+
+    if (!role) return c.redirect('/');
+
+    if (crew_id === '__custom__' && custom_name) {
+      const { nanoid } = await import('nanoid');
+      const newId = nanoid();
+      await pool.query(
+        'INSERT INTO crew (id, name, role, vessel) VALUES ($1, $2, $3, $4)',
+        [newId, custom_name, role, vessel]
+      );
+      crew_id = newId;
+      crew_name = custom_name;
+    } else if (crew_id && crew_id !== '__custom__') {
+      const result = await pool.query<CrewRow>(
+        'SELECT name FROM crew WHERE id = $1 AND active = TRUE',
+        [crew_id]
+      );
+      if (result.rows.length === 0) return c.redirect('/');
+      crew_name = result.rows[0].name;
+    } else {
       return c.redirect('/');
     }
-    crew_name = result.rows[0].name;
-  } else {
-    return c.redirect('/');
+    authRole = 'crew';
   }
 
-  // Check if this person has a manager/admin auth token
-  const auth = getAuth(c as any);
-  const authRole = auth?.auth_role || 'crew';
-
-  const sessionData = {
+  const sessionData: SessionData = {
     vessel,
-    role,
+    role: role as 'captain' | 'deckhand',
     crew_id,
     crew_name,
     trip_date,
-    trip_slot,
-    auth_role: authRole,
+    trip_slot: 'AM', // Default — only matters in logbook now
+    auth_role: authRole as any,
   };
 
   const encoded = Buffer.from(JSON.stringify(sessionData)).toString('base64');
   setCookie(c, 'haldo_session', encoded, {
     path: '/',
-    maxAge: 60 * 60 * 24, // 24 hours
+    maxAge: 60 * 60 * 24 * 7, // 7 days (persistent login)
     httpOnly: true,
     sameSite: 'Lax',
   });
@@ -112,6 +127,78 @@ app.get('/logout', (c) => {
   deleteCookie(c, 'haldo_session', { path: '/' });
   return c.redirect('/');
 });
+
+// Vessel-only picker for authenticated crew
+function renderVesselPicker(auth: any, today: string): string {
+  const vessels = [
+    { id: 'squid', label: 'SQUID', color: '#1A6B8A' },
+    { id: 'blu-q', label: 'Blu Q', color: '#0D5470' },
+    { id: 'cowfish', label: 'Cowfish', color: '#2E86AB' },
+    { id: 'scout', label: 'Scout', color: '#3A7CA5' },
+    { id: 'java-cat', label: 'Java Cat', color: '#4A90A4' },
+  ];
+
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+  <title>Haldo — Pick Your Boat</title>
+  <link rel="stylesheet" href="/public/style.css">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap">
+  <meta name="theme-color" content="#1A6B8A">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+</head>
+<body style="background:#F2F2F7">
+  <header style="text-align:center;padding:64px 0 24px">
+    <h1 style="font-family:'Manrope',sans-serif;font-size:2rem;font-weight:800;color:#1A6B8A">Hey, ${auth.crew_name}</h1>
+    <p style="font-size:0.9375rem;color:#8E8E93;font-weight:500;margin-top:4px">${auth.role === 'captain' ? 'Captain' : 'Deckhand'}</p>
+  </header>
+
+  <main style="max-width:480px;margin:0 auto;padding:0 24px 48px">
+    <form action="/session" method="POST">
+      <section style="margin-bottom:32px">
+        <h2 style="font-size:0.9375rem;font-weight:700;color:#1a1c1e;margin-bottom:16px;text-align:center">Which boat are you on today?</h2>
+        <div style="display:flex;flex-direction:column;gap:12px" id="vessel-buttons">
+          ${vessels.map(v => `
+            <button type="button" class="select-btn" data-value="${v.id}" style="width:100%;height:60px;background:${v.color};color:white;border:none;border-radius:16px;font-family:'Manrope',sans-serif;font-size:1.125rem;font-weight:700;cursor:pointer;transition:all 0.15s;opacity:0.85;letter-spacing:0.02em;-webkit-tap-highlight-color:transparent" onclick="selectVessel(this,'${v.id}')">
+              ${v.label}
+            </button>`).join('')}
+        </div>
+        <input type="hidden" name="vessel" id="vessel-input" required>
+      </section>
+
+      <section style="margin-bottom:32px">
+        <h2 style="font-size:0.8125rem;font-weight:600;color:#8E8E93;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px;text-align:center">Date</h2>
+        <div style="background:white;border-radius:12px;padding:4px;box-shadow:0 1px 3px rgba(0,0,0,0.05)">
+          <input type="date" name="trip_date" value="${today}" style="width:100%;height:54px;background:transparent;border:none;border-radius:12px;padding:0 20px;font-size:1rem;font-weight:500;color:#1a1c1e;outline:none;text-align:center">
+        </div>
+      </section>
+
+      <button type="submit" id="submit-btn" disabled style="width:100%;height:58px;background:#1A6B8A;color:white;border:none;border-radius:16px;font-family:'Manrope',sans-serif;font-size:1.125rem;font-weight:700;cursor:pointer;opacity:0.3;transition:all 0.2s">
+        Let's Go →
+      </button>
+    </form>
+  </main>
+
+  <script>
+    function selectVessel(btn, value) {
+      document.querySelectorAll('.select-btn').forEach(function(b) {
+        b.style.opacity = '0.5';
+        b.style.transform = 'scale(0.97)';
+      });
+      btn.style.opacity = '1';
+      btn.style.transform = 'scale(1.02)';
+      btn.style.boxShadow = '0 8px 24px rgba(0,0,0,0.2)';
+      document.getElementById('vessel-input').value = value;
+      var submit = document.getElementById('submit-btn');
+      submit.disabled = false;
+      submit.style.opacity = '1';
+    }
+  </script>
+</body>
+</html>`;
+}
 
 function renderLanding(
   crew: CrewRow[],

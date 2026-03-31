@@ -118,8 +118,8 @@ function renderHandoff(session: SessionData, notes: any[], saved: boolean): stri
     <a href="/today" style="color:#1A6B8A;text-decoration:none;font-weight:600;font-size:0.875rem;display:flex;align-items:center;gap:4px">
       <span class="material-symbols-outlined" style="font-size:18px">arrow_back</span> Home
     </a>
-    <span style="font-weight:700;font-size:1rem;color:#1a1c1e">Handoff Notes</span>
-    <span style="font-size:0.8125rem;color:#8E8E93">${session.vessel.toUpperCase()}</span>
+    <span style="font-weight:700;font-size:1rem;color:#1a1c1e">${session.vessel.toUpperCase()} Handoff Notes</span>
+    <span style="font-size:0.8125rem;color:#8E8E93"></span>
   </header>
 
   <main style="max-width:480px;margin:0 auto;padding:80px 24px 120px">

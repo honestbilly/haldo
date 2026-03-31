@@ -244,7 +244,7 @@ function renderTodayList(
     <div style="margin-top:20px;margin-bottom:16px">
       <div style="display:flex;align-items:center;justify-content:space-between;padding:0 4px;margin-bottom:12px">
         <h2 style="font-family:var(--font-heading);font-weight:700;font-size:1.125rem;display:flex;align-items:center;gap:8px">
-          <span class="material-symbols-outlined" style="color:#F36D4F;font-size:20px">assignment</span> My Tasks
+          <span class="material-symbols-outlined" style="color:#F36D4F;font-size:20px">assignment</span> Assigned Tasks
         </h2>
         <span style="font-size:0.625rem;font-weight:700;background:rgba(243,109,79,0.12);color:#F36D4F;padding:4px 10px;border-radius:999px;text-transform:uppercase;letter-spacing:0.05em">${myTasks.length} active</span>
       </div>
@@ -270,14 +270,11 @@ function renderTodayList(
       }).join('')}
     </div>` : '';
 
-  // Queue link (unassigned tasks crew can browse/claim)
-  const queueHtml = queueCount > 0 ? `
-    <div style="border:2px dashed rgba(174,178,187,0.5);border-radius:16px;padding:24px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;margin-bottom:16px">
-      <a href="/tasks/queue" style="text-decoration:none;display:flex;flex-direction:column;align-items:center;gap:8px">
-        <span class="material-symbols-outlined" style="color:#8E8E93;font-size:28px">view_list</span>
-        <span style="font-size:0.875rem;font-weight:600;color:var(--text-muted)">${queueCount} task${queueCount > 1 ? 's' : ''} available to pick up</span>
-      </a>
-    </div>` : '';
+  // View all tasks link (filtered by vessel)
+  const viewAllTasksHtml = `
+    <a href="/tasks/queue" style="display:flex;align-items:center;justify-content:center;gap:8px;padding:14px;background:white;border-radius:12px;text-decoration:none;color:#1A6B8A;font-weight:600;font-size:0.875rem;box-shadow:0 1px 3px rgba(0,0,0,0.04);margin-bottom:16px;transition:transform 0.15s" ontouchstart="this.style.transform='scale(0.98)'" ontouchend="this.style.transform='scale(1)'">
+      View All Tasks <span class="material-symbols-outlined" style="font-size:18px">arrow_forward</span>
+    </a>`;
 
   const dateDisplay = (() => { const [y,m,d] = session.trip_date.split('-').map(Number); return new Date(y, m-1, d).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }); })();
 
@@ -297,23 +294,33 @@ function renderTodayList(
   <link rel="icon" type="image/png" sizes="32x32" href="/public/favicon-32.png">
 </head>
 <body style="background:#F2F2F7">
-  <!-- Fixed Header (Stitch pattern) -->
-  <header style="position:fixed;top:0;left:0;right:0;z-index:50;background:rgba(255,255,255,0.8);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);box-shadow:0 1px 3px rgba(0,0,0,0.06);display:flex;justify-content:space-between;align-items:center;padding:0 24px;height:64px">
-    <div style="display:flex;align-items:center;gap:12px">
-      <div style="width:32px;height:32px;border-radius:50%;background:#1A6B8A;color:white;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.875rem">${session.crew_name.charAt(0)}</div>
-      <h1 style="font-family:'Inter',sans-serif;font-weight:600;font-size:1.125rem;color:#1a4a5e;letter-spacing:-0.01em">${session.crew_name} — ${session.vessel.toUpperCase()}</h1>
-    </div>
-    <a href="/" style="color:#1A6B8A;font-weight:700;font-size:0.6875rem;letter-spacing:0.1em;text-transform:uppercase;text-decoration:none;padding:6px 12px;border-radius:8px;transition:background 0.15s" ontouchstart="this.style.background='rgba(26,107,138,0.08)'" ontouchend="this.style.background='transparent'">Switch</a>
+  <!-- Fixed Header with vessel pill -->
+  <header style="position:fixed;top:0;left:0;right:0;z-index:50;background:rgba(255,255,255,0.9);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);box-shadow:0 1px 3px rgba(0,0,0,0.06);display:flex;justify-content:space-between;align-items:center;padding:0 20px;height:64px;padding-top:env(safe-area-inset-top,0)">
+    <span style="font-size:0.8125rem;font-weight:600;color:#1a1c1e">${session.crew_name}</span>
+    <button onclick="if(confirm('Switch vessel? Your checklists and tasks will change.')){window.location='/'}" style="background:#1A6B8A;color:white;border:none;padding:8px 20px;border-radius:999px;font-family:'Manrope',sans-serif;font-weight:700;font-size:0.875rem;letter-spacing:0.02em;cursor:pointer;-webkit-tap-highlight-color:transparent;box-shadow:0 2px 8px rgba(26,107,138,0.25)">${session.vessel.toUpperCase()}</button>
+    <div style="width:32px;height:32px;border-radius:50%;background:#1A6B8A;color:white;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.8125rem">${session.crew_name.charAt(0)}</div>
   </header>
 
-  <main style="padding:80px 16px 120px;max-width:480px;margin:0 auto">
-    <!-- Page Context -->
-    <section style="margin-top:16px;margin-bottom:24px">
-      <h2 style="font-family:'Manrope',sans-serif;font-weight:800;font-size:1.75rem;color:#1a1c1e;letter-spacing:-0.02em">${session.trip_slot} Trip</h2>
-      <p style="font-size:0.875rem;font-weight:500;color:#5b5f67">${dateDisplay}</p>
+  <main style="padding:80px 16px 120px;max-width:480px;margin:0 auto;padding-top:calc(80px + env(safe-area-inset-top,0px))">
+    <!-- Page Context: Vessel + Date (no trip slot) -->
+    <section style="margin-bottom:20px">
+      <h2 style="font-family:'Manrope',sans-serif;font-weight:800;font-size:1.75rem;color:#1a1c1e;letter-spacing:-0.02em">${session.vessel.toUpperCase()}</h2>
+      <p style="font-size:0.9375rem;font-weight:500;color:#5b5f67">${dateDisplay}</p>
     </section>
 
-    ${renderWeatherCard(weather)}
+    <!-- Compact weather strip (deranked) -->
+    ${weather ? `
+    <a href="/weather" style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:white;border-radius:12px;text-decoration:none;color:#1a1c1e;margin-bottom:12px;box-shadow:0 1px 3px rgba(0,0,0,0.04)">
+      <div style="display:flex;align-items:center;gap:12px">
+        <span style="font-family:'Manrope',sans-serif;font-weight:800;font-size:1.25rem">${weather.currentTemp ? Math.round(weather.currentTemp) + '°' : '--'}</span>
+        <span style="font-size:0.8125rem;color:#5b5f67">${weather.conditions}</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;font-size:0.75rem;color:#8E8E93">
+        <span><span class="material-symbols-outlined" style="font-size:14px;vertical-align:middle">air</span> ${Math.round(weather.windSpeed)}kts ${weather.windDirection}</span>
+        ${weather.precipChance > 5 ? `<span><span class="material-symbols-outlined" style="font-size:14px;vertical-align:middle">water_drop</span> ${weather.precipChance}%</span>` : ''}
+        <span class="material-symbols-outlined" style="font-size:16px;color:#c7c7cc">chevron_right</span>
+      </div>
+    </a>` : ''}
 
     ${handoffNotes.length > 0 ? `
     <div style="background:var(--surface);border-radius:16px;padding:20px;margin-bottom:16px;position:relative;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.04)">
@@ -321,15 +328,16 @@ function renderTodayList(
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
         <span style="font-weight:700;font-size:0.625rem;color:#70D0EB;text-transform:uppercase;letter-spacing:0.1em">
           <span class="material-symbols-outlined" style="font-size:16px;vertical-align:middle;margin-right:4px">sticky_note_2</span>
-          Handoff Notes
+          ${session.vessel.toUpperCase()} Handoff Notes
         </span>
         <a href="/handoff" style="font-size:0.75rem;color:#70D0EB;text-decoration:none;font-weight:700;display:flex;align-items:center;gap:4px">View all <span class="material-symbols-outlined" style="font-size:14px">arrow_forward</span></a>
       </div>
       ${handoffNotes.slice(0, 3).map((n: any) => {
         const roleLabel = n.role === 'captain' ? 'Capt.' : 'DH';
         const name = n.crew_display_name || n.crew_name;
-        return `<div style="padding:6px 0;border-top:1px solid rgba(245,158,11,0.2);font-size:0.8125rem;color:#78350F;line-height:1.4">
-          <span style="font-weight:600">${roleLabel} ${name}:</span> ${n.note}
+        return `<div style="padding:8px 0;border-top:1px solid rgba(112,208,235,0.15);font-size:0.8125rem;color:#1a1c1e;line-height:1.4">
+          <span style="font-weight:700;color:#5b5f67;font-size:0.6875rem">${roleLabel} ${name}:</span>
+          <span style="display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">${n.note}</span>
         </div>`;
       }).join('')}
       ${handoffNotes.length > 3 ? `<div style="font-size:0.75rem;color:#D97706;padding-top:4px">+${handoffNotes.length - 3} more</div>` : ''}
@@ -338,20 +346,73 @@ function renderTodayList(
     <!-- Today's DMT -->
     ${dmtHtml}
 
-    <!-- Checklists (Stitch section pattern) -->
-    <section style="margin-bottom:24px">
-      <h2 style="font-family:'Manrope',sans-serif;font-weight:700;font-size:1.125rem;color:#1a1c1e;display:flex;align-items:center;gap:8px;padding:0 4px;margin-bottom:12px">
-        <span class="material-symbols-outlined" style="color:#1A6B8A;font-size:22px">fact_check</span> Checklists
-      </h2>
-      <div style="display:flex;flex-direction:column;gap:12px">
-        ${items || '<p style="text-align:center;color:#8E8E93;padding:32px 0">No checklists scheduled for today.</p>'}
-      </div>
-    </section>
+    <!-- Daily Routine: 3 square cards in a row -->
+    ${(() => {
+      const routineTemplates = regularTemplates.filter(t =>
+        t.id.startsWith('wakeup') || t.id.startsWith('between') || t.id.startsWith('put-to-bed')
+      );
+      const otherChecklists = regularTemplates.filter(t =>
+        !t.id.startsWith('wakeup') && !t.id.startsWith('between') && !t.id.startsWith('put-to-bed') && t.type !== 'logbook'
+      );
+
+      const routineCards = [
+        { prefix: 'wakeup', icon: 'coffee', label: 'Wake Up' },
+        { prefix: 'between', icon: 'restaurant', label: 'Between' },
+        { prefix: 'put-to-bed', icon: 'bed', label: 'Bed' },
+      ];
+
+      const routineHtml = routineCards.map(rc => {
+        const tmpl = routineTemplates.find(t => t.id.startsWith(rc.prefix));
+        if (!tmpl) return '';
+        const comps = completedMap.get(tmpl.id) || [];
+        const isDone = comps.length > 0;
+        return `
+          <a href="/c/${tmpl.id}" style="flex:1;background:white;border-radius:16px;padding:16px 8px;text-decoration:none;color:#1a1c1e;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,0.04);display:flex;flex-direction:column;align-items:center;gap:8px;min-height:100px;transition:transform 0.15s" ontouchstart="this.style.transform='scale(0.96)'" ontouchend="this.style.transform='scale(1)'">
+            <span class="material-symbols-outlined" style="font-size:28px;color:${isDone ? '#34C759' : '#1A6B8A'};${isDone ? "font-variation-settings:'FILL' 1" : ''}">${rc.icon}</span>
+            <span style="font-size:0.75rem;font-weight:600">${rc.label}</span>
+            <span class="material-symbols-outlined" style="font-size:20px;color:${isDone ? '#34C759' : '#c7c7cc'};${isDone ? "font-variation-settings:'FILL' 1" : ''}">${isDone ? 'check_circle' : 'radio_button_unchecked'}</span>
+          </a>`;
+      }).join('');
+
+      const otherHtml = otherChecklists.map(t => {
+        const comps2 = completedMap.get(t.id) || [];
+        const isDone2 = comps2.length > 0;
+        const displayName = t.name.replace(/\s*—\s*(Captain|Deckhand|Mate)$/i, '');
+        const est2 = t.type === 'checklist' ? (t as ChecklistTemplate).estimated_minutes : (t as LogbookTemplate).estimated_minutes;
+        return stitchCard(`/c/${t.id}`, displayName, est2 ? `~${est2} min` : '', isDone2 ? '✓ DONE' : 'NOT STARTED', isDone2 ? '#34C759' : '#34C759', isDone2);
+      }).join('');
+
+      return `
+        <section style="margin-bottom:20px">
+          <h2 style="font-size:0.6875rem;font-weight:700;letter-spacing:0.15em;color:#8E8E93;text-transform:uppercase;margin-bottom:12px;padding:0 4px">Daily Routine</h2>
+          <div style="display:flex;gap:10px;margin-bottom:12px">
+            ${routineHtml}
+          </div>
+        </section>
+        ${otherHtml ? `<section style="margin-bottom:20px"><div style="display:flex;flex-direction:column;gap:12px">${otherHtml}</div></section>` : ''}`;
+    })()}
+
+    <!-- Logbook (visually separate) -->
+    ${(() => {
+      const logbooks = regularTemplates.filter(t => t.type === 'logbook');
+      const logbookCards = templates.filter(t => t.type === 'logbook');
+      if (logbookCards.length === 0) return '';
+      return `
+        <section style="margin-bottom:24px">
+          <h2 style="font-size:0.6875rem;font-weight:700;letter-spacing:0.15em;color:#8E8E93;text-transform:uppercase;margin-bottom:12px;padding:0 4px">Logbook</h2>
+          ${logbookCards.map(t => {
+            const comps = completedMap.get(t.id) || [];
+            const isDone = comps.some(c => c.trip_slot === session.trip_slot);
+            const est = (t as LogbookTemplate).estimated_minutes;
+            return stitchCard(`/c/${t.id}`, `${t.name}`, est ? `~${est} min` : '', isDone ? '✓ DONE' : 'NOT DONE', isDone ? '#34C759' : '#1A6B8A', isDone);
+          }).join('')}
+        </section>`;
+    })()}
 
     ${onDemandHtml}
 
     ${myTasksHtml}
-    ${queueHtml}
+    ${viewAllTasksHtml}
 
     <!-- Crewmate Status -->
     ${crewmateStatus.length > 0 ? `
