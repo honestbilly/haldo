@@ -61,16 +61,25 @@ export function renderLogbook(session: any, template: LogbookTemplate, crewList:
   <link rel="apple-touch-icon" href="/public/apple-touch-icon.png">
   <link rel="icon" type="image/png" sizes="32x32" href="/public/favicon-32.png">
 </head>
-<body>
-  <div class="logbook-page">
-    <header class="logbook-header">
-      <h1>${template.name}</h1>
-      <p class="checklist-context">${session.vessel.toUpperCase()} | ${session.crew_name} | ${session.trip_slot}</p>
-      <div class="step-progress">
-        <span id="step-indicator">Step 1 of ${totalSteps}</span>
-        <div class="progress-bar"><div class="progress-fill" id="step-progress-fill" style="width:${100 / totalSteps}%"></div></div>
+<body style="background:#F2F2F7">
+  <!-- Fixed Header (Stitch pattern) -->
+  <header style="position:fixed;top:0;left:0;right:0;z-index:50;background:rgba(255,255,255,0.9);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);box-shadow:0 1px 3px rgba(0,0,0,0.06);padding:12px 24px;height:auto">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+      <a href="/today" style="color:#1A6B8A;text-decoration:none;font-weight:600;font-size:0.875rem;display:flex;align-items:center;gap:4px">
+        <span class="material-symbols-outlined" style="font-size:18px">arrow_back</span> Home
+      </a>
+      <h1 style="font-family:'Manrope',sans-serif;font-weight:700;font-size:1rem;color:#1a1c1e">${template.name}</h1>
+      <span style="font-size:0.6875rem;font-weight:700;color:#1A6B8A;background:rgba(26,107,138,0.08);padding:4px 10px;border-radius:10px">${session.vessel.toUpperCase()}</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:12px">
+      <span id="step-indicator" style="font-size:0.75rem;font-weight:600;color:#8E8E93">Step 1 of ${totalSteps}</span>
+      <div style="flex:1;height:4px;background:#E5E5EA;border-radius:2px;overflow:hidden">
+        <div id="step-progress-fill" style="height:100%;background:#1A6B8A;border-radius:2px;transition:width 0.3s;width:${100 / totalSteps}%"></div>
       </div>
-    </header>
+    </div>
+  </header>
+
+  <div class="logbook-page" style="padding-top:100px">
 
     <form action="/c/${template.id}" method="POST" id="logbook-form">
       ${stepsHtml}
@@ -86,10 +95,16 @@ export function renderLogbook(session: any, template: LogbookTemplate, crewList:
           </label>
         </div>` : ''}
 
-      <div class="wizard-nav">
-        <button type="button" class="nav-btn back-btn" id="back-btn" onclick="wizardNav(-1)" style="visibility:hidden">← Back</button>
-        <button type="button" class="nav-btn next-btn" id="next-btn" onclick="wizardNav(1)">Next →</button>
-        <button type="submit" class="nav-btn submit-nav-btn" id="wizard-submit" style="display:none">Submit Logbook</button>
+      <div style="position:fixed;bottom:0;left:0;right:0;display:flex;gap:8px;padding:12px 24px;background:rgba(255,255,255,0.9);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);box-shadow:0 -1px 3px rgba(0,0,0,0.06);max-width:480px;margin:0 auto;z-index:40">
+        <button type="button" id="back-btn" onclick="wizardNav(-1)" style="visibility:hidden;flex:1;height:54px;background:white;border:2px solid #c7c7cc;border-radius:12px;font-family:'Inter',sans-serif;font-weight:700;font-size:1rem;color:#1a1c1e;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:transform 0.15s" ontouchstart="this.style.transform='scale(0.98)'" ontouchend="this.style.transform='scale(1)'">
+          <span class="material-symbols-outlined" style="font-size:18px">arrow_back</span> Back
+        </button>
+        <button type="button" id="next-btn" onclick="wizardNav(1)" style="flex:1;height:54px;background:#1A6B8A;border:none;border-radius:12px;font-family:'Inter',sans-serif;font-weight:700;font-size:1rem;color:white;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;box-shadow:0 4px 12px rgba(26,107,138,0.25);transition:transform 0.15s" ontouchstart="this.style.transform='scale(0.98)'" ontouchend="this.style.transform='scale(1)'">
+          Next <span class="material-symbols-outlined" style="font-size:18px">arrow_forward</span>
+        </button>
+        <button type="submit" id="wizard-submit" style="display:none;flex:1;height:54px;background:#F36D4F;border:none;border-radius:12px;font-family:'Manrope',sans-serif;font-weight:700;font-size:1rem;color:white;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;box-shadow:0 4px 12px rgba(243,109,79,0.3);transition:transform 0.15s" ontouchstart="this.style.transform='scale(0.98)'" ontouchend="this.style.transform='scale(1)'">
+          <span class="material-symbols-outlined" style="font-size:18px;font-variation-settings:'FILL' 1">check_circle</span> Submit
+        </button>
       </div>
     </form>
   </div>
