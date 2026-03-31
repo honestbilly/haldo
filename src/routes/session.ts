@@ -2,6 +2,7 @@ import { Hono } from 'hono';
 import { getCookie, setCookie, deleteCookie } from 'hono/cookie';
 import pool from '../db.js';
 import type { CrewRow, SessionData } from '../types.js';
+import { getAuth } from './auth.js';
 
 const app = new Hono();
 
@@ -81,6 +82,10 @@ app.post('/session', async (c) => {
     return c.redirect('/');
   }
 
+  // Check if this person has a manager/admin auth token
+  const auth = getAuth(c as any);
+  const authRole = auth?.auth_role || 'crew';
+
   const sessionData = {
     vessel,
     role,
@@ -88,6 +93,7 @@ app.post('/session', async (c) => {
     crew_name,
     trip_date,
     trip_slot,
+    auth_role: authRole,
   };
 
   const encoded = Buffer.from(JSON.stringify(sessionData)).toString('base64');

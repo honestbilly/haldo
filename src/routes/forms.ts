@@ -108,9 +108,10 @@ app.get('/c/:templateId', async (c) => {
   if (!template) return c.notFound();
 
   // Check if manager is in edit mode
-  // Auth-based: manager/admin role. Dev fallback: allow if no auth tokens exist yet.
   const auth = getAuth(c as any);
-  const canEdit = (auth && (auth.auth_role === 'manager' || auth.auth_role === 'admin')) || !process.env.REQUIRE_AUTH;
+  const canEdit = (session.auth_role === 'manager' || session.auth_role === 'admin')
+    || (auth && (auth.auth_role === 'manager' || auth.auth_role === 'admin'))
+    || !process.env.REQUIRE_AUTH; // Dev fallback
   const editMode = canEdit && c.req.query('edit') === '1';
 
   // For wake-up checklists, pre-fill engine hours from last completion
@@ -137,16 +138,35 @@ app.get('/c/:templateId', async (c) => {
   }
 });
 
-// Save in-place edits to a template
+// Save in-place edits to a template (with rollback backup)
 app.post('/c/:templateId/edit', async (c) => {
+  // Allow edit if auth token says manager/admin, or if no REQUIRE_AUTH (dev mode)
   const auth = getAuth(c as any);
-  if (!auth || (auth.auth_role !== 'manager' && auth.auth_role !== 'admin')) {
+  const session = getSession(c as any);
+  const isManager = (auth && (auth.auth_role === 'manager' || auth.auth_role === 'admin'))
+    || (session?.auth_role === 'manager' || session?.auth_role === 'admin')
+    || !process.env.REQUIRE_AUTH;
+  if (!isManager) {
     return c.text('Unauthorized', 403);
   }
 
   const templateId = c.req.param('templateId');
   const template = getTemplateById(templateId);
   if (!template || template.type !== 'checklist') return c.notFound();
+
+  // Save rollback backup before editing
+  const { writeFile, mkdir } = await import('fs/promises');
+  const { join } = await import('path');
+  const backupDir = join(process.cwd(), 'templates', '.backups');
+  try {
+    await mkdir(backupDir, { recursive: true });
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+    const backupPath = join(backupDir, `${templateId}_${timestamp}.json`);
+    await writeFile(backupPath, JSON.stringify(template, null, 2));
+  } catch (e) {
+    // Backup failure shouldn't block the save, but log it
+    console.warn('[edit] Failed to create backup:', e);
+  }
 
   const body = await c.req.parseBody();
 
@@ -666,7 +686,7 @@ function renderChecklist(session: any, template: ChecklistTemplate, lastEngineHo
   <link rel="apple-touch-icon" href="/public/apple-touch-icon.png">
   <link rel="icon" type="image/png" sizes="32x32" href="/public/favicon-32.png">
 </head>
-<body>
+<body${editMode ? ' class="edit-mode-active"' : ''}>
   <div class="checklist-page">
     <header class="checklist-header">
       <div style="display:flex;justify-content:space-between;align-items:center">
@@ -674,7 +694,10 @@ function renderChecklist(session: any, template: ChecklistTemplate, lastEngineHo
         ${canEdit ? `<a href="/c/${template.id}${editMode ? '' : '?edit=1'}" class="edit-toggle-btn" style="font-size:0.75rem;padding:6px 12px;border-radius:6px;text-decoration:none;font-weight:600;${editMode ? 'background:#F36D4F;color:#fff' : 'background:rgba(0,105,80,0.1);color:#006950'}">${editMode ? '✕ Exit Edit' : '✏️ Edit'}</a>` : ''}
       </div>
       <p class="checklist-context">${session.vessel.toUpperCase()} | ${session.crew_name} | ${session.trip_slot}</p>
-      ${editMode ? '<div style="padding:8px 12px;background:rgba(243,109,79,0.08);border:1px solid #F36D4F;border-radius:8px;margin:8px 0;font-size:0.8125rem;color:#ba1a1a;text-align:center"><strong>EDIT MODE</strong> — changes will update the template for all crew</div>' : ''}
+      ${editMode ? `<div style="padding:10px 12px;background:#FFF8E1;border:2px solid #F59E0B;border-radius:8px;margin:8px 0;font-size:0.8125rem;color:#92400E;text-align:center">
+        <strong>⚠️ EDIT MODE</strong> — changes update the template for all crew<br>
+        <span style="font-size:0.6875rem">Auto-exits in <span id="edit-timer">5:00</span> if no save</span>
+      </div>` : ''}
       ${savedMsg ? '<div style="padding:8px 12px;background:rgba(0,105,80,0.08);border-radius:8px;margin:8px 0;font-size:0.8125rem;color:#006950;text-align:center">✓ Changes saved</div>' : ''}
       ${editMode ? '' : `<div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div><p class="progress-text" id="progress-text">0 / ${totalItems} items</p>`}
     </header>
@@ -693,10 +716,34 @@ function renderChecklist(session: any, template: ChecklistTemplate, lastEngineHo
       ${sectionsHtml}
 
       ${editMode ? `
-      <div style="position:sticky;bottom:60px;background:var(--surface);border-top:2px solid #F36D4F;padding:12px;margin:16px -16px 0;display:flex;gap:8px">
-        <button type="submit" style="flex:1;padding:14px;background:#006950;color:#fff;border:none;border-radius:8px;font-size:1rem;font-weight:600;cursor:pointer;min-height:48px">Save Changes</button>
+      <div style="position:sticky;bottom:60px;background:var(--surface);border-top:2px solid #F59E0B;padding:12px;margin:16px -16px 0;display:flex;gap:8px">
+        <button type="button" onclick="confirmSave()" style="flex:1;padding:14px;background:#006950;color:#fff;border:none;border-radius:8px;font-size:1rem;font-weight:600;cursor:pointer;min-height:48px">Save Changes</button>
         <a href="/c/${template.id}" style="display:flex;align-items:center;justify-content:center;padding:14px 20px;background:#fff;border:2px solid #bdc9c2;border-radius:8px;text-decoration:none;color:#1a1c1c;font-weight:500;min-height:48px">Cancel</a>
-      </div>` : `
+      </div>
+      <script>
+        // Confirmation before save
+        function confirmSave() {
+          if (confirm('Save changes to this template? This will update it for ALL crew members.')) {
+            document.getElementById('edit-form').submit();
+          }
+        }
+
+        // Auto-exit edit mode after 5 minutes
+        var editTimeout = 300; // seconds
+        var timerEl = document.getElementById('edit-timer');
+        var editInterval = setInterval(function() {
+          editTimeout--;
+          if (editTimeout <= 0) {
+            clearInterval(editInterval);
+            alert('Edit mode timed out. Returning to normal view.');
+            window.location.href = '/c/${template.id}';
+            return;
+          }
+          var m = Math.floor(editTimeout / 60);
+          var s = editTimeout % 60;
+          if (timerEl) timerEl.textContent = m + ':' + (s < 10 ? '0' : '') + s;
+        }, 1000);
+      </script>` : `
       ${template.completion.notes_field ? `
         <div class="notes-section">
           <label>${template.completion.notes_prompt || 'Notes'}</label>

@@ -170,4 +170,5 @@ export interface SessionData {
   crew_name: string;
   trip_date: string;
   trip_slot: string;
+  auth_role?: 'crew' | 'manager' | 'admin';
 }

@@ -921,8 +921,11 @@ function reportLayout(activeTab: string, content: string): string {
 </head>
 <body>
   <div class="report-page">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px">
-      <h1 style="font-family:'Manrope',-apple-system,sans-serif;font-size:1.5rem;color:#006950">Haldo</h1>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <div style="display:flex;align-items:center;gap:12px">
+        <a href="/today" style="text-decoration:none;color:#006950;font-size:0.875rem;font-weight:500">← Home</a>
+        <h1 style="font-family:'Manrope',-apple-system,sans-serif;font-size:1.5rem;color:#006950">Haldo</h1>
+      </div>
       <span style="font-size:0.875rem;color:#6e7a74">${today}</span>
     </div>
     <nav style="display:flex;gap:16px;margin-bottom:24px;border-bottom:2px solid #bdc9c2">
