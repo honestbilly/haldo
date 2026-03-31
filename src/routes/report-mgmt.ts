@@ -192,31 +192,82 @@ app.get('/report/crew', async (c) => {
     const highlight = generated === cr.id ? 'border:2px solid #1A6B8A;' : '';
 
     return `
-      <div style="background:#FFFFFF;border-radius:8px;padding:14px 16px;margin-bottom:8px;${highlight}">
+      <div style="background:#FFFFFF;border-radius:12px;padding:16px 20px;margin-bottom:8px;box-shadow:0 1px 3px rgba(0,0,0,0.04);${highlight}">
         <div style="display:flex;justify-content:space-between;align-items:center">
-          <div>
-            <span style="font-weight:600;font-size:0.9375rem">${escapeHtml(cr.name)}</span>
-            <span style="font-size:0.75rem;color:#6e7a74;margin-left:6px">${roleLabel}</span>
+          <div style="display:flex;align-items:center;gap:8px">
+            <span style="font-weight:700;font-size:0.9375rem">${escapeHtml(cr.name)}</span>
+            <span style="font-size:0.6875rem;font-weight:600;color:white;background:${cr.role === 'captain' ? '#1A6B8A' : '#70D0EB'};padding:2px 8px;border-radius:999px">${roleLabel}</span>
             ${statusBadge}
           </div>
-          <span style="font-size:0.75rem;color:#6e7a74">${VESSEL_LABELS[cr.vessel] || cr.vessel || 'Unassigned'}</span>
         </div>
         ${tokenSection}
       </div>`;
   }).join('');
 
+  const created = c.req.query('created');
+  const inputStyle = `width:100%;height:48px;background:#E5E8F0;border:none;border-radius:12px;padding:0 16px;font-size:0.9375rem;font-weight:500;color:#1a1c1e;outline:none;font-family:'Inter',sans-serif`;
+
   return c.html(reportLayout('Crew', `
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
       <h2 style="font-family:'Manrope',-apple-system,sans-serif;font-size:1.125rem;font-weight:700">Crew & Login Links</h2>
-      <span style="font-size:0.8125rem;color:#6e7a74">${crewMap.size} members</span>
+      <span style="font-size:0.8125rem;color:#8E8E93">${crewMap.size} members</span>
     </div>
 
-    <div style="padding:12px;background:rgba(112,208,235,0.1);border-radius:8px;margin-bottom:16px;font-size:0.8125rem;color:#1a1c1c;line-height:1.5">
-      <strong>How login works:</strong> Generate a login link for each crew member. Send it via WhatsApp or text. They tap it once and stay logged in permanently. To revoke access, deactivate the crew member.
+    <div style="padding:14px 16px;background:rgba(112,208,235,0.08);border-radius:12px;margin-bottom:16px;font-size:0.8125rem;color:#1a1c1e;line-height:1.5">
+      <strong>How login works:</strong> Generate a login link for each crew member. Send it via WhatsApp or text. They tap it once and stay logged in permanently.
     </div>
+
+    ${created ? '<div style="padding:12px;background:rgba(52,199,89,0.1);border-radius:12px;margin-bottom:16px;font-size:0.875rem;color:#34C759;text-align:center;font-weight:600">✓ Crew member created</div>' : ''}
+
+    <!-- Add Crew Member -->
+    <details style="background:white;border-radius:12px;padding:16px 20px;margin-bottom:16px;box-shadow:0 1px 3px rgba(0,0,0,0.04)">
+      <summary style="font-weight:700;font-size:0.875rem;cursor:pointer;color:#1A6B8A;display:flex;align-items:center;gap:8px">
+        <span class="material-symbols-outlined" style="font-size:20px">person_add</span> Add Crew Member
+      </summary>
+      <form action="/report/crew/create" method="POST" style="margin-top:16px">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+          <div>
+            <label style="display:block;font-size:0.75rem;font-weight:600;color:#8E8E93;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.05em">Name *</label>
+            <input type="text" name="name" required placeholder="Full name" style="${inputStyle}">
+          </div>
+          <div>
+            <label style="display:block;font-size:0.75rem;font-weight:600;color:#8E8E93;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.05em">Role *</label>
+            <select name="role" required style="${inputStyle};-webkit-appearance:none;appearance:none">
+              <option value="captain">Captain</option>
+              <option value="deckhand">Deckhand</option>
+            </select>
+          </div>
+        </div>
+        <button type="submit" style="width:100%;height:48px;background:#1A6B8A;color:white;border:none;border-radius:12px;font-weight:700;font-size:0.875rem;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">
+          <span class="material-symbols-outlined" style="font-size:18px">add</span> Create & Generate Login Link
+        </button>
+      </form>
+    </details>
 
     ${crewRows}
   `));
+});
+
+// Create new crew member + auto-generate login link
+app.post('/report/crew/create', async (c) => {
+  const body = await c.req.parseBody();
+  const name = String(body.name || '').trim();
+  const role = String(body.role || 'deckhand');
+
+  if (!name) return c.redirect('/report/crew');
+
+  const { nanoid } = await import('nanoid');
+  const crewId = nanoid();
+
+  await pool.query(
+    'INSERT INTO crew (id, name, role, active) VALUES ($1, $2, $3, TRUE)',
+    [crewId, name, role]
+  );
+
+  // Auto-generate login link
+  await generateToken(crewId, 'crew');
+
+  return c.redirect(`/report/crew?created=1&generated=${crewId}`);
 });
 
 // Generate token for a crew member
