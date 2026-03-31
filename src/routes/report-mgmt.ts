@@ -217,8 +217,12 @@ app.get('/report/crew', async (c) => {
 
     const highlight = generated === cr.id ? 'border:2px solid #34C759;' : '';
 
+    const toggleAction = cr.active ? 'deactivate' : 'reactivate';
+    const toggleLabel = cr.active ? 'Deactivate' : 'Reactivate';
+    const toggleColor = cr.active ? '#FF3B30' : '#34C759';
+
     return `
-      <div style="background:#FFFFFF;border-radius:12px;padding:16px 20px;margin-bottom:10px;box-shadow:0 1px 3px rgba(0,0,0,0.04);${highlight}">
+      <div style="background:#FFFFFF;border-radius:12px;padding:16px 20px;margin-bottom:10px;box-shadow:0 1px 3px rgba(0,0,0,0.04);${highlight}${!cr.active ? 'opacity:0.6;' : ''}">
         <div style="display:flex;justify-content:space-between;align-items:center">
           <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
             <span style="font-weight:700;font-size:0.9375rem">${escapeHtml(cr.name)}</span>
@@ -226,8 +230,11 @@ app.get('/report/crew', async (c) => {
             ${authBadge}
             ${statusBadge}
           </div>
+          <form action="/report/crew/${cr.id}/${toggleAction}" method="POST" style="margin:0">
+            <button type="submit" style="padding:4px 10px;background:none;border:1px solid ${toggleColor};border-radius:6px;font-size:0.625rem;font-weight:600;color:${toggleColor};cursor:pointer">${toggleLabel}</button>
+          </form>
         </div>
-        ${tokenSection}
+        ${cr.active ? tokenSection : '<div style="margin-top:8px;font-size:0.75rem;color:#8E8E93;font-style:italic">Login revoked. Reactivate to restore access.</div>'}
       </div>`;
   }).join('');
 
@@ -295,6 +302,21 @@ app.post('/report/crew/create', async (c) => {
   await generateToken(crewId, 'crew');
 
   return c.redirect(`/report/crew?created=1&generated=${crewId}`);
+});
+
+// Deactivate crew member (revokes all tokens)
+app.post('/report/crew/:crewId/deactivate', async (c) => {
+  const crewId = c.req.param('crewId');
+  await pool.query('UPDATE crew SET active = FALSE WHERE id = $1', [crewId]);
+  await revokeAllTokens(crewId);
+  return c.redirect('/report/crew');
+});
+
+// Reactivate crew member
+app.post('/report/crew/:crewId/reactivate', async (c) => {
+  const crewId = c.req.param('crewId');
+  await pool.query('UPDATE crew SET active = TRUE WHERE id = $1', [crewId]);
+  return c.redirect(`/report/crew?generated=${crewId}`);
 });
 
 // Regenerate token with new auth role (revokes old one)
