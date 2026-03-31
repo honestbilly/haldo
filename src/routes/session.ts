@@ -121,11 +121,17 @@ function renderLanding(
   const crewJson = JSON.stringify(crew);
   const tripJson = JSON.stringify(tripConfigs);
 
+  const sectionLabel = (text: string) =>
+    `<h2 style="padding:0 16px;font-size:0.8125rem;font-weight:600;color:#5b5f67;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px">${text}</h2>`;
+
+  const pillBtn = (value: string, label: string, isFullWidth: boolean = false) =>
+    `<button type="button" class="select-btn" data-value="${value}" style="height:54px;${isFullWidth ? 'width:100%;' : 'flex:1;'}background:#F2F2F7;color:#1A6B8A;border:2px solid rgba(26,107,138,0.1);border-radius:999px;font-weight:700;font-size:0.875rem;letter-spacing:0.02em;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.15s;-webkit-tap-highlight-color:transparent">${label}</button>`;
+
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
   <title>Haldo — Honest Eco</title>
   <link rel="stylesheet" href="/public/style.css">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap">
@@ -135,67 +141,94 @@ function renderLanding(
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <link rel="apple-touch-icon" href="/public/apple-touch-icon.png">
   <link rel="icon" type="image/png" sizes="32x32" href="/public/favicon-32.png">
+  <style>
+    .select-btn.active {
+      background: #1A6B8A !important;
+      color: white !important;
+      border-color: #1A6B8A !important;
+    }
+  </style>
 </head>
-<body>
-  <div class="landing">
-    <header class="landing-header">
-      <h1 class="app-name">Haldo</h1>
-      <p class="app-subtitle">Honest Eco Crew Operations</p>
-    </header>
+<body style="background:#F2F2F7">
+  <!-- Logo Header -->
+  <header style="text-align:center;padding:48px 0 32px">
+    <h1 style="font-family:'Manrope',sans-serif;font-size:2.5rem;font-weight:800;color:#1A6B8A;letter-spacing:-0.02em">Haldo</h1>
+    <p style="font-size:0.875rem;color:#8E8E93;font-weight:500;margin-top:4px">Honest Eco Crew Operations</p>
+  </header>
 
-    <form action="/session" method="POST" class="landing-form" id="landing-form">
-      <div class="form-group">
-        <label for="vessel">Which boat?</label>
-        <div class="button-group" id="vessel-buttons">
-          <button type="button" class="select-btn" data-value="squid">SQUID</button>
-          <button type="button" class="select-btn" data-value="blu-q">Blu Q</button>
-          <button type="button" class="select-btn" data-value="cowfish">Cowfish</button>
-          <button type="button" class="select-btn" data-value="scout">Scout</button>
-          <button type="button" class="select-btn" data-value="java-cat">Java Cat</button>
+  <main style="max-width:480px;margin:0 auto;padding:0 16px 48px">
+    <form action="/session" method="POST" id="landing-form">
+      <!-- Vessel -->
+      <section style="margin-bottom:24px">
+        ${sectionLabel('Select your vessel')}
+        <div style="background:white;border-radius:12px;padding:16px;box-shadow:0 1px 3px rgba(0,0,0,0.05)">
+          <div class="button-group" id="vessel-buttons" style="display:flex;flex-direction:column;gap:10px">
+            ${pillBtn('squid', 'SQUID', true)}
+            ${pillBtn('blu-q', 'Blu Q', true)}
+            ${pillBtn('cowfish', 'Cowfish', true)}
+            ${pillBtn('scout', 'Scout', true)}
+            ${pillBtn('java-cat', 'Java Cat', true)}
+          </div>
+          <input type="hidden" name="vessel" id="vessel-input" required>
         </div>
-        <input type="hidden" name="vessel" id="vessel-input" required>
-      </div>
+      </section>
 
-      <div class="form-group">
-        <label for="trip_date">Date</label>
-        <input type="date" name="trip_date" id="trip_date" value="${today}" class="date-input">
-      </div>
-
-      <div class="form-group">
-        <label>Trip</label>
-        <div class="button-group" id="trip-buttons">
-          <button type="button" class="select-btn" data-value="AM">AM</button>
-          <button type="button" class="select-btn" data-value="PM">PM</button>
-          <button type="button" class="select-btn" data-value="Sunset">Sunset</button>
+      <!-- Date -->
+      <section style="margin-bottom:24px">
+        ${sectionLabel('Trip date')}
+        <div style="background:white;border-radius:12px;padding:16px;box-shadow:0 1px 3px rgba(0,0,0,0.05)">
+          <input type="date" name="trip_date" id="trip_date" value="${today}" style="width:100%;height:54px;background:#E5E8F0;border:none;border-radius:16px;padding:0 20px;font-size:1rem;font-weight:500;color:#1a1c1e;outline:none;-webkit-appearance:none">
         </div>
-        <input type="hidden" name="trip_slot" id="trip-slot-input" required>
-      </div>
+      </section>
 
-      <div class="form-group">
-        <label for="role">Your role</label>
-        <div class="button-group" id="role-buttons">
-          <button type="button" class="select-btn" data-value="captain">Captain</button>
-          <button type="button" class="select-btn" data-value="deckhand">Deckhand</button>
+      <!-- Trip Slot -->
+      <section style="margin-bottom:24px">
+        ${sectionLabel('Trip')}
+        <div style="background:white;border-radius:12px;padding:16px;box-shadow:0 1px 3px rgba(0,0,0,0.05)">
+          <div class="button-group" id="trip-buttons" style="display:flex;gap:8px">
+            ${pillBtn('AM', 'AM')}
+            ${pillBtn('PM', 'PM')}
+            ${pillBtn('Sunset', 'Sunset')}
+          </div>
+          <input type="hidden" name="trip_slot" id="trip-slot-input" required>
         </div>
-        <input type="hidden" name="role" id="role-input" required>
-      </div>
+      </section>
 
-      <div class="form-group">
-        <label for="crew_id">Who are you?</label>
-        <select name="crew_id" id="crew-select" class="crew-dropdown" required>
-          <option value="">Select your name...</option>
-        </select>
-        <div id="custom-name-row" style="display:none; margin-top: 8px;">
-          <input type="text" name="custom_name" id="custom-name-input" class="crew-dropdown"
-            placeholder="Enter your name..." autocomplete="off">
+      <!-- Role -->
+      <section style="margin-bottom:24px">
+        ${sectionLabel('Your role')}
+        <div style="background:white;border-radius:12px;padding:16px;box-shadow:0 1px 3px rgba(0,0,0,0.05)">
+          <div class="button-group" id="role-buttons" style="display:flex;gap:8px">
+            <button type="button" class="select-btn" data-value="captain" style="flex:1;height:54px;background:#F2F2F7;color:#1A6B8A;border:2px solid rgba(26,107,138,0.1);border-radius:999px;font-weight:700;font-size:0.875rem;display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;transition:all 0.15s">
+              <span class="material-symbols-outlined" style="font-size:20px;font-variation-settings:'FILL' 1">anchor</span> Captain
+            </button>
+            <button type="button" class="select-btn" data-value="deckhand" style="flex:1;height:54px;background:#F2F2F7;color:#1A6B8A;border:2px solid rgba(26,107,138,0.1);border-radius:999px;font-weight:700;font-size:0.875rem;display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;transition:all 0.15s">
+              <span class="material-symbols-outlined" style="font-size:20px">handshake</span> Deckhand
+            </button>
+          </div>
+          <input type="hidden" name="role" id="role-input" required>
         </div>
-      </div>
+      </section>
 
-      <button type="submit" class="primary-btn" id="submit-btn" disabled>
+      <!-- Crew Name -->
+      <section style="margin-bottom:32px">
+        ${sectionLabel('Who are you?')}
+        <div style="background:white;border-radius:12px;padding:16px;box-shadow:0 1px 3px rgba(0,0,0,0.05)">
+          <select name="crew_id" id="crew-select" required style="width:100%;height:54px;background:#E5E8F0;border:none;border-radius:16px;padding:0 20px;font-size:1rem;font-weight:500;color:#1a1c1e;outline:none;-webkit-appearance:none;appearance:none;background-image:url(&quot;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%238E8E93' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10l-5 5z'/%3E%3C/svg%3E&quot;);background-repeat:no-repeat;background-position:right 20px center">
+            <option value="">Select your name...</option>
+          </select>
+          <div id="custom-name-row" style="display:none;margin-top:10px">
+            <input type="text" name="custom_name" id="custom-name-input" placeholder="Enter your name..." autocomplete="off" style="width:100%;height:54px;background:#E5E8F0;border:none;border-radius:16px;padding:0 20px;font-size:1rem;font-weight:500;color:#1a1c1e;outline:none">
+          </div>
+        </div>
+      </section>
+
+      <!-- Submit -->
+      <button type="submit" id="submit-btn" disabled style="width:100%;height:58px;background:#1A6B8A;color:white;border:none;border-radius:16px;font-family:'Manrope',sans-serif;font-size:1.125rem;font-weight:700;cursor:pointer;opacity:0.4;transition:all 0.2s;-webkit-tap-highlight-color:transparent">
         Let's Go →
       </button>
     </form>
-  </div>
+  </main>
 
   <script>
     const crew = ${crewJson};
@@ -281,7 +314,10 @@ function renderLanding(
       const customName = document.getElementById('custom-name-input').value.trim();
 
       const crewReady = crewVal && (crewVal !== '__custom__' || customName.length > 0);
-      document.getElementById('submit-btn').disabled = !(vessel && role && crewReady && tripSlot);
+      const btn = document.getElementById('submit-btn');
+      const ready = vessel && role && crewReady && tripSlot;
+      btn.disabled = !ready;
+      btn.style.opacity = ready ? '1' : '0.4';
     }
   </script>
 </body>
