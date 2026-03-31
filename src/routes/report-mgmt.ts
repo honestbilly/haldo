@@ -35,7 +35,7 @@ app.get('/report/templates', async (c) => {
       const roleLabel = t.role === 'all' ? 'All' : t.role.charAt(0).toUpperCase() + t.role.slice(1);
       const recurrence = t.type === 'checklist' ? (t as any).recurrence || '' : 'per-trip';
       return `
-        <a href="/report/templates/${encodeURIComponent(t.id)}" style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;background:#FFFFFF;border-radius:8px;margin-bottom:6px;text-decoration:none;color:#1a1c1c;border-left:4px solid #006950;min-height:48px">
+        <a href="/report/templates/${encodeURIComponent(t.id)}" style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;background:#FFFFFF;border-radius:8px;margin-bottom:6px;text-decoration:none;color:#1a1c1c;border-left:4px solid #1A6B8A;min-height:48px">
           <div>
             <div style="font-weight:600;font-size:0.875rem">${escapeHtml(t.name)}</div>
             <div style="font-size:0.75rem;color:#6e7a74">${vesselLabel} · ${roleLabel} · ${recurrence}</div>
@@ -69,7 +69,7 @@ app.get('/report/templates/:templateId', async (c) => {
   if (!template) {
     return c.html(reportLayout('Templates', `
       <p style="color:#F36D4F">Template "${escapeHtml(templateId)}" not found.</p>
-      <a href="/report/templates" style="color:#006950">← Back to templates</a>
+      <a href="/report/templates" style="color:#1A6B8A">← Back to templates</a>
     `));
   }
 
@@ -79,7 +79,7 @@ app.get('/report/templates/:templateId', async (c) => {
 
   return c.html(reportLayout('Templates', `
     <div style="margin-bottom:16px">
-      <a href="/report/templates" style="color:#006950;text-decoration:none;font-size:0.875rem">← Back to templates</a>
+      <a href="/report/templates" style="color:#1A6B8A;text-decoration:none;font-size:0.875rem">← Back to templates</a>
     </div>
 
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
@@ -87,14 +87,14 @@ app.get('/report/templates/:templateId', async (c) => {
       <span style="font-size:0.75rem;color:#6e7a74">${escapeHtml(template.id)}</span>
     </div>
 
-    ${saved ? '<div style="padding:10px 16px;background:rgba(0,105,80,0.08);border-radius:8px;margin-bottom:12px;font-size:0.875rem;color:#006950;text-align:center">✓ Template saved and reloaded</div>' : ''}
+    ${saved ? '<div style="padding:10px 16px;background:rgba(26,107,138,0.08);border-radius:8px;margin-bottom:12px;font-size:0.875rem;color:#1A6B8A;text-align:center">✓ Template saved and reloaded</div>' : ''}
     ${error ? `<div style="padding:10px 16px;background:rgba(186,26,26,0.08);border-radius:8px;margin-bottom:12px;font-size:0.875rem;color:#ba1a1a">${escapeHtml(decodeURIComponent(error))}</div>` : ''}
 
     <form action="/report/templates/${encodeURIComponent(templateId)}" method="POST">
       <textarea name="json" style="width:100%;min-height:500px;padding:16px;border:2px solid #bdc9c2;border-radius:8px;font-family:'Menlo','Monaco','Consolas',monospace;font-size:13px;line-height:1.5;background:#FFFFFF;color:#1a1c1c;resize:vertical;tab-size:2;white-space:pre" spellcheck="false">${escapeHtml(jsonStr)}</textarea>
 
       <div style="display:flex;gap:8px;margin-top:12px">
-        <button type="submit" style="flex:1;padding:14px;background:#006950;color:white;border:none;border-radius:8px;font-size:0.9375rem;font-weight:600;cursor:pointer;min-height:48px">Save Template</button>
+        <button type="submit" style="flex:1;padding:14px;background:#1A6B8A;color:white;border:none;border-radius:8px;font-size:0.9375rem;font-weight:600;cursor:pointer;min-height:48px">Save Template</button>
         <a href="/report/templates/${encodeURIComponent(templateId)}/clone" style="display:flex;align-items:center;justify-content:center;padding:14px 20px;background:#FFFFFF;border:2px solid #bdc9c2;border-radius:8px;font-size:0.875rem;font-weight:500;text-decoration:none;color:#1a1c1c;min-height:48px">Clone</a>
       </div>
     </form>
@@ -176,7 +176,7 @@ app.get('/report/crew', async (c) => {
   const crewRows = Array.from(crewMap.values()).map(cr => {
     const roleLabel = cr.role === 'captain' ? 'Captain' : 'Deckhand';
     const statusBadge = cr.active
-      ? '<span style="font-size:0.6875rem;background:rgba(0,105,80,0.1);color:#006950;padding:2px 6px;border-radius:4px">Active</span>'
+      ? '<span style="font-size:0.6875rem;background:rgba(26,107,138,0.1);color:#1A6B8A;padding:2px 6px;border-radius:4px">Active</span>'
       : '<span style="font-size:0.6875rem;background:rgba(186,26,26,0.1);color:#ba1a1a;padding:2px 6px;border-radius:4px">Inactive</span>';
 
     const tokenSection = cr.token
@@ -186,10 +186,10 @@ app.get('/report/crew', async (c) => {
           <div style="font-size:0.625rem;color:#6e7a74;margin-top:2px">${cr.last_used_at ? 'Last used: ' + new Date(cr.last_used_at).toLocaleDateString() : 'Never used'}</div>
         </div>`
       : `<form action="/report/crew/${cr.id}/generate-token" method="POST" style="margin-top:6px">
-          <button type="submit" style="padding:6px 12px;background:#006950;color:white;border:none;border-radius:6px;font-size:0.75rem;cursor:pointer;min-height:36px">Generate Login Link</button>
+          <button type="submit" style="padding:6px 12px;background:#1A6B8A;color:white;border:none;border-radius:6px;font-size:0.75rem;cursor:pointer;min-height:36px">Generate Login Link</button>
         </form>`;
 
-    const highlight = generated === cr.id ? 'border:2px solid #006950;' : '';
+    const highlight = generated === cr.id ? 'border:2px solid #1A6B8A;' : '';
 
     return `
       <div style="background:#FFFFFF;border-radius:8px;padding:14px 16px;margin-bottom:8px;${highlight}">

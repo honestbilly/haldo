@@ -129,7 +129,7 @@ function renderLanding(
   <title>Haldo — Honest Eco</title>
   <link rel="stylesheet" href="/public/style.css">
   <link rel="manifest" href="/public/manifest.json">
-  <meta name="theme-color" content="#006950">
+  <meta name="theme-color" content="#1A6B8A">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <link rel="apple-touch-icon" href="/public/apple-touch-icon.png">

@@ -70,7 +70,7 @@ export function renderCompletionCard(co: any): string {
     : '—';
 
   // Card border + background
-  let cardStyle = 'background:#FFFFFF;border-radius:10px;padding:14px 16px;margin-bottom:10px;border-left:4px solid #006950';
+  let cardStyle = 'background:#FFFFFF;border-radius:10px;padding:14px 16px;margin-bottom:10px;border-left:4px solid #1A6B8A';
   if (hasIncident) {
     cardStyle = 'background:#FFF5F5;border-radius:10px;padding:14px 16px;margin-bottom:10px;border-left:4px solid #ba1a1a;border:2px solid #F36D4F;border-left:4px solid #ba1a1a';
   } else if (hasAlerts) {
@@ -175,7 +175,7 @@ function renderLogbookCard(
         </div>
         <div style="text-align:right;flex-shrink:0">
           <div style="font-size:0.75rem;color:#6e7a74">${time} · ${escapeHtml(co.crew_name || '')} ${notesIcon}</div>
-          <div style="font-size:0.6875rem;color:#006950;font-weight:500">${checkedCount}/${totalItems} items ✓</div>
+          <div style="font-size:0.6875rem;color:#1A6B8A;font-weight:500">${checkedCount}/${totalItems} items ✓</div>
         </div>
       </div>
 
@@ -231,7 +231,7 @@ function renderChecklistCard(
         </div>
         <div style="text-align:right;flex-shrink:0">
           <div style="font-size:0.75rem;color:#6e7a74">${time} · ${escapeHtml(co.crew_name || '')} ${notesIcon}</div>
-          <div style="font-size:0.6875rem;color:#006950;font-weight:500">${checkedCount}/${totalItems} ✓</div>
+          <div style="font-size:0.6875rem;color:#1A6B8A;font-weight:500">${checkedCount}/${totalItems} ✓</div>
         </div>
       </div>
       ${valuesHtml ? `<div style="font-size:0.8125rem;color:#6e7a74;line-height:1.5;margin-top:4px">${valuesHtml}</div>` : ''}
@@ -263,7 +263,7 @@ export function renderChecklistSymbols(checklists: any[]): string {
           : '';
         return `${role}${t ? ' ' + t : ''}`;
       });
-      return `<span style="color:#006950;font-size:0.8125rem" title="${escapeHtml(cat.label)}: ${escapeHtml(times.join(', '))}">&#9745; ${escapeHtml(cat.label)}</span>`;
+      return `<span style="color:#1A6B8A;font-size:0.8125rem" title="${escapeHtml(cat.label)}: ${escapeHtml(times.join(', '))}">&#9745; ${escapeHtml(cat.label)}</span>`;
     } else {
       return `<span style="color:#ba1a1a;font-size:0.8125rem;opacity:0.6" title="${escapeHtml(cat.label)} not completed">&#10007; ${escapeHtml(cat.label)}</span>`;
     }
@@ -276,7 +276,7 @@ export function renderChecklistSymbols(checklists: any[]): string {
       const time = co.completed_at
         ? new Date(co.completed_at).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })
         : '';
-      symbols.push(`<span style="color:#006950;font-size:0.8125rem">&#9745; ${escapeHtml(label)}${time ? ' (' + time + ')' : ''}</span>`);
+      symbols.push(`<span style="color:#1A6B8A;font-size:0.8125rem">&#9745; ${escapeHtml(label)}${time ? ' (' + time + ')' : ''}</span>`);
     }
   }
 
@@ -299,7 +299,7 @@ export function reportLayout(activeTab: string, content: string): string {
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       font-family: 'Inter', -apple-system, sans-serif;
-      background: #e5fff8;
+      background: #F2F2F7;
       color: #1a1c1c;
       line-height: 1.5;
       -webkit-font-smoothing: antialiased;
@@ -313,17 +313,17 @@ export function reportLayout(activeTab: string, content: string): string {
   <div class="report-page">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
       <div style="display:flex;align-items:center;gap:12px">
-        <a href="/today" style="text-decoration:none;color:#006950;font-size:0.875rem;font-weight:500">← Home</a>
-        <h1 style="font-family:'Manrope',-apple-system,sans-serif;font-size:1.5rem;color:#006950">Haldo</h1>
+        <a href="/today" style="text-decoration:none;color:#1A6B8A;font-size:0.875rem;font-weight:500">← Home</a>
+        <h1 style="font-family:'Manrope',-apple-system,sans-serif;font-size:1.5rem;color:#1A6B8A">Haldo</h1>
       </div>
       <span style="font-size:0.875rem;color:#6e7a74">${today}</span>
     </div>
     <nav style="display:flex;gap:16px;margin-bottom:24px;border-bottom:2px solid #bdc9c2">
-      <a href="/report" style="padding:8px 0;text-decoration:none;font-weight:500;margin-bottom:-2px;${activeTab === 'Today' ? 'color:#006950;border-bottom:2px solid #006950' : 'color:#6e7a74;border-bottom:2px solid transparent'}">Today</a>
-      <a href="/report/history" style="padding:8px 0;text-decoration:none;font-weight:500;margin-bottom:-2px;${activeTab === 'History' ? 'color:#006950;border-bottom:2px solid #006950' : 'color:#6e7a74;border-bottom:2px solid transparent'}">History</a>
-      <a href="/report/templates" style="padding:8px 0;text-decoration:none;font-weight:500;margin-bottom:-2px;${activeTab === 'Templates' ? 'color:#006950;border-bottom:2px solid #006950' : 'color:#6e7a74;border-bottom:2px solid transparent'}">Templates</a>
-      <a href="/report/crew" style="padding:8px 0;text-decoration:none;font-weight:500;margin-bottom:-2px;${activeTab === 'Crew' ? 'color:#006950;border-bottom:2px solid #006950' : 'color:#6e7a74;border-bottom:2px solid transparent'}">Crew</a>
-      <a href="/report/tasks" style="padding:8px 0;text-decoration:none;font-weight:500;margin-bottom:-2px;${activeTab === 'Tasks' ? 'color:#006950;border-bottom:2px solid #006950' : 'color:#6e7a74;border-bottom:2px solid transparent'}">Tasks</a>
+      <a href="/report" style="padding:8px 0;text-decoration:none;font-weight:500;margin-bottom:-2px;${activeTab === 'Today' ? 'color:#1A6B8A;border-bottom:2px solid #1A6B8A' : 'color:#6e7a74;border-bottom:2px solid transparent'}">Today</a>
+      <a href="/report/history" style="padding:8px 0;text-decoration:none;font-weight:500;margin-bottom:-2px;${activeTab === 'History' ? 'color:#1A6B8A;border-bottom:2px solid #1A6B8A' : 'color:#6e7a74;border-bottom:2px solid transparent'}">History</a>
+      <a href="/report/templates" style="padding:8px 0;text-decoration:none;font-weight:500;margin-bottom:-2px;${activeTab === 'Templates' ? 'color:#1A6B8A;border-bottom:2px solid #1A6B8A' : 'color:#6e7a74;border-bottom:2px solid transparent'}">Templates</a>
+      <a href="/report/crew" style="padding:8px 0;text-decoration:none;font-weight:500;margin-bottom:-2px;${activeTab === 'Crew' ? 'color:#1A6B8A;border-bottom:2px solid #1A6B8A' : 'color:#6e7a74;border-bottom:2px solid transparent'}">Crew</a>
+      <a href="/report/tasks" style="padding:8px 0;text-decoration:none;font-weight:500;margin-bottom:-2px;${activeTab === 'Tasks' ? 'color:#1A6B8A;border-bottom:2px solid #1A6B8A' : 'color:#6e7a74;border-bottom:2px solid transparent'}">Tasks</a>
     </nav>
     ${content}
   </div>

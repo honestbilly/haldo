@@ -103,7 +103,7 @@ app.get('/today', async (c) => {
 function renderWeatherCard(weather: any): string {
   if (!weather) {
     return `
-      <a href="/weather" style="display:block;text-decoration:none;color:inherit;background:linear-gradient(135deg, #006950 0%, #004D3A 100%);border-radius:12px;padding:14px 16px;margin-bottom:12px;min-height:48px">
+      <a href="/weather" style="display:block;text-decoration:none;color:inherit;background:linear-gradient(135deg, #1A6B8A 0%, #004D3A 100%);border-radius:12px;padding:14px 16px;margin-bottom:12px;min-height:48px">
         <div style="display:flex;justify-content:space-between;align-items:center">
           <span style="font-size:0.8125rem;color:rgba(255,255,255,0.7)">Weather loading...</span>
           <span style="color:rgba(255,255,255,0.5)">→</span>
@@ -121,7 +121,7 @@ function renderWeatherCard(weather: any): string {
     : '';
 
   return `
-    <a href="/weather" style="display:block;text-decoration:none;color:inherit;background:linear-gradient(135deg, #006950 0%, #004D3A 100%);border-radius:12px;padding:14px 16px;margin-bottom:12px">
+    <a href="/weather" style="display:block;text-decoration:none;color:inherit;background:linear-gradient(135deg, #1A6B8A 0%, #004D3A 100%);border-radius:12px;padding:14px 16px;margin-bottom:12px">
       <div style="display:flex;justify-content:space-between;align-items:flex-start">
         <div>
           <div style="font-size:1.5rem;font-weight:700;color:white">${weather.currentTemp ? Math.round(weather.currentTemp) + '°' : '--°'}</div>
@@ -265,7 +265,7 @@ function renderTodayList(
   <title>Today — Haldo</title>
   <link rel="stylesheet" href="/public/style.css">
   <link rel="manifest" href="/public/manifest.json">
-  <meta name="theme-color" content="#006950">
+  <meta name="theme-color" content="#1A6B8A">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <link rel="apple-touch-icon" href="/public/apple-touch-icon.png">

@@ -283,7 +283,7 @@ function renderChecklist(session: any, template: ChecklistTemplate, lastEngineHo
   <title>${template.name} — Haldo</title>
   <link rel="stylesheet" href="/public/style.css">
   <link rel="manifest" href="/public/manifest.json">
-  <meta name="theme-color" content="#006950">
+  <meta name="theme-color" content="#1A6B8A">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <link rel="apple-touch-icon" href="/public/apple-touch-icon.png">
@@ -294,14 +294,14 @@ function renderChecklist(session: any, template: ChecklistTemplate, lastEngineHo
     <header class="checklist-header">
       <div style="display:flex;justify-content:space-between;align-items:center">
         <h1>${template.name}</h1>
-        ${canEdit ? `<a href="/c/${template.id}${editMode ? '' : '?edit=1'}" class="edit-toggle-btn" style="font-size:0.75rem;padding:6px 12px;border-radius:6px;text-decoration:none;font-weight:600;${editMode ? 'background:#F36D4F;color:#fff' : 'background:rgba(0,105,80,0.1);color:#006950'}">${editMode ? '✕ Exit Edit' : '✏️ Edit'}</a>` : ''}
+        ${canEdit ? `<a href="/c/${template.id}${editMode ? '' : '?edit=1'}" class="edit-toggle-btn" style="font-size:0.75rem;padding:6px 12px;border-radius:6px;text-decoration:none;font-weight:600;${editMode ? 'background:#F36D4F;color:#fff' : 'background:rgba(26,107,138,0.1);color:#1A6B8A'}">${editMode ? '✕ Exit Edit' : '✏️ Edit'}</a>` : ''}
       </div>
       <p class="checklist-context">${session.vessel.toUpperCase()} | ${session.crew_name} | ${session.trip_slot}</p>
       ${editMode ? `<div style="padding:10px 12px;background:#FFF8E1;border:2px solid #F59E0B;border-radius:8px;margin:8px 0;font-size:0.8125rem;color:#92400E;text-align:center">
         <strong>⚠️ EDIT MODE</strong> — changes update the template for all crew<br>
         <span style="font-size:0.6875rem">Auto-exits in <span id="edit-timer">2:00</span> if no save. Tap a field to edit it.</span>
       </div>` : ''}
-      ${savedMsg ? '<div style="padding:8px 12px;background:rgba(0,105,80,0.08);border-radius:8px;margin:8px 0;font-size:0.8125rem;color:#006950;text-align:center">✓ Changes saved</div>' : ''}
+      ${savedMsg ? '<div style="padding:8px 12px;background:rgba(26,107,138,0.08);border-radius:8px;margin:8px 0;font-size:0.8125rem;color:#1A6B8A;text-align:center">✓ Changes saved</div>' : ''}
       ${editMode ? '' : `<div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div><p class="progress-text" id="progress-text">0 / ${totalItems} items</p>`}
     </header>
 
@@ -320,7 +320,7 @@ function renderChecklist(session: any, template: ChecklistTemplate, lastEngineHo
 
       ${editMode ? `
       <div style="position:sticky;bottom:60px;background:var(--surface);border-top:2px solid #F59E0B;padding:12px;margin:16px -16px 0;display:flex;gap:8px">
-        <button type="button" onclick="confirmSave()" style="flex:1;padding:14px;background:#006950;color:#fff;border:none;border-radius:8px;font-size:1rem;font-weight:600;cursor:pointer;min-height:48px">Save Changes</button>
+        <button type="button" onclick="confirmSave()" style="flex:1;padding:14px;background:#1A6B8A;color:#fff;border:none;border-radius:8px;font-size:1rem;font-weight:600;cursor:pointer;min-height:48px">Save Changes</button>
         <a href="/c/${template.id}" style="display:flex;align-items:center;justify-content:center;padding:14px 20px;background:#fff;border:2px solid #bdc9c2;border-radius:8px;text-decoration:none;color:#1a1c1c;font-weight:500;min-height:48px">Cancel</a>
       </div>
       <script>

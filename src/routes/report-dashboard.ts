@@ -91,9 +91,9 @@ app.get('/report', async (c) => {
   // -- Day Navigation --
   const dayNavHtml = `
     <div style="display:flex;align-items:center;justify-content:center;gap:16px;margin:16px 0">
-      <a href="${buildReportUrl({ date: prevDate }, baseParams)}" style="text-decoration:none;font-size:1.25rem;color:#006950;font-weight:700;padding:4px 10px;border-radius:6px;border:1px solid #bdc9c2;background:#FFFFFF">&larr;</a>
+      <a href="${buildReportUrl({ date: prevDate }, baseParams)}" style="text-decoration:none;font-size:1.25rem;color:#1A6B8A;font-weight:700;padding:4px 10px;border-radius:6px;border:1px solid #bdc9c2;background:#FFFFFF">&larr;</a>
       <input type="date" value="${currentDate}" onchange="var p=new URLSearchParams(window.location.search);p.set('date',this.value);p.delete('from');p.delete('to');window.location='/report?'+p.toString()" style="padding:8px 12px;border:1px solid #bdc9c2;border-radius:8px;font-family:'Inter',-apple-system,sans-serif;font-size:0.9375rem;background:#FFFFFF;color:#1a1c1c">
-      <a href="${buildReportUrl({ date: nextDate }, baseParams)}" style="text-decoration:none;font-size:1.25rem;color:#006950;font-weight:700;padding:4px 10px;border-radius:6px;border:1px solid #bdc9c2;background:#FFFFFF">&rarr;</a>
+      <a href="${buildReportUrl({ date: nextDate }, baseParams)}" style="text-decoration:none;font-size:1.25rem;color:#1A6B8A;font-weight:700;padding:4px 10px;border-radius:6px;border:1px solid #bdc9c2;background:#FFFFFF">&rarr;</a>
     </div>
     <div style="text-align:center;font-size:0.8125rem;color:#6e7a74;margin-bottom:8px">${formatDateDisplay(currentDate)}</div>`;
 
@@ -138,10 +138,10 @@ app.get('/report', async (c) => {
             <div style="font-size:0.8125rem;color:#6e7a74;margin-top:4px">${(a.vessel || '').toUpperCase()} &middot; ${escapeHtml(a.crew_name || '')} &middot; ${escapeHtml(a.template_id)} &middot; ${new Date(a.created_at).toLocaleTimeString()}</div>
           </div>
           <form action="/report/alerts/${a.id}/acknowledge" method="POST" style="display:inline">
-            <button type="submit" style="padding:8px 16px;background:#006950;color:white;border:none;border-radius:8px;font-size:0.8125rem;cursor:pointer">Acknowledge</button>
+            <button type="submit" style="padding:8px 16px;background:#1A6B8A;color:white;border:none;border-radius:8px;font-size:0.8125rem;cursor:pointer">Acknowledge</button>
           </form>
         </div>`).join('')
-    : '<p style="text-align:center;padding:24px;color:#006950;font-weight:500">All clear &mdash; no alerts.</p>';
+    : '<p style="text-align:center;padding:24px;color:#1A6B8A;font-weight:500">All clear &mdash; no alerts.</p>';
 
   // -- Vessel-Grouped Timeline --
   const vesselSections = VESSELS
@@ -193,7 +193,7 @@ app.get('/report', async (c) => {
 
       return `
         <div class="vessel-group" data-vessel-group="${v}">
-          <h3 style="font-family:'Manrope',-apple-system,sans-serif;font-size:1rem;font-weight:700;color:#006950;padding:8px 0;border-bottom:2px solid #006950;margin-bottom:8px;display:flex;align-items:center;gap:8px">${VESSEL_LABELS[v] || v.toUpperCase()} <span style="font-size:0.75rem;font-weight:500;background:rgba(22,142,110,0.1);color:#006950;padding:2px 8px;border-radius:12px">${count}</span></h3>
+          <h3 style="font-family:'Manrope',-apple-system,sans-serif;font-size:1rem;font-weight:700;color:#1A6B8A;padding:8px 0;border-bottom:2px solid #1A6B8A;margin-bottom:8px;display:flex;align-items:center;gap:8px">${VESSEL_LABELS[v] || v.toUpperCase()} <span style="font-size:0.75rem;font-weight:500;background:rgba(22,142,110,0.1);color:#1A6B8A;padding:2px 8px;border-radius:12px">${count}</span></h3>
           ${symbolRow}
           ${logbookCards}
           ${freeFormHtml}
@@ -213,7 +213,7 @@ app.get('/report', async (c) => {
     ${dayNavHtml}
 
     <div style="margin-bottom:16px">
-      <input type="text" id="report-search" placeholder="Search logs... (e.g., oil, engine hours, incident)" style="width:100%;padding:10px 16px;border:2px solid #bdc9c2;border-radius:8px;font-family:'Inter',-apple-system,sans-serif;font-size:0.9375rem;background:#FFFFFF;box-sizing:border-box" onfocus="this.style.borderColor='#006950'" onblur="this.style.borderColor='#bdc9c2'">
+      <input type="text" id="report-search" placeholder="Search logs... (e.g., oil, engine hours, incident)" style="width:100%;padding:10px 16px;border:2px solid #bdc9c2;border-radius:8px;font-family:'Inter',-apple-system,sans-serif;font-size:0.9375rem;background:#FFFFFF;box-sizing:border-box" onfocus="this.style.borderColor='#1A6B8A'" onblur="this.style.borderColor='#bdc9c2'">
     </div>
 
     ${filterBarHtml}
@@ -299,7 +299,7 @@ app.get('/report/history', async (c) => {
 
       return `
         <div class="vessel-group" data-vessel-group="${v}">
-          <h3 style="font-family:'Manrope',-apple-system,sans-serif;font-size:1rem;font-weight:700;color:#006950;padding:8px 0;border-bottom:2px solid #006950;margin-bottom:8px;display:flex;align-items:center;gap:8px">${VESSEL_LABELS[v] || v.toUpperCase()} <span style="font-size:0.75rem;font-weight:500;background:rgba(22,142,110,0.1);color:#006950;padding:2px 8px;border-radius:12px">${byVessel.get(v)!.length}</span></h3>
+          <h3 style="font-family:'Manrope',-apple-system,sans-serif;font-size:1rem;font-weight:700;color:#1A6B8A;padding:8px 0;border-bottom:2px solid #1A6B8A;margin-bottom:8px;display:flex;align-items:center;gap:8px">${VESSEL_LABELS[v] || v.toUpperCase()} <span style="font-size:0.75rem;font-weight:500;background:rgba(22,142,110,0.1);color:#1A6B8A;padding:2px 8px;border-radius:12px">${byVessel.get(v)!.length}</span></h3>
           ${dateSections}
         </div>`;
     }).join('');
@@ -312,7 +312,7 @@ app.get('/report/history', async (c) => {
   const vesselFilterBtns = VESSELS.map(v => {
     const isActive = vessel === v;
     const activeStyle = isActive
-      ? 'border:2px solid #006950;background:#006950;color:white'
+      ? 'border:2px solid #1A6B8A;background:#1A6B8A;color:white'
       : 'border:2px solid #bdc9c2;background:#FFFFFF;color:#1a1c1c';
     const linkParams = new URLSearchParams();
     if (!isActive) linkParams.set('vessel', v);
@@ -335,13 +335,13 @@ app.get('/report/history', async (c) => {
   const allBtnQs = allBtnParams.toString();
   const allBtnHref = `/report/history${allBtnQs ? '?' + allBtnQs : ''}`;
   const allBtnStyle = !vessel
-    ? 'border:2px solid #006950;background:#006950;color:white'
+    ? 'border:2px solid #1A6B8A;background:#1A6B8A;color:white'
     : 'border:2px solid #bdc9c2;background:#FFFFFF;color:#1a1c1c';
 
   return c.html(reportLayout('History', `
     <div style="margin-bottom:16px">
       <form method="GET" action="/report/history" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-        <input type="text" name="q" value="${escapeHtml(search)}" placeholder="Search all logs..." style="flex:1;min-width:200px;padding:8px 12px;border:2px solid #bdc9c2;border-radius:8px;font-family:'Inter',-apple-system,sans-serif;font-size:0.875rem;background:#FFFFFF" onfocus="this.style.borderColor='#006950'" onblur="this.style.borderColor='#bdc9c2'">
+        <input type="text" name="q" value="${escapeHtml(search)}" placeholder="Search all logs..." style="flex:1;min-width:200px;padding:8px 12px;border:2px solid #bdc9c2;border-radius:8px;font-family:'Inter',-apple-system,sans-serif;font-size:0.875rem;background:#FFFFFF" onfocus="this.style.borderColor='#1A6B8A'" onblur="this.style.borderColor='#bdc9c2'">
         <select name="crew_id" style="padding:8px 12px;border:1px solid #bdc9c2;border-radius:8px;font-family:'Inter',-apple-system,sans-serif;font-size:0.875rem">
           <option value="">All crew</option>
           ${crewList.rows.map((cr: any) => `<option value="${cr.id}" ${crewId === cr.id ? 'selected' : ''}>${escapeHtml(cr.name)} (${cr.role})</option>`).join('')}
@@ -353,7 +353,7 @@ app.get('/report/history', async (c) => {
         </select>
         <input type="date" name="from" value="${from}" style="padding:8px 12px;border:1px solid #bdc9c2;border-radius:8px;font-family:'Inter',-apple-system,sans-serif;font-size:0.875rem">
         <input type="date" name="to" value="${to}" style="padding:8px 12px;border:1px solid #bdc9c2;border-radius:8px;font-family:'Inter',-apple-system,sans-serif;font-size:0.875rem">
-        <button type="submit" style="padding:8px 16px;background:#006950;color:white;border:none;border-radius:8px;font-size:0.8125rem;cursor:pointer">Filter</button>
+        <button type="submit" style="padding:8px 16px;background:#1A6B8A;color:white;border:none;border-radius:8px;font-size:0.8125rem;cursor:pointer">Filter</button>
         ${activeFilters > 0 ? `<a href="/report/history" style="color:#F36D4F;font-size:0.8125rem;text-decoration:none">Clear (${activeFilters})</a>` : ''}
       </form>
     </div>

@@ -126,7 +126,7 @@ function renderHandoff(session: SessionData, notes: any[], saved: boolean = fals
   <title>Handoff Notes — Haldo</title>
   <link rel="stylesheet" href="/public/style.css">
   <link rel="manifest" href="/public/manifest.json">
-  <meta name="theme-color" content="#006950">
+  <meta name="theme-color" content="#1A6B8A">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <link rel="apple-touch-icon" href="/public/apple-touch-icon.png">
   <link rel="icon" type="image/png" sizes="32x32" href="/public/favicon-32.png">
@@ -176,7 +176,7 @@ function renderHandoff(session: SessionData, notes: any[], saved: boolean = fals
       <p>${session.vessel.toUpperCase()} — ${session.crew_name}</p>
     </header>
 
-    ${saved ? `<div style="padding:10px 16px;background:rgba(0,105,80,0.08);border-radius:var(--radius);margin-bottom:12px;font-size:0.875rem;color:var(--primary);text-align:center;">✓ Note saved</div>` : ''}
+    ${saved ? `<div style="padding:10px 16px;background:rgba(26,107,138,0.08);border-radius:var(--radius);margin-bottom:12px;font-size:0.875rem;color:var(--primary);text-align:center;">✓ Note saved</div>` : ''}
 
     ${otherNotes.length > 0 ? `
       <h2 class="handoff-section-title">Notes from other crew</h2>

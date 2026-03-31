@@ -88,7 +88,7 @@ app.get('/weather', (c) => {
       const isCurrent = hourNum === currentHour;
 
       return `
-        <div style="display:grid;grid-template-columns:55px 50px 1fr 60px 50px;gap:8px;align-items:center;padding:10px 12px;${isCurrent ? 'background:rgba(0,105,80,0.06);border-radius:8px;font-weight:600' : ''}">
+        <div style="display:grid;grid-template-columns:55px 50px 1fr 60px 50px;gap:8px;align-items:center;padding:10px 12px;${isCurrent ? 'background:rgba(26,107,138,0.06);border-radius:8px;font-weight:600' : ''}">
           <span style="font-size:0.8125rem;color:${isCurrent ? 'var(--primary)' : 'var(--text-muted)'}">${displayHour}${ampm}</span>
           <span style="font-size:0.875rem">${Math.round(h.temperature_f)}°</span>
           <span style="font-size:0.8125rem;color:var(--text-muted)">${h.conditions}</span>
@@ -148,12 +148,12 @@ app.get('/weather', (c) => {
             </div>
           </div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-            <div style="background:rgba(0,105,80,0.04);padding:10px;border-radius:8px">
+            <div style="background:rgba(26,107,138,0.04);padding:10px;border-radius:8px">
               <div style="font-size:0.6875rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em">Wind</div>
               <div style="font-size:1rem;font-weight:600">${Math.round(summary.windSpeed)} kts ${summary.windDirection}</div>
               ${summary.windGust > summary.windSpeed + 3 ? `<div style="font-size:0.75rem;color:var(--text-muted)">Gusts ${Math.round(summary.windGust)} kts</div>` : ''}
             </div>
-            <div style="background:rgba(0,105,80,0.04);padding:10px;border-radius:8px">
+            <div style="background:rgba(26,107,138,0.04);padding:10px;border-radius:8px">
               <div style="font-size:0.6875rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em">Rain</div>
               <div style="font-size:1rem;font-weight:600">${summary.precipChance}%</div>
             </div>

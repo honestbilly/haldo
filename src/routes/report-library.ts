@@ -19,7 +19,7 @@ function subNav(active: string): string {
     { id: 'library', label: 'Library', href: '/report/library' },
   ];
   return `<div style="display:flex;gap:12px;margin-bottom:20px;padding-bottom:8px;border-bottom:1px solid #bdc9c2">
-    ${tabs.map(t => `<a href="${t.href}" style="padding:6px 12px;border-radius:6px;font-size:0.8125rem;font-weight:500;text-decoration:none;${active === t.id ? 'background:#006950;color:white' : 'background:rgba(0,105,80,0.06);color:#006950'}">${t.label}</a>`).join('')}
+    ${tabs.map(t => `<a href="${t.href}" style="padding:6px 12px;border-radius:6px;font-size:0.8125rem;font-weight:500;text-decoration:none;${active === t.id ? 'background:#1A6B8A;color:white' : 'background:rgba(26,107,138,0.06);color:#1A6B8A'}">${t.label}</a>`).join('')}
   </div>`;
 }
 
@@ -87,7 +87,7 @@ app.get('/report/library', async (c) => {
 
       return `
         <div style="margin-bottom:24px">
-          <h3 style="font-family:'Manrope',-apple-system,sans-serif;font-size:0.8125rem;font-weight:700;color:#006950;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px">${info.label} <span style="background:rgba(0,105,80,0.1);color:#006950;padding:2px 6px;border-radius:10px;font-size:0.6875rem">${items.length}</span></h3>
+          <h3 style="font-family:'Manrope',-apple-system,sans-serif;font-size:0.8125rem;font-weight:700;color:#1A6B8A;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px">${info.label} <span style="background:rgba(26,107,138,0.1);color:#1A6B8A;padding:2px 6px;border-radius:10px;font-size:0.6875rem">${items.length}</span></h3>
           <p style="font-size:0.75rem;color:#6e7a74;margin-bottom:8px">${info.desc}</p>
           ${cards}
         </div>`;
@@ -97,7 +97,7 @@ app.get('/report/library', async (c) => {
     ${subNav('library')}
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
       <h2 style="font-family:'Manrope',-apple-system,sans-serif;font-size:1.125rem;font-weight:700">Repeated Task Library</h2>
-      <a href="/report/library/build" style="display:flex;align-items:center;justify-content:center;padding:10px 16px;background:#006950;color:white;border-radius:8px;text-decoration:none;font-weight:600;font-size:0.875rem;min-height:44px">+ Build New</a>
+      <a href="/report/library/build" style="display:flex;align-items:center;justify-content:center;padding:10px 16px;background:#1A6B8A;color:white;border-radius:8px;text-decoration:none;font-weight:600;font-size:0.875rem;min-height:44px">+ Build New</a>
     </div>
     ${groupsHtml}
   `));
@@ -121,7 +121,7 @@ app.get('/report/library/build', async (c) => {
   return c.html(reportLayout('Tasks', `
     ${subNav('library')}
     <div style="margin-bottom:16px">
-      <a href="/report/library" style="color:#006950;text-decoration:none;font-size:0.875rem">← Back to library</a>
+      <a href="/report/library" style="color:#1A6B8A;text-decoration:none;font-size:0.875rem">← Back to library</a>
     </div>
     <h2 style="font-family:'Manrope',-apple-system,sans-serif;font-size:1.125rem;font-weight:700;margin-bottom:16px">${prefill ? 'Clone: ' + escapeHtml(prefill.name) : 'Build New Repeated Task'}</h2>
 
@@ -205,7 +205,7 @@ app.get('/report/library/build', async (c) => {
         <p style="font-size:0.75rem;color:#6e7a74;margin-bottom:12px">Name each day's task. Checklist items go in the next section.</p>
         ${DAYS.map((d, i) => `
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
-            <span style="font-size:0.8125rem;font-weight:600;color:#006950;width:32px">${d.substring(0, 3)}</span>
+            <span style="font-size:0.8125rem;font-weight:600;color:#1A6B8A;width:32px">${d.substring(0, 3)}</span>
             <input type="text" name="day_${i}_name" style="${inputStyle}" placeholder="e.g. ${['Bilge Inspection', 'Engine Room Check', 'Safety Equipment', 'Electrical Systems', 'Hull & Deck', 'Snorkel Gear', 'Deep Clean'][i]}">
           </div>`).join('')}
       </div>
@@ -216,7 +216,7 @@ app.get('/report/library/build', async (c) => {
         <p style="font-size:0.75rem;color:#6e7a74;margin-bottom:12px" id="items-hint">Add the items crew will check off. For DMTs, these items appear on every day's task.</p>
 
         <div id="items-container">
-          <div class="item-row" style="background:rgba(0,105,80,0.03);border-radius:8px;padding:12px;margin-bottom:8px">
+          <div class="item-row" style="background:rgba(26,107,138,0.03);border-radius:8px;padding:12px;margin-bottom:8px">
             <div style="display:grid;grid-template-columns:1fr auto auto;gap:8px;margin-bottom:8px">
               <input type="text" name="items[0].label" style="${inputStyle}" placeholder="Item label (e.g. Check bilge for water)">
               <select name="items[0].type" style="${dropdownStyle};width:120px" onchange="toggleItemFields(this)">
@@ -248,7 +248,7 @@ app.get('/report/library/build', async (c) => {
           </div>
         </div>
 
-        <button type="button" onclick="addItem()" style="width:100%;padding:10px;background:none;border:2px dashed #bdc9c2;border-radius:8px;color:#006950;font-weight:600;font-size:0.8125rem;cursor:pointer;min-height:44px;margin-top:8px">+ Add Item</button>
+        <button type="button" onclick="addItem()" style="width:100%;padding:10px;background:none;border:2px dashed #bdc9c2;border-radius:8px;color:#1A6B8A;font-weight:600;font-size:0.8125rem;cursor:pointer;min-height:44px;margin-top:8px">+ Add Item</button>
       </div>
 
       <!-- Step 4: Advanced -->
@@ -271,7 +271,7 @@ app.get('/report/library/build', async (c) => {
         </div>
       </details>
 
-      <button type="submit" style="width:100%;padding:14px;background:#006950;color:white;border:none;border-radius:8px;font-size:0.9375rem;font-weight:600;cursor:pointer;min-height:48px">Save to Library</button>
+      <button type="submit" style="width:100%;padding:14px;background:#1A6B8A;color:white;border:none;border-radius:8px;font-size:0.9375rem;font-weight:600;cursor:pointer;min-height:48px">Save to Library</button>
     </form>
 
     <script>
@@ -303,7 +303,7 @@ app.get('/report/library/build', async (c) => {
       function addItem() {
         var idx = itemCount++;
         var container = document.getElementById('items-container');
-        var html = '<div class="item-row" style="background:rgba(0,105,80,0.03);border-radius:8px;padding:12px;margin-bottom:8px">'
+        var html = '<div class="item-row" style="background:rgba(26,107,138,0.03);border-radius:8px;padding:12px;margin-bottom:8px">'
           + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">'
           + '<span style="font-size:0.75rem;color:#6e7a74">Item ' + (idx + 1) + '</span>'
           + '<button type="button" onclick="this.closest(\\'.item-row\\').remove()" style="background:none;border:none;color:#F36D4F;font-size:0.875rem;cursor:pointer;padding:4px 8px">✕ Remove</button>'
@@ -489,7 +489,7 @@ app.get('/report/library/:templateId', async (c) => {
     return c.html(reportLayout('Tasks', `
       ${subNav('library')}
       <p style="color:#F36D4F">Template "${escapeHtml(templateId)}" not found.</p>
-      <a href="/report/library" style="color:#006950">← Back to library</a>
+      <a href="/report/library" style="color:#1A6B8A">← Back to library</a>
     `));
   }
 
@@ -508,10 +508,10 @@ app.get('/report/library/:templateId', async (c) => {
   return c.html(reportLayout('Tasks', `
     ${subNav('library')}
     <div style="margin-bottom:16px">
-      <a href="/report/library" style="color:#006950;text-decoration:none;font-size:0.875rem">← Back to library</a>
+      <a href="/report/library" style="color:#1A6B8A;text-decoration:none;font-size:0.875rem">← Back to library</a>
     </div>
 
-    ${saved ? '<div style="padding:10px 16px;background:rgba(0,105,80,0.08);border-radius:8px;margin-bottom:12px;font-size:0.875rem;color:#006950;text-align:center">✓ Template saved</div>' : ''}
+    ${saved ? '<div style="padding:10px 16px;background:rgba(26,107,138,0.08);border-radius:8px;margin-bottom:12px;font-size:0.875rem;color:#1A6B8A;text-align:center">✓ Template saved</div>' : ''}
 
     <div style="background:#FFFFFF;border-radius:8px;padding:16px;margin-bottom:16px">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
@@ -519,7 +519,7 @@ app.get('/report/library/:templateId', async (c) => {
           <h2 style="font-family:'Manrope',-apple-system,sans-serif;font-size:1.125rem;font-weight:700">${escapeHtml(template.name)}</h2>
           <div style="font-size:0.8125rem;color:#6e7a74;margin-top:4px">${vesselLabel} · ${roleLabel} · ${triggerInfo.label}</div>
         </div>
-        <span style="font-size:0.6875rem;padding:2px 8px;border-radius:12px;background:rgba(0,105,80,0.1);color:#006950">${itemCount} items · ${sectionCount} sections</span>
+        <span style="font-size:0.6875rem;padding:2px 8px;border-radius:12px;background:rgba(26,107,138,0.1);color:#1A6B8A">${itemCount} items · ${sectionCount} sections</span>
       </div>
 
       ${ct.estimated_minutes ? `<div style="font-size:0.8125rem;color:#6e7a74">Estimated: ~${ct.estimated_minutes} min</div>` : ''}
@@ -530,7 +530,7 @@ app.get('/report/library/:templateId', async (c) => {
       <textarea name="json" style="width:100%;min-height:400px;padding:16px;border:2px solid #bdc9c2;border-radius:8px;font-family:'Menlo','Monaco','Consolas',monospace;font-size:13px;line-height:1.5;background:#FFFFFF;color:#1a1c1c;resize:vertical;tab-size:2;white-space:pre" spellcheck="false">${escapeHtml(jsonStr)}</textarea>
 
       <div style="display:flex;gap:8px;margin-top:12px">
-        <button type="submit" style="flex:1;padding:14px;background:#006950;color:white;border:none;border-radius:8px;font-size:0.9375rem;font-weight:600;cursor:pointer;min-height:48px">Save Changes</button>
+        <button type="submit" style="flex:1;padding:14px;background:#1A6B8A;color:white;border:none;border-radius:8px;font-size:0.9375rem;font-weight:600;cursor:pointer;min-height:48px">Save Changes</button>
         <a href="/report/library/build?from=${encodeURIComponent(templateId)}" style="display:flex;align-items:center;justify-content:center;padding:14px 20px;background:#FFFFFF;border:2px solid #bdc9c2;border-radius:8px;font-size:0.875rem;font-weight:500;text-decoration:none;color:#1a1c1c;min-height:48px">Clone</a>
       </div>
     </form>

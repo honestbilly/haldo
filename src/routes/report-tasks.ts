@@ -13,8 +13,8 @@ const app = new Hono();
 const STATUS_BADGES: Record<string, { label: string; bg: string; color: string }> = {
   'pending':     { label: 'In Queue',    bg: 'rgba(110,122,116,0.1)', color: '#6e7a74' },
   'assigned':    { label: 'Assigned',    bg: 'rgba(112,208,235,0.15)', color: '#0C7DA0' },
-  'in-progress': { label: 'In Progress', bg: 'rgba(0,105,80,0.1)', color: '#006950' },
-  'completed':   { label: 'Completed',   bg: 'rgba(0,105,80,0.15)', color: '#006950' },
+  'in-progress': { label: 'In Progress', bg: 'rgba(26,107,138,0.1)', color: '#1A6B8A' },
+  'completed':   { label: 'Completed',   bg: 'rgba(26,107,138,0.15)', color: '#1A6B8A' },
   'blocked':     { label: 'Blocked',     bg: 'rgba(243,109,79,0.12)', color: '#F36D4F' },
   'snoozed':     { label: 'Snoozed',     bg: 'rgba(110,122,116,0.08)', color: '#9ca3af' },
   'cancelled':   { label: 'Cancelled',   bg: 'rgba(110,122,116,0.08)', color: '#9ca3af' },
@@ -51,7 +51,7 @@ function subNav(active: string): string {
     { id: 'library', label: 'Library', href: '/report/library' },
   ];
   return `<div style="display:flex;gap:12px;margin-bottom:20px;padding-bottom:8px;border-bottom:1px solid #bdc9c2">
-    ${tabs.map(t => `<a href="${t.href}" style="padding:6px 12px;border-radius:6px;font-size:0.8125rem;font-weight:500;text-decoration:none;${active === t.id ? 'background:#006950;color:white' : 'background:rgba(0,105,80,0.06);color:#006950'}">${t.label}</a>`).join('')}
+    ${tabs.map(t => `<a href="${t.href}" style="padding:6px 12px;border-radius:6px;font-size:0.8125rem;font-weight:500;text-decoration:none;${active === t.id ? 'background:#1A6B8A;color:white' : 'background:rgba(26,107,138,0.06);color:#1A6B8A'}">${t.label}</a>`).join('')}
   </div>`;
 }
 
@@ -109,7 +109,7 @@ app.get('/report/tasks', async (c) => {
   }
 
   const renderTaskCard = (t: any) => {
-    const borderColor = t.status === 'blocked' ? '#F36D4F' : t.priority === 'urgent' ? '#ba1a1a' : t.priority === 'high' ? '#F36D4F' : '#006950';
+    const borderColor = t.status === 'blocked' ? '#F36D4F' : t.priority === 'urgent' ? '#ba1a1a' : t.priority === 'high' ? '#F36D4F' : '#1A6B8A';
     const dueStr = t.due_date ? new Date(t.due_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '';
     const assigneeStr = t.assignee_name || (t.assigned_to ? 'Unknown' : 'Unassigned');
 
@@ -135,7 +135,7 @@ app.get('/report/tasks', async (c) => {
     const vTasks = byVessel.get(v)!;
     return `
       <div style="margin-bottom:20px">
-        <h3 style="font-family:'Manrope',-apple-system,sans-serif;font-size:0.8125rem;font-weight:700;color:#006950;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px">${VESSEL_LABELS[v] || v} <span style="background:rgba(0,105,80,0.1);color:#006950;padding:2px 6px;border-radius:10px;font-size:0.6875rem">${vTasks.length}</span></h3>
+        <h3 style="font-family:'Manrope',-apple-system,sans-serif;font-size:0.8125rem;font-weight:700;color:#1A6B8A;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px">${VESSEL_LABELS[v] || v} <span style="background:rgba(26,107,138,0.1);color:#1A6B8A;padding:2px 6px;border-radius:10px;font-size:0.6875rem">${vTasks.length}</span></h3>
         ${vTasks.map(renderTaskCard).join('')}
       </div>`;
   }).join('');
@@ -160,7 +160,7 @@ app.get('/report/tasks', async (c) => {
           `<option value="/report/tasks?vessel=${v}${statusFilter ? '&status=' + statusFilter : ''}" ${vesselFilter === v ? 'selected' : ''}>${VESSEL_LABELS[v]}</option>`
         ).join('')}
       </select>
-      <a href="/report/tasks/create" style="display:flex;align-items:center;justify-content:center;padding:10px;background:#006950;color:white;border-radius:8px;text-decoration:none;font-weight:600;font-size:0.875rem;min-height:44px">+ New Task</a>
+      <a href="/report/tasks/create" style="display:flex;align-items:center;justify-content:center;padding:10px;background:#1A6B8A;color:white;border-radius:8px;text-decoration:none;font-weight:600;font-size:0.875rem;min-height:44px">+ New Task</a>
     </div>`;
 
   return c.html(reportLayout('Tasks', `
@@ -192,7 +192,7 @@ app.get('/report/tasks/create', async (c) => {
   return c.html(reportLayout('Tasks', `
     ${subNav('list')}
     <div style="margin-bottom:16px">
-      <a href="/report/tasks" style="color:#006950;text-decoration:none;font-size:0.875rem">← Back to tasks</a>
+      <a href="/report/tasks" style="color:#1A6B8A;text-decoration:none;font-size:0.875rem">← Back to tasks</a>
     </div>
     <h2 style="font-family:'Manrope',-apple-system,sans-serif;font-size:1.125rem;font-weight:700;margin-bottom:16px">${fromSubmission ? 'Create Task from Submission' : 'Create New Task'}</h2>
 
@@ -251,7 +251,7 @@ app.get('/report/tasks/create', async (c) => {
         <textarea name="notes" style="${textareaStyle}" placeholder="Warranty info, vendor contacts, special instructions..."></textarea>
       </div>
 
-      <button type="submit" style="width:100%;padding:14px;background:#006950;color:white;border:none;border-radius:8px;font-size:0.9375rem;font-weight:600;cursor:pointer;min-height:48px">Create Task</button>
+      <button type="submit" style="width:100%;padding:14px;background:#1A6B8A;color:white;border:none;border-radius:8px;font-size:0.9375rem;font-weight:600;cursor:pointer;min-height:48px">Create Task</button>
     </form>
   `));
 });
@@ -302,7 +302,7 @@ app.get('/report/tasks/:id', async (c) => {
     [taskId]
   );
   const task = result.rows[0];
-  if (!task) return c.html(reportLayout('Tasks', '<p style="color:#F36D4F">Task not found.</p><a href="/report/tasks" style="color:#006950">← Back</a>'));
+  if (!task) return c.html(reportLayout('Tasks', '<p style="color:#F36D4F">Task not found.</p><a href="/report/tasks" style="color:#1A6B8A">← Back</a>'));
 
   const crewList = await pool.query('SELECT id, name, role FROM crew WHERE active = TRUE ORDER BY role, name');
   const saved = c.req.query('saved') === '1';
@@ -310,10 +310,10 @@ app.get('/report/tasks/:id', async (c) => {
   return c.html(reportLayout('Tasks', `
     ${subNav('list')}
     <div style="margin-bottom:16px">
-      <a href="/report/tasks" style="color:#006950;text-decoration:none;font-size:0.875rem">← Back to tasks</a>
+      <a href="/report/tasks" style="color:#1A6B8A;text-decoration:none;font-size:0.875rem">← Back to tasks</a>
     </div>
 
-    ${saved ? '<div style="padding:10px 16px;background:rgba(0,105,80,0.08);border-radius:8px;margin-bottom:12px;font-size:0.875rem;color:#006950;text-align:center">✓ Task updated</div>' : ''}
+    ${saved ? '<div style="padding:10px 16px;background:rgba(26,107,138,0.08);border-radius:8px;margin-bottom:12px;font-size:0.875rem;color:#1A6B8A;text-align:center">✓ Task updated</div>' : ''}
 
     <form action="/report/tasks/${escapeHtml(taskId)}" method="POST">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
@@ -388,12 +388,12 @@ app.get('/report/tasks/:id', async (c) => {
       </div>
 
       <div style="display:flex;gap:8px">
-        <button type="submit" style="flex:1;padding:14px;background:#006950;color:white;border:none;border-radius:8px;font-size:0.9375rem;font-weight:600;cursor:pointer;min-height:48px">Save Changes</button>
+        <button type="submit" style="flex:1;padding:14px;background:#1A6B8A;color:white;border:none;border-radius:8px;font-size:0.9375rem;font-weight:600;cursor:pointer;min-height:48px">Save Changes</button>
         ${task.status !== 'snoozed' ? `<button type="submit" name="snooze" value="1" style="padding:14px 20px;background:#FFFFFF;border:2px solid #bdc9c2;border-radius:8px;font-size:0.875rem;font-weight:500;cursor:pointer;color:#6e7a74;min-height:48px">Snooze 90d</button>` : ''}
       </div>
     </form>
 
-    ${task.source_submission_id ? `<div style="margin-top:16px;font-size:0.75rem;color:#6e7a74">Created from <a href="/report/inbox/${escapeHtml(task.source_submission_id)}" style="color:#006950">crew submission</a></div>` : ''}
+    ${task.source_submission_id ? `<div style="margin-top:16px;font-size:0.75rem;color:#6e7a74">Created from <a href="/report/inbox/${escapeHtml(task.source_submission_id)}" style="color:#1A6B8A">crew submission</a></div>` : ''}
     ${task.completed_at ? `<div style="margin-top:8px;font-size:0.75rem;color:#6e7a74">Completed ${new Date(task.completed_at).toLocaleString()}</div>` : ''}
     <div style="margin-top:4px;font-size:0.6875rem;color:#9ca3af">Created ${new Date(task.created_at).toLocaleString()}</div>
   `));
@@ -539,7 +539,7 @@ app.get('/report/inbox/:id', async (c) => {
     [subId]
   );
   const sub = result.rows[0];
-  if (!sub) return c.html(reportLayout('Tasks', '<p style="color:#F36D4F">Submission not found.</p><a href="/report/inbox" style="color:#006950">← Back</a>'));
+  if (!sub) return c.html(reportLayout('Tasks', '<p style="color:#F36D4F">Submission not found.</p><a href="/report/inbox" style="color:#1A6B8A">← Back</a>'));
 
   const saved = c.req.query('saved') === '1';
   const icon = CATEGORY_ICONS[sub.category] || '💬';
@@ -549,10 +549,10 @@ app.get('/report/inbox/:id', async (c) => {
   return c.html(reportLayout('Tasks', `
     ${subNav('inbox')}
     <div style="margin-bottom:16px">
-      <a href="/report/inbox" style="color:#006950;text-decoration:none;font-size:0.875rem">← Back to inbox</a>
+      <a href="/report/inbox" style="color:#1A6B8A;text-decoration:none;font-size:0.875rem">← Back to inbox</a>
     </div>
 
-    ${saved ? '<div style="padding:10px 16px;background:rgba(0,105,80,0.08);border-radius:8px;margin-bottom:12px;font-size:0.875rem;color:#006950;text-align:center">✓ Submission updated</div>' : ''}
+    ${saved ? '<div style="padding:10px 16px;background:rgba(26,107,138,0.08);border-radius:8px;margin-bottom:12px;font-size:0.875rem;color:#1A6B8A;text-align:center">✓ Submission updated</div>' : ''}
 
     <div style="background:#FFFFFF;border-radius:8px;padding:16px;margin-bottom:16px">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
@@ -560,7 +560,7 @@ app.get('/report/inbox/:id', async (c) => {
         <h2 style="font-family:'Manrope',-apple-system,sans-serif;font-size:1.125rem;font-weight:700">${escapeHtml(sub.title)}</h2>
       </div>
       <div style="font-size:0.8125rem;color:#6e7a74;margin-bottom:12px">${escapeHtml(sub.crew_name)} · ${VESSEL_LABELS[sub.vessel] || sub.vessel} · ${catLabel} · ${time}</div>
-      ${sub.details ? `<div style="font-size:0.9375rem;line-height:1.6;padding:12px;background:rgba(0,105,80,0.03);border-radius:6px">${escapeHtml(sub.details)}</div>` : '<p style="color:#6e7a74;font-style:italic">No additional details</p>'}
+      ${sub.details ? `<div style="font-size:0.9375rem;line-height:1.6;padding:12px;background:rgba(26,107,138,0.03);border-radius:6px">${escapeHtml(sub.details)}</div>` : '<p style="color:#6e7a74;font-style:italic">No additional details</p>'}
     </div>
 
     <form action="/report/inbox/${escapeHtml(subId)}" method="POST">
@@ -590,8 +590,8 @@ app.get('/report/inbox/:id', async (c) => {
       </div>
 
       <div style="display:flex;gap:8px">
-        <button type="submit" style="flex:1;padding:14px;background:#006950;color:white;border:none;border-radius:8px;font-size:0.9375rem;font-weight:600;cursor:pointer;min-height:48px">Update Submission</button>
-        <a href="/report/tasks/create?from_submission=${escapeHtml(subId)}" style="display:flex;align-items:center;justify-content:center;padding:14px 16px;background:#FFFFFF;border:2px solid #006950;border-radius:8px;font-size:0.875rem;font-weight:600;text-decoration:none;color:#006950;min-height:48px;white-space:nowrap">→ Create Task</a>
+        <button type="submit" style="flex:1;padding:14px;background:#1A6B8A;color:white;border:none;border-radius:8px;font-size:0.9375rem;font-weight:600;cursor:pointer;min-height:48px">Update Submission</button>
+        <a href="/report/tasks/create?from_submission=${escapeHtml(subId)}" style="display:flex;align-items:center;justify-content:center;padding:14px 16px;background:#FFFFFF;border:2px solid #1A6B8A;border-radius:8px;font-size:0.875rem;font-weight:600;text-decoration:none;color:#1A6B8A;min-height:48px;white-space:nowrap">→ Create Task</a>
       </div>
     </form>
   `));
@@ -674,12 +674,12 @@ app.get('/report/schedule', async (c) => {
       const renderTemplates = (templates: any[]) => templates.map(t => {
         const done = completionSet.has(`${vessel}:${t.id}:${date}`);
         const name = t.name.replace(/\s*—\s*(Captain|Deckhand|Mate)$/i, '');
-        return `<span style="font-size:0.6875rem;${done ? 'color:#006950' : isToday ? 'color:#1a1c1c;font-weight:600' : 'color:#6e7a74'}">${done ? '✓' : '○'} ${escapeHtml(name)}</span>`;
+        return `<span style="font-size:0.6875rem;${done ? 'color:#1A6B8A' : isToday ? 'color:#1a1c1c;font-weight:600' : 'color:#6e7a74'}">${done ? '✓' : '○'} ${escapeHtml(name)}</span>`;
       }).join('<br>');
 
       return `
-        <tr style="${isToday ? 'background:rgba(0,105,80,0.04)' : ''}">
-          <td style="padding:8px;font-size:0.8125rem;font-weight:${isToday ? '600' : '400'};color:${isToday ? '#006950' : '#1a1c1c'};white-space:nowrap;vertical-align:top">${dayLabels[i]}</td>
+        <tr style="${isToday ? 'background:rgba(26,107,138,0.04)' : ''}">
+          <td style="padding:8px;font-size:0.8125rem;font-weight:${isToday ? '600' : '400'};color:${isToday ? '#1A6B8A' : '#1a1c1c'};white-space:nowrap;vertical-align:top">${dayLabels[i]}</td>
           <td style="padding:8px;vertical-align:top">${captainTemplates.length > 0 ? renderTemplates(captainTemplates) : '<span style="font-size:0.6875rem;color:#bdc9c2">—</span>'}</td>
           <td style="padding:8px;vertical-align:top">${deckhandTemplates.length > 0 ? renderTemplates(deckhandTemplates) : '<span style="font-size:0.6875rem;color:#bdc9c2">—</span>'}</td>
         </tr>`;
@@ -687,7 +687,7 @@ app.get('/report/schedule', async (c) => {
 
     return `
       <div style="margin-bottom:24px">
-        <h3 style="font-family:'Manrope',-apple-system,sans-serif;font-size:0.875rem;font-weight:700;color:#006950;margin-bottom:8px">${VESSEL_LABELS[vessel] || vessel}</h3>
+        <h3 style="font-family:'Manrope',-apple-system,sans-serif;font-size:0.875rem;font-weight:700;color:#1A6B8A;margin-bottom:8px">${VESSEL_LABELS[vessel] || vessel}</h3>
         <div style="overflow-x:auto">
           <table style="width:100%;border-collapse:collapse;background:#FFFFFF;border-radius:8px;overflow:hidden">
             <thead>
@@ -708,11 +708,11 @@ app.get('/report/schedule', async (c) => {
   return c.html(reportLayout('Tasks', `
     ${subNav('schedule')}
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
-      <a href="/report/schedule?week=${weekOffset - 1}" style="padding:8px 12px;background:#FFFFFF;border:1px solid #bdc9c2;border-radius:6px;text-decoration:none;color:#006950;font-size:0.875rem;min-height:36px;display:flex;align-items:center">← Prev</a>
+      <a href="/report/schedule?week=${weekOffset - 1}" style="padding:8px 12px;background:#FFFFFF;border:1px solid #bdc9c2;border-radius:6px;text-decoration:none;color:#1A6B8A;font-size:0.875rem;min-height:36px;display:flex;align-items:center">← Prev</a>
       <span style="font-weight:600;font-size:0.9375rem">${weekLabel}</span>
-      <a href="/report/schedule?week=${weekOffset + 1}" style="padding:8px 12px;background:#FFFFFF;border:1px solid #bdc9c2;border-radius:6px;text-decoration:none;color:#006950;font-size:0.875rem;min-height:36px;display:flex;align-items:center">Next →</a>
+      <a href="/report/schedule?week=${weekOffset + 1}" style="padding:8px 12px;background:#FFFFFF;border:1px solid #bdc9c2;border-radius:6px;text-decoration:none;color:#1A6B8A;font-size:0.875rem;min-height:36px;display:flex;align-items:center">Next →</a>
     </div>
-    ${weekOffset !== 0 ? `<a href="/report/schedule" style="display:block;text-align:center;font-size:0.75rem;color:#006950;margin-bottom:12px">Jump to this week</a>` : ''}
+    ${weekOffset !== 0 ? `<a href="/report/schedule" style="display:block;text-align:center;font-size:0.75rem;color:#1A6B8A;margin-bottom:12px">Jump to this week</a>` : ''}
     ${vesselGrids || '<p style="text-align:center;color:#6e7a74;padding:40px 0">No scheduled templates found.</p>'}
     <div style="text-align:center;padding:8px;font-size:0.6875rem;color:#6e7a74">✓ = completed · ○ = pending</div>
   `));

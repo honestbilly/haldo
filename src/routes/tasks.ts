@@ -23,9 +23,9 @@ const PRIORITY_COLORS: Record<string, string> = {
 
 const STATUS_LABELS: Record<string, { label: string; color: string }> = {
   'pending': { label: 'In Queue', color: '#6e7a74' },
-  'in-progress': { label: 'In Progress', color: '#006950' },
+  'in-progress': { label: 'In Progress', color: '#1A6B8A' },
   'blocked': { label: 'Blocked', color: '#F36D4F' },
-  'completed': { label: 'Done', color: '#006950' },
+  'completed': { label: 'Done', color: '#1A6B8A' },
 };
 
 // ─── Task Queue (browse/claim unassigned tasks) ─────────────
@@ -94,7 +94,7 @@ app.get('/:id', async (c) => {
   );
   const task = result.rows[0];
   if (!task) {
-    return c.html(`${htmlHead('Task Not Found')}<body><div style="max-width:480px;margin:0 auto;padding:16px"><p>Task not found.</p><a href="/today" style="color:#006950">← Home</a></div>${bottomNav('home')}</body></html>`);
+    return c.html(`${htmlHead('Task Not Found')}<body><div style="max-width:480px;margin:0 auto;padding:16px"><p>Task not found.</p><a href="/today" style="color:#1A6B8A">← Home</a></div>${bottomNav('home')}</body></html>`);
   }
 
   const isMyTask = task.assigned_to === session.crew_id;
@@ -114,19 +114,19 @@ app.get('/:id', async (c) => {
   if (isUnassigned && vesselMatch && task.status === 'pending') {
     actionHtml = `
       <form action="/tasks/${task.id}/claim" method="POST" style="margin-top:16px">
-        <button type="submit" style="width:100%;padding:14px;background:#006950;color:white;border:none;border-radius:8px;font-size:0.9375rem;font-weight:600;cursor:pointer;min-height:48px">I'll Take This</button>
+        <button type="submit" style="width:100%;padding:14px;background:#1A6B8A;color:white;border:none;border-radius:8px;font-size:0.9375rem;font-weight:600;cursor:pointer;min-height:48px">I'll Take This</button>
       </form>`;
   } else if (isMyTask && task.status === 'pending') {
     actionHtml = `
       <form action="/tasks/${task.id}/status" method="POST" style="margin-top:16px">
         <input type="hidden" name="status" value="in-progress">
-        <button type="submit" style="width:100%;padding:14px;background:#006950;color:white;border:none;border-radius:8px;font-size:0.9375rem;font-weight:600;cursor:pointer;min-height:48px">Start Working</button>
+        <button type="submit" style="width:100%;padding:14px;background:#1A6B8A;color:white;border:none;border-radius:8px;font-size:0.9375rem;font-weight:600;cursor:pointer;min-height:48px">Start Working</button>
       </form>`;
   } else if (isMyTask && task.status === 'in-progress') {
     actionHtml = `
       <form action="/tasks/${task.id}/status" method="POST" style="margin-top:16px">
         <input type="hidden" name="status" value="completed">
-        <button type="submit" style="width:100%;padding:14px;background:#006950;color:white;border:none;border-radius:8px;font-size:0.9375rem;font-weight:600;cursor:pointer;min-height:48px">✓ Mark Complete</button>
+        <button type="submit" style="width:100%;padding:14px;background:#1A6B8A;color:white;border:none;border-radius:8px;font-size:0.9375rem;font-weight:600;cursor:pointer;min-height:48px">✓ Mark Complete</button>
       </form>`;
   }
 
@@ -135,38 +135,38 @@ app.get('/:id', async (c) => {
   <div style="max-width:480px;margin:0 auto;padding:16px;padding-bottom:80px">
     ${pageHeader('Task', session.vessel)}
 
-    ${saved ? '<div style="padding:10px;background:rgba(0,105,80,0.08);border-radius:8px;margin-bottom:12px;font-size:0.875rem;color:#006950;text-align:center">✓ Updated</div>' : ''}
+    ${saved ? '<div style="padding:10px;background:rgba(26,107,138,0.08);border-radius:8px;margin-bottom:12px;font-size:0.875rem;color:#1A6B8A;text-align:center">✓ Updated</div>' : ''}
 
     <!-- Task card -->
     <div style="background:var(--surface);border-radius:12px;padding:16px;border:1px solid var(--border);margin-bottom:12px">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
         <h2 style="font-family:var(--font-heading);font-size:1.125rem;font-weight:700;flex:1">${escHtml(task.title)}</h2>
-        <span style="font-size:0.6875rem;padding:3px 10px;border-radius:12px;background:${status.color === '#006950' ? 'rgba(0,105,80,0.1)' : status.color === '#F36D4F' ? 'rgba(243,109,79,0.12)' : 'rgba(110,122,116,0.1)'};color:${status.color};font-weight:500;white-space:nowrap;margin-left:8px">${status.label}</span>
+        <span style="font-size:0.6875rem;padding:3px 10px;border-radius:12px;background:${status.color === '#1A6B8A' ? 'rgba(26,107,138,0.1)' : status.color === '#F36D4F' ? 'rgba(243,109,79,0.12)' : 'rgba(110,122,116,0.1)'};color:${status.color};font-weight:500;white-space:nowrap;margin-left:8px">${status.label}</span>
       </div>
 
       ${task.description ? `<div style="font-size:0.9375rem;line-height:1.6;margin-bottom:12px;color:var(--text)">${escHtml(task.description)}</div>` : ''}
 
       <div style="display:grid;grid-template-columns:1fr 1fr${task.estimated_minutes ? ' 1fr' : ''};gap:8px;margin-bottom:12px">
-        <div style="background:rgba(0,105,80,0.03);padding:8px 10px;border-radius:6px">
+        <div style="background:rgba(26,107,138,0.03);padding:8px 10px;border-radius:6px">
           <div style="font-size:0.6875rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em">Priority</div>
           <div style="font-size:0.875rem;font-weight:500;color:${priorityColor}">${priorityLabel}</div>
         </div>
-        <div style="background:rgba(0,105,80,0.03);padding:8px 10px;border-radius:6px">
+        <div style="background:rgba(26,107,138,0.03);padding:8px 10px;border-radius:6px">
           <div style="font-size:0.6875rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em">Vessel</div>
           <div style="font-size:0.875rem;font-weight:500">${task.vessel ? task.vessel.toUpperCase() : 'Any'}</div>
         </div>
-        ${task.estimated_minutes ? `<div style="background:rgba(0,105,80,0.03);padding:8px 10px;border-radius:6px">
+        ${task.estimated_minutes ? `<div style="background:rgba(26,107,138,0.03);padding:8px 10px;border-radius:6px">
           <div style="font-size:0.6875rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em">Est. Time</div>
           <div style="font-size:0.875rem;font-weight:500">~${task.estimated_minutes} min</div>
         </div>` : ''}
       </div>
 
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-        <div style="background:rgba(0,105,80,0.03);padding:8px 10px;border-radius:6px">
+        <div style="background:rgba(26,107,138,0.03);padding:8px 10px;border-radius:6px">
           <div style="font-size:0.6875rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em">Assigned To</div>
           <div style="font-size:0.875rem;font-weight:500">${task.assignee_name || (isUnassigned ? '<span style="color:var(--text-muted);font-style:italic">Unclaimed</span>' : 'Unknown')}</div>
         </div>
-        ${dueStr ? `<div style="background:rgba(0,105,80,0.03);padding:8px 10px;border-radius:6px">
+        ${dueStr ? `<div style="background:rgba(26,107,138,0.03);padding:8px 10px;border-radius:6px">
           <div style="font-size:0.6875rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em">Due</div>
           <div style="font-size:0.875rem;font-weight:500">${dueStr}</div>
         </div>` : ''}
