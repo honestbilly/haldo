@@ -1,7 +1,6 @@
 // Haldo Service Worker — offline support + form queue
-const CACHE_NAME = 'haldo-v1';
+const CACHE_NAME = 'haldo-v2';
 const STATIC_ASSETS = [
-  '/',
   '/public/style.css',
   '/public/app.js',
   '/public/manifest.json',
@@ -61,8 +60,8 @@ self.addEventListener('fetch', (event) => {
   event.respondWith(
     fetch(event.request)
       .then(response => {
-        // Cache successful GET responses for static assets
-        if (response.ok && (url.pathname.startsWith('/public/') || url.pathname === '/')) {
+        // Only cache static assets (CSS, JS, images) — never cache HTML pages
+        if (response.ok && url.pathname.startsWith('/public/')) {
           const clone = response.clone();
           caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
         }
