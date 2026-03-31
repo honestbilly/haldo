@@ -73,34 +73,61 @@ Railway auto-deploys when you push to `main`.
 
 ## Managing Crew
 
-Crew come and go. To manage them:
+Crew roles: **Captain** and **Deckhand** (not "mate" — updated 2026-03-30).
 
-**Via Claude Code (recommended):**
-- "Add a new mate named Alex to SQUID" → Claude uses the MCP `add_crew_member` tool
-- "Deactivate Brady, he left" → Claude uses `update_crew` with `active: false`
-- Brady's historical completions are preserved; he just disappears from the name dropdown
+**Via Manager Dashboard:**
+- Go to `/report/crew` — see all crew, generate login links
+- Login links: one-time tap, stays logged in 365 days. Send via WhatsApp.
 
-**Via seed script:**
-```bash
-# The seed script in scripts/seed.ts has the crew list
-# Edit it and re-run: npm run seed
-```
+**Via Claude Code (MCP):**
+- "Add a new deckhand named Alex to SQUID" → `add_crew_member` tool
+- "Deactivate Brady, he left" → `update_crew` with `active: false`
+- Historical data preserved; they disappear from the name dropdown
 
 ## Managing Checklists
 
-Checklists are JSON files in the `/templates/` directory. Claude manages them.
+Checklists are JSON files in `/templates/`. Two ways to manage them:
 
-**To add a new checklist:**
-Tell Claude what you want. Example: "Add a monthly safety drill checklist for captains."
-Claude creates the JSON template via the MCP `create_template` tool and it appears in the app immediately.
+**Via Manager Dashboard (recommended for non-technical users):**
+- Go to `/report/templates` — see all checklists grouped by category
+- Click to edit (JSON editor with validation)
+- Clone button to duplicate for another vessel
+- Save validates JSON and reloads immediately
 
-**To update an existing checklist:**
-"Change the snorkel inventory minimum for adult masks from 14 to 16."
-Claude updates the template via MCP `update_template`.
+**Via Claude Code (MCP):**
+- "Add a monthly safety drill checklist for captains" → `create_template`
+- "Change snorkel inventory minimum for adult masks to 16" → `update_template`
+- "What checklists show for a deckhand on SQUID next week?" → `preview_schedule`
 
-**To preview the schedule:**
-"What checklists will show for a mate on SQUID next week?"
-Claude calls `preview_schedule` and shows you the day-by-day list.
+## Database Tables (as of 2026-03-30)
+
+| Table | Purpose |
+|-------|---------|
+| `vessels` | 5 vessels with name, slug, COI flag |
+| `crew` | Crew members with role (captain/deckhand) |
+| `completions` | All checklist, logbook, and free-form log submissions |
+| `alerts` | Threshold violations from checklist submissions |
+| `handoff_notes` | Crew-to-crew notes, auto-expire 24hrs |
+| `submissions` | Crew feedback (maintenance, safety, suggestions, kudos) |
+| `assigned_tasks` | Manager-assigned tasks to vessel/crew |
+| `auth_tokens` | Persistent login tokens |
+| `settings` | App configuration |
+| `trip_config` | Trip slots per vessel |
+
+## Navigation (Crew Side)
+
+- **Home** (`/today`) — Today's checklists, DMT pinned, assigned tasks
+- **Submit** (`/submit`) — Handoff notes or feedback to management
+- **More** (`/more`) — Profile, MGMT link, switch crew
+- **Add Log Entry** (`/log`) — Free-form timestamped log (engine work, incidents, etc.)
+- Bottom nav on all pages: Home | Submit | More
+
+## Navigation (Manager Side)
+
+- **Today** (`/report`) — Dashboard with vessel-grouped timeline, filters, search
+- **History** (`/report/history`) — Historical view with date range, crew, type filters
+- **Templates** (`/report/templates`) — Checklist editor
+- **Crew** (`/report/crew`) — Crew management + login link generation
 
 ## MCP Server (Claude Code Integration)
 
