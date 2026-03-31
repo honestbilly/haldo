@@ -33,6 +33,7 @@ app.get('/:token', async (c) => {
     return c.html(`<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
       <title>Invalid Link — Haldo</title>
       <link rel="stylesheet" href="/public/style.css">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap">
       </head><body>
       <div style="max-width:480px;margin:0 auto;padding:48px 16px;text-align:center">
         <h1 style="color:var(--danger);font-family:var(--font-heading)">Link Expired or Invalid</h1>

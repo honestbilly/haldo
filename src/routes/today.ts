@@ -121,19 +121,26 @@ function renderWeatherCard(weather: any): string {
     : '';
 
   return `
-    <a href="/weather" style="display:block;text-decoration:none;color:inherit;background:linear-gradient(135deg, #1A6B8A 0%, #004D3A 100%);border-radius:12px;padding:14px 16px;margin-bottom:12px">
-      <div style="display:flex;justify-content:space-between;align-items:flex-start">
+    <a href="/weather" style="display:block;text-decoration:none;color:inherit;background:linear-gradient(135deg, #1A6B8A 0%, #0D5470 100%);border-radius:16px;padding:24px 20px;margin-bottom:16px;position:relative;overflow:hidden;box-shadow:0 12px 32px rgba(0,40,40,0.12);min-height:140px">
+      <div style="position:absolute;right:-16px;top:-16px;width:96px;height:96px;background:rgba(255,255,255,0.1);border-radius:50%;filter:blur(24px)"></div>
+      <div style="display:flex;justify-content:space-between;align-items:center;position:relative">
         <div>
-          <div style="font-size:1.5rem;font-weight:700;color:white">${weather.currentTemp ? Math.round(weather.currentTemp) + '°' : '--°'}</div>
-          <div style="font-size:0.8125rem;color:rgba(255,255,255,0.8)">${weather.conditions}</div>
+          <div style="font-size:3rem;font-weight:800;color:white;letter-spacing:-0.02em;line-height:1">${weather.currentTemp ? Math.round(weather.currentTemp) + '°' : '--°'}</div>
+          <div style="font-size:1.125rem;font-weight:500;color:rgba(255,255,255,0.9);margin-top:4px">${weather.conditions}</div>
         </div>
-        <div style="text-align:right">
-          <div style="font-size:0.875rem;color:rgba(255,255,255,0.9)">
-            ${Math.round(weather.windSpeed)} kts ${weather.windDirection}
-            ${weather.windGust > weather.windSpeed + 3 ? `<span style="color:rgba(255,255,255,0.6)">g${Math.round(weather.windGust)}</span>` : ''}
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
+          <div style="display:flex;align-items:center;gap:6px;font-size:0.75rem;font-weight:600;color:rgba(255,255,255,0.95);text-transform:uppercase;letter-spacing:0.05em">
+            <span class="material-symbols-outlined" style="font-size:16px;color:rgba(255,255,255,0.8)">air</span>
+            ${Math.round(weather.windSpeed)} kts ${weather.windDirection}${weather.windGust > weather.windSpeed + 3 ? ' g' + Math.round(weather.windGust) : ''}
           </div>
-          ${weather.precipChance > 0 ? `<div style="font-size:0.75rem;color:rgba(255,255,255,0.7)">Rain ${weather.precipChance}%</div>` : ''}
-          ${tideStr ? `<div style="font-size:0.75rem;color:rgba(255,255,255,0.6);margin-top:2px">${tideStr}</div>` : ''}
+          ${weather.precipChance > 0 ? `<div style="display:flex;align-items:center;gap:6px;font-size:0.75rem;font-weight:600;color:rgba(255,255,255,0.85);text-transform:uppercase;letter-spacing:0.05em">
+            <span class="material-symbols-outlined" style="font-size:16px;color:rgba(255,255,255,0.7)">water_drop</span>
+            Rain ${weather.precipChance}%
+          </div>` : ''}
+          ${tideStr ? `<div style="display:flex;align-items:center;gap:6px;font-size:0.75rem;font-weight:600;color:rgba(255,255,255,0.75);text-transform:uppercase;letter-spacing:0.05em">
+            <span class="material-symbols-outlined" style="font-size:16px;color:rgba(255,255,255,0.6)">waves</span>
+            ${tideStr}
+          </div>` : ''}
         </div>
       </div>
       ${alertBanner}
@@ -178,7 +185,7 @@ function renderTodayList(
       }
       return `
         <a href="/c/${t.id}" class="today-card dmt-pinned ${isDone ? 'done' : ''}">
-          <div class="dmt-pinned-label">⚡ TODAY'S DMT</div>
+          <div class="dmt-pinned-label"><span class="material-symbols-outlined" style="font-size:14px;vertical-align:middle;margin-right:2px;font-variation-settings:'FILL' 1">bolt</span> TODAY'S DMT</div>
           <div class="today-card-info">
             <span class="today-card-name">${taskName}</span>
             ${est ? `<span class="today-card-time">~${est} min</span>` : ''}
@@ -229,33 +236,43 @@ function renderTodayList(
 
   // My assigned tasks (from assigned_tasks table — only tasks assigned to ME)
   const myTasksHtml = myTasks.length > 0 ? `
-    <div style="margin-top:16px;margin-bottom:16px">
-      <h3 class="on-demand-header" style="cursor:default;display:flex;align-items:center;justify-content:space-between">
-        <span>My Tasks</span>
-        <span style="font-size:0.6875rem;background:rgba(112,208,235,0.15);color:#0C7DA0;padding:2px 8px;border-radius:10px">${myTasks.length}</span>
-      </h3>
+    <div style="margin-top:20px;margin-bottom:16px">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:0 4px;margin-bottom:12px">
+        <h2 style="font-family:var(--font-heading);font-weight:700;font-size:1.125rem;display:flex;align-items:center;gap:8px">
+          <span class="material-symbols-outlined" style="color:#F36D4F;font-size:20px">assignment</span> My Tasks
+        </h2>
+        <span style="font-size:0.625rem;font-weight:700;background:rgba(243,109,79,0.12);color:#F36D4F;padding:4px 10px;border-radius:999px;text-transform:uppercase;letter-spacing:0.05em">${myTasks.length} active</span>
+      </div>
       ${myTasks.map((t: any) => {
-        const priorityIcon = t.priority === 'urgent' ? '🔴 ' : t.priority === 'high' ? '⚠ ' : '';
-        const statusColor = t.status === 'in-progress' ? 'var(--primary)' : t.status === 'blocked' ? '#F36D4F' : 'var(--text-muted)';
-        const statusLabel = t.status === 'in-progress' ? 'In Progress' : t.status === 'blocked' ? 'Blocked' : 'To Do';
+        const priorityIcon = t.priority === 'urgent' ? '<span class="material-symbols-outlined" style="font-size:18px;color:#ba1a1a">error</span> ' : t.priority === 'high' ? '<span class="material-symbols-outlined" style="font-size:18px;color:#F36D4F">warning</span> ' : '';
+        const barColor = t.status === 'blocked' ? '#F36D4F' : '#F36D4F';
+        const statusBg = t.status === 'in-progress' ? 'rgba(112,208,235,0.15)' : t.status === 'blocked' ? 'rgba(243,109,79,0.12)' : 'rgba(110,122,116,0.08)';
+        const statusColor = t.status === 'in-progress' ? '#0C7DA0' : t.status === 'blocked' ? '#F36D4F' : '#8E8E93';
+        const statusLabel = t.status === 'in-progress' ? 'IN PROGRESS' : t.status === 'blocked' ? 'BLOCKED' : 'TO DO';
         const dueStr = t.due_date ? ` · Due ${new Date(t.due_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}` : '';
         const estStr = t.estimated_minutes ? ` · ~${t.estimated_minutes}min` : '';
         return `
-          <a href="/tasks/${t.id}" style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;background:var(--surface);border-radius:var(--radius);margin-bottom:6px;text-decoration:none;color:var(--text);border-left:4px solid ${t.status === 'blocked' ? '#F36D4F' : '#70D0EB'};min-height:48px">
-            <div>
-              <div style="font-weight:500;font-size:0.875rem">${priorityIcon}${t.title}</div>
-              <div style="font-size:0.6875rem;color:var(--text-muted)">${t.vessel ? t.vessel.toUpperCase() : 'Any'}${dueStr}${estStr}</div>
+          <a href="/tasks/${t.id}" style="display:block;text-decoration:none;color:var(--text);background:var(--surface);border-radius:16px;padding:20px;margin-bottom:8px;position:relative;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.04);min-height:72px">
+            <div style="position:absolute;left:0;top:0;bottom:0;width:6px;background:${barColor}"></div>
+            <div style="display:flex;justify-content:space-between;align-items:flex-start">
+              <div>
+                <h3 style="font-weight:700;font-size:0.9375rem;display:flex;align-items:center;gap:6px">${priorityIcon}${t.title}</h3>
+                <p style="font-size:0.75rem;color:var(--text-muted);font-weight:500;margin-top:4px">${t.vessel ? t.vessel.toUpperCase() : 'Any'}${dueStr}${estStr}</p>
+              </div>
+              <span style="font-size:0.5625rem;font-weight:800;padding:3px 8px;border-radius:999px;background:${statusBg};color:${statusColor};text-transform:uppercase;letter-spacing:0.05em;white-space:nowrap">${statusLabel}</span>
             </div>
-            <span style="font-size:0.75rem;color:${statusColor};font-weight:500;white-space:nowrap">${statusLabel}</span>
           </a>`;
       }).join('')}
     </div>` : '';
 
   // Queue link (unassigned tasks crew can browse/claim)
   const queueHtml = queueCount > 0 ? `
-    <a href="/tasks/queue" style="display:flex;align-items:center;justify-content:center;gap:8px;padding:10px 16px;background:var(--surface);border:1px dashed var(--border);border-radius:var(--radius);text-decoration:none;color:var(--text-muted);font-size:0.8125rem;font-weight:500;margin-bottom:16px;min-height:44px">
-      <span style="color:var(--primary)">${queueCount}</span> task${queueCount > 1 ? 's' : ''} available to pick up
-    </a>` : '';
+    <div style="border:2px dashed rgba(174,178,187,0.5);border-radius:16px;padding:24px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;margin-bottom:16px">
+      <a href="/tasks/queue" style="text-decoration:none;display:flex;flex-direction:column;align-items:center;gap:8px">
+        <span class="material-symbols-outlined" style="color:#8E8E93;font-size:28px">view_list</span>
+        <span style="font-size:0.875rem;font-weight:600;color:var(--text-muted)">${queueCount} task${queueCount > 1 ? 's' : ''} available to pick up</span>
+      </a>
+    </div>` : '';
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -264,6 +281,7 @@ function renderTodayList(
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <title>Today — Haldo</title>
   <link rel="stylesheet" href="/public/style.css">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap">
   <link rel="manifest" href="/public/manifest.json">
   <meta name="theme-color" content="#1A6B8A">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -283,10 +301,14 @@ function renderTodayList(
     ${renderWeatherCard(weather)}
 
     ${handoffNotes.length > 0 ? `
-    <div style="background:#FFF8E1;border:1px solid #F59E0B;border-radius:var(--radius);padding:12px 16px;margin-bottom:12px">
+    <div style="background:var(--surface);border-radius:16px;padding:20px;margin-bottom:16px;position:relative;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.04)">
+      <div style="position:absolute;left:0;top:0;bottom:0;width:6px;background:#70D0EB"></div>
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-        <span style="font-weight:600;font-size:0.875rem;color:#92400E">📝 Handoff Notes</span>
-        <a href="/handoff" style="font-size:0.75rem;color:#D97706;text-decoration:none;font-weight:500">View all →</a>
+        <span style="font-weight:700;font-size:0.625rem;color:#70D0EB;text-transform:uppercase;letter-spacing:0.1em">
+          <span class="material-symbols-outlined" style="font-size:16px;vertical-align:middle;margin-right:4px">sticky_note_2</span>
+          Handoff Notes
+        </span>
+        <a href="/handoff" style="font-size:0.75rem;color:#70D0EB;text-decoration:none;font-weight:700;display:flex;align-items:center;gap:4px">View all <span class="material-symbols-outlined" style="font-size:14px">arrow_forward</span></a>
       </div>
       ${handoffNotes.slice(0, 3).map((n: any) => {
         const roleLabel = n.role === 'captain' ? 'Capt.' : 'DH';

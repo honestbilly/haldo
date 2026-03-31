@@ -37,24 +37,24 @@ app.get('/', async (c) => {
     </header>
 
     <div style="display:flex;flex-direction:column;gap:2px;">
-      <a href="/today" style="display:flex;align-items:center;justify-content:space-between;padding:16px;background:var(--surface);text-decoration:none;color:var(--text);border-radius:var(--radius) var(--radius) 0 0;border:1px solid var(--border);">
-        <span>📋 My Completions Today</span>
-        <span style="color:var(--primary);font-weight:600;">${todayCount}</span>
+      <a href="/today" style="display:flex;align-items:center;justify-content:space-between;padding:18px 16px;background:var(--surface);text-decoration:none;color:var(--text);border-radius:16px 16px 0 0;min-height:54px">
+        <span style="display:flex;align-items:center;gap:12px"><span class="material-symbols-outlined" style="color:var(--primary);font-size:22px">task_alt</span> My Completions Today</span>
+        <span style="color:var(--primary);font-weight:700;">${todayCount}</span>
       </a>
 
-      <a href="/handoff" style="display:flex;align-items:center;justify-content:space-between;padding:16px;background:var(--surface);text-decoration:none;color:var(--text);border:1px solid var(--border);border-top:0;">
-        <span>📝 Handoff Notes</span>
-        <span style="color:var(--text-muted);">→</span>
+      <a href="/handoff" style="display:flex;align-items:center;justify-content:space-between;padding:18px 16px;background:var(--surface);text-decoration:none;color:var(--text);min-height:54px">
+        <span style="display:flex;align-items:center;gap:12px"><span class="material-symbols-outlined" style="color:var(--primary);font-size:22px">sticky_note_2</span> Handoff Notes</span>
+        <span class="material-symbols-outlined" style="color:var(--text-muted);font-size:18px">chevron_right</span>
       </a>
 
-      <a href="/report" style="display:flex;align-items:center;justify-content:space-between;padding:16px;background:var(--surface);text-decoration:none;color:var(--text);border:1px solid var(--border);border-top:0;">
-        <span>📊 MGMT Dashboard</span>
-        <span style="color:var(--text-muted);">→</span>
+      <a href="/report" style="display:flex;align-items:center;justify-content:space-between;padding:18px 16px;background:var(--surface);text-decoration:none;color:var(--text);min-height:54px">
+        <span style="display:flex;align-items:center;gap:12px"><span class="material-symbols-outlined" style="color:var(--primary);font-size:22px">dashboard</span> MGMT Dashboard</span>
+        <span class="material-symbols-outlined" style="color:var(--text-muted);font-size:18px">chevron_right</span>
       </a>
 
-      <a href="/" style="display:flex;align-items:center;justify-content:space-between;padding:16px;background:var(--surface);text-decoration:none;color:var(--text);border-radius:0 0 var(--radius) var(--radius);border:1px solid var(--border);border-top:0;">
-        <span>🚤 Switch Vessel / Trip</span>
-        <span style="color:var(--text-muted);">→</span>
+      <a href="/" style="display:flex;align-items:center;justify-content:space-between;padding:18px 16px;background:var(--surface);text-decoration:none;color:var(--text);border-radius:0 0 16px 16px;min-height:54px">
+        <span style="display:flex;align-items:center;gap:12px"><span class="material-symbols-outlined" style="color:var(--primary);font-size:22px">directions_boat</span> Switch Vessel / Trip</span>
+        <span class="material-symbols-outlined" style="color:var(--text-muted);font-size:18px">chevron_right</span>
       </a>
     </div>
 
