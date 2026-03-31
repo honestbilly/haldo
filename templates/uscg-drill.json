@@ -1,0 +1,143 @@
+{
+  "id": "uscg-drill",
+  "name": "USCG Safety Drill",
+  "type": "logbook",
+  "vessel": "all",
+  "role": "captain",
+  "recurrence": "on-demand",
+  "version": "2026-03-30",
+  "source": "KB: squid-emergency-procedures / 46 CFR 185-25 + squid-on-board-binder quarterly drill schedule",
+  "estimated_minutes": 15,
+  "priority": 100,
+  "display_order": 35,
+  "intro": "Log a USCG required safety drill. Per 46 CFR 185-25, drills must be performed quarterly. MOB, Abandon Ship, and Fire are required every quarter. Flooding at least once per year (Q1). Heart Attack/Medical at least once per year (Q2).",
+  "steps": [
+    {
+      "title": "Drill Type",
+      "prompt": "What drill are you logging?",
+      "items": [
+        {
+          "id": "drill-type",
+          "label": "Drill type",
+          "type": "select",
+          "options": ["Man Overboard (MOB)", "Abandon Ship", "Fire", "Flooding", "Heart Attack / Medical"],
+          "required": true
+        },
+        {
+          "id": "drill-date",
+          "label": "Date performed",
+          "type": "text",
+          "placeholder": "Today's date (auto-filled)",
+          "info": "Leave blank for today. Enter a past date if logging a drill from a prior day."
+        }
+      ]
+    },
+    {
+      "title": "Participants",
+      "prompt": "Who participated in the drill?",
+      "items": [
+        {
+          "id": "participants",
+          "label": "Crew who participated",
+          "type": "multi_select",
+          "options": ["Jess", "Chase", "Kristen", "Alexa", "Libbie", "Dan", "Andrew", "Hadden", "Bryan", "Jackie", "Charlie"],
+          "required": true
+        },
+        {
+          "id": "passengers-present",
+          "label": "Were passengers on board during the drill?",
+          "type": "select",
+          "options": ["No — dock drill", "Yes — conducted during trip"],
+          "info": "Drills can be done dockside or during a trip"
+        }
+      ]
+    },
+    {
+      "title": "Drill Execution",
+      "prompt": "How did the drill go?",
+      "items": [
+        {
+          "id": "drill-outcome",
+          "label": "Overall drill result",
+          "type": "select",
+          "options": ["Successful — all procedures followed", "Completed with issues noted", "Incomplete — needs to be redone"],
+          "required": true
+        },
+        {
+          "id": "drill-notes",
+          "label": "Notes and observations",
+          "type": "text",
+          "placeholder": "Any deficiencies, crew performance notes, equipment issues..."
+        },
+        {
+          "id": "drill-photo",
+          "label": "Photo documentation (optional)",
+          "type": "photo",
+          "placeholder": "Photo of drill in progress or equipment check",
+          "max_photos": 2
+        }
+      ]
+    },
+    {
+      "title": "Procedure Review",
+      "prompt": "Confirm the procedure was followed correctly.",
+      "items": [
+        {
+          "id": "procedure-mob",
+          "label": "MOB: Announced location, eyes on person, life ring thrown, maneuvered to pick up, swim platform deployed",
+          "type": "checkbox",
+          "requires": "drill-type",
+          "help": {
+            "title": "MOB Procedure (9 steps)",
+            "body": "1. Loudly announce 'Man Overboard' and location\n2. Ensure multiple crew have eyes on person\n3. Throw life ring\n4. Maneuver vessel to pick up person\n5. Crew member dons PFD, stands by swim platform\n6. On captain's command, deploy swim platform, pull person aboard\n7. Check health and breathing\n8. If not located, notify Coast Guard\n9. Continue search until released by Coast Guard"
+          }
+        },
+        {
+          "id": "procedure-fire",
+          "label": "Fire: Moved passengers, donned lifejackets, cut fuel/electrical, used Class B extinguisher, did NOT open sealed spaces",
+          "type": "checkbox",
+          "help": {
+            "title": "Fire at Sea Procedure",
+            "body": "Phase 1: Move passengers, don lifejackets, VHF Ch 16, prepare to abandon\nPhase 2: Cut fuel, kill electrical, close air supply, use Class B extinguisher. Do NOT open sealed machine space or hull.\nPhase 3: Account for all, treat injuries, report and document"
+          }
+        },
+        {
+          "id": "procedure-abandon",
+          "label": "Abandon Ship: Mustered passengers, donned lifejackets, VHF notified, starboard gate opened, EPIRB grabbed",
+          "type": "checkbox",
+          "help": {
+            "title": "Abandon Ship Procedure (6 steps)",
+            "body": "1. Muster passengers in back, don lifejackets\n2. Notify Coast Guard and nearby craft via VHF\n3. Open starboard gate\n4. Grab EPIRB\n5. Activate EPIRB if forced or instructed by captain\n6. Never abandon unless forced or instructed by captain"
+          }
+        },
+        {
+          "id": "procedure-flooding",
+          "label": "Flooding: Checked hatches, pumped water, closed watertight doors, fire buckets ready, passengers seated evenly",
+          "type": "checkbox",
+          "help": {
+            "title": "Flooding Procedure (6 steps)",
+            "body": "1. Check hatches and openings, pump water\n2. Close watertight hatches, dog down, close machine space doors\n3. Locate fire buckets as secondary water removal\n4. Keep passengers seated and evenly distributed\n5. Don lifejackets if conditions worsen\n6. Prepare distress call"
+          }
+        }
+      ]
+    },
+    {
+      "title": "Review & Submit",
+      "prompt": "Confirm this drill record is accurate.",
+      "items": [
+        {
+          "id": "review-placeholder",
+          "label": "Review your entries above",
+          "type": "checkbox",
+          "info": "This drill will be logged for USCG compliance records."
+        }
+      ]
+    }
+  ],
+  "completion": {
+    "require_all": false,
+    "sign_off": true,
+    "notes_field": true,
+    "notes_prompt": "Additional notes for the drill record"
+  }
+}

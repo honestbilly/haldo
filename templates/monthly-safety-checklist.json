@@ -1,0 +1,194 @@
+{
+  "id": "monthly-safety-checklist",
+  "name": "Monthly Safety Equipment Checklist",
+  "type": "checklist",
+  "vessel": "squid",
+  "role": "captain",
+  "recurrence": "monthly",
+  "trigger_dates": [1],
+  "version": "2026-03-30",
+  "source": "KB: squid-safety-checklist.md + squid-on-board-binder §Monthly Safety",
+  "estimated_minutes": 20,
+  "priority": 95,
+  "display_order": 55,
+  "supersedes": ["daily-maintenance-captain"],
+  "intro": "Monthly USCG safety equipment inspection. Check every item — deficiencies must be reported and corrected immediately. This checklist satisfies the monthly safety documentation requirement.",
+  "sections": [
+    {
+      "title": "Documents & Compliance",
+      "items": [
+        {
+          "id": "documents-utd",
+          "label": "All documents in order and up to date",
+          "type": "checkbox",
+          "required": true,
+          "info": "COI, registration, FCC license, crew credentials"
+        },
+        {
+          "id": "coi-posted",
+          "label": "Certificate of Inspection (COI) posted and current",
+          "type": "checkbox",
+          "required": true
+        }
+      ]
+    },
+    {
+      "title": "Communication & Navigation",
+      "items": [
+        {
+          "id": "horn-tested",
+          "label": "Horn tested and operational",
+          "type": "checkbox"
+        },
+        {
+          "id": "radio-tested",
+          "label": "VHF radio tested — transmit and receive",
+          "type": "checkbox",
+          "required": true
+        },
+        {
+          "id": "nav-lights-tested",
+          "label": "Navigation lights tested — all working",
+          "type": "checkbox"
+        },
+        {
+          "id": "epirb-tested",
+          "label": "EPIRB tested — registration, battery, and hydrostat up to date",
+          "type": "checkbox",
+          "required": true,
+          "help": {
+            "title": "EPIRB check",
+            "body": "Verify: 1) Registration current, 2) Battery not expired, 3) Hydrostat release mechanism not expired, 4) Self-test button produces signal. If any are expired, flag immediately."
+          }
+        }
+      ]
+    },
+    {
+      "title": "Fire Safety",
+      "items": [
+        {
+          "id": "extinguishers-charged",
+          "label": "Fire extinguishers charged and up to date",
+          "type": "checkbox",
+          "required": true
+        },
+        {
+          "id": "fireboys-charged",
+          "label": "Fireboys (fixed system) charged and up to date",
+          "type": "checkbox",
+          "required": true
+        },
+        {
+          "id": "fire-buckets",
+          "label": "3 fire buckets aboard with lanyards and lettering",
+          "type": "checkbox",
+          "required": true
+        },
+        {
+          "id": "fuel-shutoff-tested",
+          "label": "Emergency fuel shutoff tested and operational",
+          "type": "checkbox",
+          "required": true,
+          "help": {
+            "title": "Fuel shutoff test",
+            "body": "Physically test the emergency fuel shutoff. Make sure it operates smoothly and shuts off fuel flow completely. Reset after testing."
+          }
+        }
+      ]
+    },
+    {
+      "title": "Life Safety Equipment",
+      "items": [
+        {
+          "id": "flares-utd",
+          "label": "Flares sufficient quantity and not expired",
+          "type": "checkbox",
+          "required": true
+        },
+        {
+          "id": "smoke-signals",
+          "label": "Smoke signals present and not expired",
+          "type": "checkbox"
+        },
+        {
+          "id": "ring-buoy-tested",
+          "label": "Ring buoy and strobe tested",
+          "type": "checkbox",
+          "required": true
+        },
+        {
+          "id": "lifejackets-count",
+          "label": "Lifejackets — correct count, properly stowed, good repair",
+          "type": "checkbox",
+          "required": true,
+          "info": "Must meet or exceed COI passenger capacity"
+        },
+        {
+          "id": "kids-lifejackets",
+          "label": "Kids sport life jackets available and in good repair",
+          "type": "checkbox"
+        },
+        {
+          "id": "whistle",
+          "label": "Whistle present and functional",
+          "type": "checkbox"
+        }
+      ]
+    },
+    {
+      "title": "Medical & Emergency",
+      "items": [
+        {
+          "id": "med-kit",
+          "label": "Medical kit stocked and up to date",
+          "type": "checkbox",
+          "required": true
+        },
+        {
+          "id": "aed-checked",
+          "label": "AED checked — battery and pads not expired",
+          "type": "checkbox",
+          "required": true
+        },
+        {
+          "id": "safety-procedures-reviewed",
+          "label": "Reviewed laminated safety procedures in helm with mate",
+          "type": "checkbox",
+          "required": true,
+          "info": "Walk through the emergency procedures with your mate — make sure they know where everything is"
+        }
+      ]
+    },
+    {
+      "title": "Vessel Systems",
+      "items": [
+        {
+          "id": "steering-tested",
+          "label": "Steering system tested — no sponginess or play",
+          "type": "checkbox"
+        },
+        {
+          "id": "thru-hulls-inspected",
+          "label": "Thru-hulls inspected — no leaks",
+          "type": "checkbox"
+        },
+        {
+          "id": "bilge-pumps-tested",
+          "label": "Bilge pumps tested — manual and auto",
+          "type": "checkbox"
+        },
+        {
+          "id": "float-switches-tested",
+          "label": "Float switches tested and operational",
+          "type": "checkbox"
+        }
+      ]
+    }
+  ],
+  "completion": {
+    "require_all": false,
+    "sign_off": true,
+    "notes_field": true,
+    "notes_prompt": "Any deficiencies found? List corrective actions taken or needed."
+  }
+}
