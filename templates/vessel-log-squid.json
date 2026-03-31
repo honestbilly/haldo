@@ -1,0 +1,422 @@
+{
+  "id": "vessel-log-squid",
+  "name": "Vessel Log — SQUID",
+  "type": "logbook",
+  "vessel": "squid",
+  "role": "captain",
+  "recurrence": "daily",
+  "display_order": 50,
+  "version": "2026-03-31",
+  "source": "Redesigned from SQUID physical logbook + Haldo v2 spec (workbench §28)",
+  "estimated_minutes": 8,
+  "captain_steps": [1, 2, 3, 4, 5],
+  "steps": [
+    {
+      "step": 1,
+      "title": "Trip 1",
+      "items": [
+        {
+          "id": "t1-has-trip",
+          "label": "Was there a trip?",
+          "type": "select",
+          "options": ["Yes", "No trip today"],
+          "required": true
+        },
+        {
+          "id": "t1-slot",
+          "label": "Trip slot",
+          "type": "select",
+          "options": ["AM", "PM", "Sunset"],
+          "requires": "t1-has-trip"
+        },
+        {
+          "id": "t1-deckhand",
+          "label": "Deckhand",
+          "type": "select",
+          "options": ["(loaded from crew database)"],
+          "requires": "t1-has-trip"
+        },
+        {
+          "id": "t1-deckhand-other",
+          "label": "Other / relief deckhand",
+          "type": "text",
+          "placeholder": "Name if not listed above",
+          "requires": "t1-has-trip"
+        },
+        {
+          "id": "t1-pax",
+          "label": "Passengers on board",
+          "type": "number",
+          "min": 0,
+          "max": 50,
+          "requires": "t1-has-trip"
+        },
+        {
+          "id": "t1-noshows",
+          "label": "No-shows",
+          "type": "number",
+          "min": 0,
+          "max": 20,
+          "requires": "t1-has-trip"
+        },
+        {
+          "id": "t1-safety",
+          "label": "Safety orientation completed (life jackets, fire ext, MOB ring, slips/trips/falls)",
+          "type": "checkbox",
+          "requires": "t1-has-trip"
+        },
+        {
+          "id": "t1-boat-orient",
+          "label": "Boat orientation completed (head, water, snacks, seating)",
+          "type": "checkbox",
+          "requires": "t1-has-trip"
+        },
+        {
+          "id": "t1-incident",
+          "label": "Any incidents?",
+          "type": "select",
+          "options": ["No incidents", "Minor incident", "Major incident"],
+          "requires": "t1-has-trip"
+        },
+        {
+          "id": "t1-incident-details",
+          "label": "Incident details",
+          "type": "text",
+          "placeholder": "Describe what happened...",
+          "requires": "t1-incident"
+        },
+        {
+          "id": "t1-snorkel-loc",
+          "label": "Snorkel location",
+          "type": "text",
+          "placeholder": "e.g. Wisteria Reef",
+          "requires": "t1-has-trip"
+        },
+        {
+          "id": "t1-dolphin-loc",
+          "label": "Dolphin location",
+          "type": "text",
+          "placeholder": "e.g. Mile marker 23",
+          "requires": "t1-has-trip"
+        },
+        {
+          "id": "t1-other-loc",
+          "label": "Other location (sandbar, etc.)",
+          "type": "text",
+          "requires": "t1-has-trip"
+        },
+        {
+          "id": "t1-notes",
+          "label": "Trip notes / highlights",
+          "type": "text",
+          "placeholder": "Wildlife, conditions, guest feedback, anything notable..."
+        },
+        {
+          "id": "t1-merch-sold",
+          "label": "Merch sold this trip?",
+          "type": "select",
+          "options": ["No", "Yes"],
+          "requires": "t1-has-trip"
+        },
+        {
+          "id": "t1-merch-hats",
+          "label": "Hats sold",
+          "type": "number",
+          "min": 0,
+          "requires": "t1-merch-sold"
+        },
+        {
+          "id": "t1-merch-tshirts",
+          "label": "T-Shirts sold",
+          "type": "number",
+          "min": 0,
+          "requires": "t1-merch-sold"
+        },
+        {
+          "id": "t1-merch-sunshirts",
+          "label": "Sun Shirts sold",
+          "type": "number",
+          "min": 0,
+          "requires": "t1-merch-sold"
+        },
+        {
+          "id": "t1-merch-sweatshirts",
+          "label": "Sweatshirts sold",
+          "type": "number",
+          "min": 0,
+          "requires": "t1-merch-sold"
+        },
+        {
+          "id": "t1-merch-payment",
+          "label": "How were items paid for?",
+          "type": "multi_select",
+          "options": ["Cash", "Card", "Venmo"],
+          "requires": "t1-merch-sold"
+        }
+      ]
+    },
+    {
+      "step": 2,
+      "title": "Trip 2",
+      "items": [
+        {
+          "id": "t2-has-trip",
+          "label": "Was there a second trip?",
+          "type": "select",
+          "options": ["Yes", "No second trip"],
+          "required": true
+        },
+        {
+          "id": "t2-slot",
+          "label": "Trip slot",
+          "type": "select",
+          "options": ["AM", "PM", "Sunset"],
+          "requires": "t2-has-trip"
+        },
+        {
+          "id": "t2-deckhand",
+          "label": "Deckhand",
+          "type": "select",
+          "options": ["(loaded from crew database)"],
+          "requires": "t2-has-trip",
+          "info": "Pre-filled from Trip 1 if same deckhand"
+        },
+        {
+          "id": "t2-deckhand-other",
+          "label": "Other / relief deckhand",
+          "type": "text",
+          "requires": "t2-has-trip"
+        },
+        {
+          "id": "t2-pax",
+          "label": "Passengers on board",
+          "type": "number",
+          "min": 0,
+          "max": 50,
+          "requires": "t2-has-trip"
+        },
+        {
+          "id": "t2-noshows",
+          "label": "No-shows",
+          "type": "number",
+          "min": 0,
+          "max": 20,
+          "requires": "t2-has-trip"
+        },
+        {
+          "id": "t2-safety",
+          "label": "Safety orientation completed",
+          "type": "checkbox",
+          "requires": "t2-has-trip"
+        },
+        {
+          "id": "t2-boat-orient",
+          "label": "Boat orientation completed",
+          "type": "checkbox",
+          "requires": "t2-has-trip"
+        },
+        {
+          "id": "t2-incident",
+          "label": "Any incidents?",
+          "type": "select",
+          "options": ["No incidents", "Minor incident", "Major incident"],
+          "requires": "t2-has-trip"
+        },
+        {
+          "id": "t2-incident-details",
+          "label": "Incident details",
+          "type": "text",
+          "requires": "t2-incident"
+        },
+        {
+          "id": "t2-snorkel-loc",
+          "label": "Snorkel location",
+          "type": "text",
+          "requires": "t2-has-trip"
+        },
+        {
+          "id": "t2-dolphin-loc",
+          "label": "Dolphin location",
+          "type": "text",
+          "requires": "t2-has-trip"
+        },
+        {
+          "id": "t2-other-loc",
+          "label": "Other location",
+          "type": "text",
+          "requires": "t2-has-trip"
+        },
+        {
+          "id": "t2-notes",
+          "label": "Trip notes / highlights",
+          "type": "text"
+        },
+        {
+          "id": "t2-merch-sold",
+          "label": "Merch sold this trip?",
+          "type": "select",
+          "options": ["No", "Yes"],
+          "requires": "t2-has-trip"
+        },
+        {
+          "id": "t2-merch-hats",
+          "label": "Hats sold",
+          "type": "number",
+          "min": 0,
+          "requires": "t2-merch-sold"
+        },
+        {
+          "id": "t2-merch-tshirts",
+          "label": "T-Shirts sold",
+          "type": "number",
+          "min": 0,
+          "requires": "t2-merch-sold"
+        },
+        {
+          "id": "t2-merch-sunshirts",
+          "label": "Sun Shirts sold",
+          "type": "number",
+          "min": 0,
+          "requires": "t2-merch-sold"
+        },
+        {
+          "id": "t2-merch-sweatshirts",
+          "label": "Sweatshirts sold",
+          "type": "number",
+          "min": 0,
+          "requires": "t2-merch-sold"
+        },
+        {
+          "id": "t2-merch-payment",
+          "label": "Payment method",
+          "type": "multi_select",
+          "options": ["Cash", "Card", "Venmo"],
+          "requires": "t2-merch-sold"
+        }
+      ]
+    },
+    {
+      "step": 3,
+      "title": "Vessel",
+      "items": [
+        {
+          "id": "engine-hours-port",
+          "label": "Engine hours — Port (end of day)",
+          "type": "number",
+          "min": 0,
+          "max": 99999,
+          "unit": "hours",
+          "required": true
+        },
+        {
+          "id": "engine-hours-stbd",
+          "label": "Engine hours — Starboard (end of day)",
+          "type": "number",
+          "min": 0,
+          "max": 99999,
+          "unit": "hours",
+          "required": true
+        },
+        {
+          "id": "fuel-burned",
+          "label": "Fuel burned today",
+          "type": "number",
+          "min": 0,
+          "max": 200,
+          "unit": "gallons"
+        },
+        {
+          "id": "fuel-added",
+          "label": "Fuel added this morning?",
+          "type": "select",
+          "options": ["None", "Enter amount"]
+        },
+        {
+          "id": "fuel-added-amount",
+          "label": "Gallons added",
+          "type": "number",
+          "min": 0,
+          "max": 300,
+          "unit": "gallons",
+          "requires": "fuel-added"
+        },
+        {
+          "id": "pump-out",
+          "label": "Pump out completed?",
+          "type": "select",
+          "options": ["Yes", "No"]
+        },
+        {
+          "id": "holding-tank",
+          "label": "Holding tank status",
+          "type": "select",
+          "options": ["OK", "Near capacity"]
+        },
+        {
+          "id": "conditions-agree",
+          "label": "Conditions",
+          "type": "select",
+          "options": ["Agree with forecast", "Different — enter below"],
+          "info": "Weather API: conditions will be pre-filled"
+        },
+        {
+          "id": "conditions-override",
+          "label": "Actual conditions",
+          "type": "text",
+          "placeholder": "Wind, seas, visibility...",
+          "requires": "conditions-agree"
+        }
+      ]
+    },
+    {
+      "step": 4,
+      "title": "End of Day",
+      "items": [
+        {
+          "id": "uscg-drill",
+          "label": "USCG drill completed today?",
+          "type": "select",
+          "options": ["No", "Yes"]
+        },
+        {
+          "id": "uscg-drill-type",
+          "label": "Drill type",
+          "type": "select",
+          "options": ["Man Overboard (MOB)", "Abandon Ship", "Fire", "Flooding", "Heart Attack / Medical"],
+          "requires": "uscg-drill"
+        },
+        {
+          "id": "uscg-drill-details",
+          "label": "Drill description",
+          "type": "text",
+          "placeholder": "What was done, who participated...",
+          "requires": "uscg-drill"
+        },
+        {
+          "id": "handoff-note",
+          "label": "Handoff note for next crew?",
+          "type": "select",
+          "options": ["No", "Yes"]
+        },
+        {
+          "id": "handoff-note-text",
+          "label": "Handoff note",
+          "type": "text",
+          "placeholder": "This will show on tomorrow's home screen...",
+          "requires": "handoff-note",
+          "info": "Will appear in the next crew's handoff notes on their home page"
+        }
+      ]
+    },
+    {
+      "step": 5,
+      "title": "Review & Submit",
+      "items": []
+    }
+  ],
+  "completion": {
+    "require_all": false,
+    "sign_off": true,
+    "notes_field": false
+  }
+}

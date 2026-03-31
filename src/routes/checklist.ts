@@ -67,7 +67,10 @@ app.get('/c/:templateId', async (c) => {
       `SELECT id, name, role FROM crew WHERE active = TRUE ORDER BY role, name`
     );
     const crewList = crewResult.rows;
-    return c.html(renderLogbook(session, template as LogbookTemplate, crewList));
+    // Pass weather data for conditions pre-fill
+    const { getWeatherSummary } = await import('../services/weather/weather-cache.js');
+    const weather = getWeatherSummary();
+    return c.html(renderLogbook(session, template as LogbookTemplate, crewList, weather));
   }
 });
 

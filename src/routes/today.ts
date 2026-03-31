@@ -377,7 +377,7 @@ function renderTodayList(
       }).join('');
 
       // Vessel Log — single daily status: Not Started / In Progress / Complete
-      const tripLogbook = templates.find(t => t.type === 'logbook' && t.id.startsWith('trip-logbook'));
+      const tripLogbook = templates.find(t => t.type === 'logbook' && (t.id.startsWith('vessel-log') || t.id.startsWith('trip-logbook')));
       const logbookHtml = tripLogbook ? (() => {
         const comps = completedMap.get(tripLogbook.id) || [];
         const hasAny = comps.length > 0;
