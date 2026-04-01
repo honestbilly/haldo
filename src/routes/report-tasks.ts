@@ -66,6 +66,49 @@ app.get('/report/tasks', async (c) => {
   const vesselFilter = c.req.query('vessel') || '';
   const showSnoozed = c.req.query('show_snoozed') === '1';
 
+  // ── Crew availability strip (7-day forward) ──
+  const today = new Date();
+  const days: string[] = [];
+  const dayLabels: string[] = [];
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(today);
+    d.setDate(today.getDate() + i);
+    days.push(d.toISOString().split('T')[0]);
+    dayLabels.push(i === 0 ? 'Today' : d.toLocaleDateString('en-US', { weekday: 'short', month: 'numeric', day: 'numeric' }));
+  }
+
+  const schedResult = await pool.query(
+    `SELECT cs.schedule_date, cs.shift, cr.name, cr.role
+     FROM crew_schedule cs JOIN crew cr ON cs.crew_id = cr.id
+     WHERE cs.schedule_date >= $1 AND cs.schedule_date <= $2 AND cs.shift != 'off'
+     ORDER BY cr.role, cr.name`,
+    [days[0], days[6]]
+  );
+
+  // Group by date
+  const schedByDate = new Map<string, Array<{ name: string; role: string }>>();
+  for (const row of schedResult.rows) {
+    const dk = row.schedule_date instanceof Date ? row.schedule_date.toISOString().split('T')[0] : String(row.schedule_date).split('T')[0];
+    if (!schedByDate.has(dk)) schedByDate.set(dk, []);
+    schedByDate.get(dk)!.push({ name: row.name, role: row.role });
+  }
+
+  const crewStrip = `
+    <div style="display:flex;gap:2px;margin-bottom:20px;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:4px">
+      ${days.map((d, i) => {
+        const crew = schedByDate.get(d) || [];
+        const isToday = i === 0;
+        return `
+          <div style="flex:0 0 auto;min-width:100px;padding:8px 10px;background:${isToday ? 'white' : '#F8F9FA'};border-radius:8px;${isToday ? 'box-shadow:0 1px 4px rgba(0,0,0,0.08);border:1px solid rgba(26,107,138,0.15)' : ''}">
+            <div style="font-size:0.5625rem;font-weight:700;color:${isToday ? '#1A6B8A' : '#8E8E93'};text-transform:uppercase;letter-spacing:0.1em;margin-bottom:6px">${dayLabels[i]}</div>
+            ${crew.length > 0
+              ? crew.map(c => `<div style="font-size:0.625rem;font-weight:${c.role === 'captain' ? '700' : '500'};color:${c.role === 'captain' ? '#1a1c1e' : '#5b5f67'};line-height:1.6;white-space:nowrap">${escapeHtml(c.name)}</div>`).join('')
+              : '<div style="font-size:0.625rem;color:#c7c7cc;font-style:italic">—</div>'
+            }
+          </div>`;
+      }).join('')}
+    </div>`;
+
   let where = 'WHERE 1=1';
   const params: any[] = [];
   let paramIdx = 1;
@@ -195,6 +238,7 @@ app.get('/report/tasks', async (c) => {
     </div>`;
 
   return c.html(reportLayout('Tasks', `
+    ${crewStrip}
     ${subNav('list')}
     ${filterHtml}
     ${tasks.length === 0 ? '<p style="text-align:center;color:#6e7a74;padding:40px 0">No tasks found.</p>' : ''}
