@@ -1,14 +1,38 @@
 // Shared constants, helpers, card renderers, and layout for the manager dashboard
+import pool from '../db.js';
 
-export const VESSELS = ['squid', 'blu-q', 'cowfish', 'scout', 'java-cat'];
-
-export const VESSEL_LABELS: Record<string, string> = {
-  'squid': 'SQUID',
-  'blu-q': 'Blu Q',
-  'cowfish': 'Cowfish',
-  'scout': 'Scout',
-  'java-cat': 'Java Cat',
+// Fallback constants (used until DB loads)
+export let VESSELS = ['squid', 'blu-q', 'cowfish', 'scout', 'java-cat'];
+export let VESSEL_LABELS: Record<string, string> = {
+  'squid': 'SQUID', 'blu-q': 'Blu Q', 'cowfish': 'Cowfish', 'scout': 'Scout', 'java-cat': 'Java Cat',
 };
+export let VESSEL_COLORS: Record<string, string> = {
+  'squid': '#1A6B8A', 'blu-q': '#0D5470', 'cowfish': '#2E86AB', 'scout': '#3A7CA5', 'java-cat': '#4A90A4',
+};
+
+// Load vessels from DB (call on startup and when vessels change)
+export async function loadVessels(): Promise<void> {
+  try {
+    const result = await pool.query('SELECT slug, name, color, vessel_type FROM vessels WHERE active = TRUE ORDER BY display_order');
+    if (result.rows.length > 0) {
+      VESSELS = result.rows.filter(v => v.vessel_type === 'boat').map(v => v.slug);
+      VESSEL_LABELS = Object.fromEntries(result.rows.map(v => [v.slug, v.name]));
+      VESSEL_COLORS = Object.fromEntries(result.rows.map(v => [v.slug, v.color]));
+    }
+  } catch (e) {
+    // DB not ready yet — use fallbacks
+  }
+}
+
+// All locations (boats + shore/yard/office) for dropdowns
+export async function getAllLocations(): Promise<Array<{ slug: string; name: string; type: string; color: string }>> {
+  try {
+    const result = await pool.query('SELECT slug, name, vessel_type, color FROM vessels WHERE active = TRUE ORDER BY display_order');
+    return result.rows.map(v => ({ slug: v.slug, name: v.name, type: v.vessel_type, color: v.color }));
+  } catch {
+    return VESSELS.map(v => ({ slug: v, name: VESSEL_LABELS[v] || v, type: 'boat', color: VESSEL_COLORS[v] || '#1A6B8A' }));
+  }
+}
 
 export function escapeHtml(str: string): string {
   return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -292,21 +316,44 @@ export function reportLayout(activeTab: string, content: string): string {
     return `<a href="${href}" style="display:flex;align-items:center;height:44px;padding:0 16px;text-decoration:none;font-weight:${isActive ? '700' : '500'};font-size:0.8125rem;color:${isActive ? '#1A6B8A' : '#8E8E93'};border-bottom:2px solid ${isActive ? '#1A6B8A' : 'transparent'};transition:color 0.15s;white-space:nowrap">${label}</a>`;
   };
 
-  // Sidebar nav items with Material icons
-  const sidebarItems = [
+  // Sidebar nav — Operations + Build sections
+  const opsItems = [
     { id: 'Activity', label: 'Activity', icon: 'dashboard', href: '/report' },
-    { id: 'Templates', label: 'Templates', icon: 'description', href: '/report/templates' },
-    { id: 'Crew', label: 'Crew', icon: 'group', href: '/report/crew' },
+    { id: 'Inbox', label: 'Inbox', icon: 'inbox', href: '/report/inbox' },
     { id: 'Tasks', label: 'Tasks', icon: 'checklist', href: '/report/tasks' },
   ];
 
-  const sidebarHtml = sidebarItems.map(item => {
-    const isActive = activeTab === item.id || (item.id === 'Activity' && (activeTab === 'Today' || activeTab === 'History'));
-    return `<a href="${item.href}" style="display:flex;align-items:center;gap:12px;padding:10px 16px;border-radius:8px;text-decoration:none;font-size:0.875rem;font-weight:${isActive ? '700' : '500'};color:${isActive ? '#1A6B8A' : 'rgba(26,28,30,0.6)'};background:${isActive ? 'white' : 'transparent'};${isActive ? 'box-shadow:0 1px 3px rgba(0,0,0,0.06)' : ''};transition:all 0.15s">
-      <span class="material-symbols-outlined" style="font-size:20px;${isActive ? "font-variation-settings:'FILL' 1" : ''}">${item.icon}</span>
-      ${item.label}
-    </a>`;
-  }).join('');
+  const peopleItems = [
+    { id: 'Crew', label: 'Crew', icon: 'group', href: '/report/crew' },
+    { id: 'Schedule', label: 'Schedule', icon: 'calendar_month', href: '/report/crew-schedule' },
+  ];
+
+  const buildItems = [
+    { id: 'Library', label: 'Library', icon: 'auto_stories', href: '/report/library' },
+    { id: 'Checklists', label: 'Checklists', icon: 'fact_check', href: '/report/templates' },
+    { id: 'Vessels', label: 'Vessels', icon: 'directions_boat', href: '/report/vessels' },
+  ];
+
+  const sidebarItems = [...opsItems, ...peopleItems, ...buildItems];
+
+  const renderSidebarSection = (label: string, items: typeof opsItems) => {
+    const links = items.map(item => {
+      const isActive = activeTab === item.id || (item.id === 'Activity' && (activeTab === 'Today' || activeTab === 'History'));
+      return `<a href="${item.href}" style="display:flex;align-items:center;gap:12px;padding:10px 16px;border-radius:8px;text-decoration:none;font-size:0.875rem;font-weight:${isActive ? '700' : '500'};color:${isActive ? '#1A6B8A' : 'rgba(26,28,30,0.6)'};background:${isActive ? 'white' : 'transparent'};${isActive ? 'box-shadow:0 1px 3px rgba(0,0,0,0.06)' : ''};transition:all 0.15s">
+        <span class="material-symbols-outlined" style="font-size:20px;${isActive ? "font-variation-settings:'FILL' 1" : ''}">${item.icon}</span>
+        ${item.label}
+      </a>`;
+    }).join('');
+    return `
+      <div style="margin-bottom:8px">
+        <div style="font-size:0.5625rem;font-weight:700;color:rgba(26,28,30,0.3);text-transform:uppercase;letter-spacing:0.15em;padding:8px 16px 4px">${label}</div>
+        ${links}
+      </div>`;
+  };
+
+  const sidebarHtml = renderSidebarSection('Operations', opsItems)
+    + renderSidebarSection('People', peopleItems)
+    + renderSidebarSection('Build', buildItems);
 
   return `<!DOCTYPE html>
 <html lang="en">

@@ -200,6 +200,55 @@ export async function initDatabase(): Promise<void> {
         created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
       );
 
+      -- Crew profile additions
+      DO $$ BEGIN ALTER TABLE crew ADD COLUMN email TEXT; EXCEPTION WHEN duplicate_column THEN NULL; END $$;
+      DO $$ BEGIN ALTER TABLE crew ADD COLUMN phone TEXT; EXCEPTION WHEN duplicate_column THEN NULL; END $$;
+      DO $$ BEGIN ALTER TABLE crew ADD COLUMN skills TEXT[] DEFAULT '{}'; EXCEPTION WHEN duplicate_column THEN NULL; END $$;
+      DO $$ BEGIN ALTER TABLE crew ADD COLUMN notes TEXT; EXCEPTION WHEN duplicate_column THEN NULL; END $$;
+
+      -- Vessels table (replaces hardcoded VESSELS constant)
+      CREATE TABLE IF NOT EXISTS vessels (
+        id TEXT PRIMARY KEY,
+        name TEXT NOT NULL,
+        slug TEXT NOT NULL UNIQUE,
+        color TEXT DEFAULT '#1A6B8A',
+        vessel_type TEXT DEFAULT 'boat' CHECK (vessel_type IN ('boat', 'shore', 'yard', 'office')),
+        active BOOLEAN DEFAULT TRUE,
+        display_order INTEGER DEFAULT 0,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
+
+      -- Crew schedule table (monthly CSV upload)
+      CREATE TABLE IF NOT EXISTS crew_schedule (
+        id TEXT PRIMARY KEY,
+        crew_id TEXT NOT NULL REFERENCES crew(id),
+        schedule_date DATE NOT NULL,
+        vessel_slug TEXT,
+        shift TEXT DEFAULT 'full' CHECK (shift IN ('am', 'pm', 'full', 'off')),
+        notes TEXT,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        UNIQUE(crew_id, schedule_date)
+      );
+      CREATE INDEX IF NOT EXISTS idx_crew_schedule_date ON crew_schedule(schedule_date);
+      CREATE INDEX IF NOT EXISTS idx_crew_schedule_crew ON crew_schedule(crew_id);
+
+      -- Ensure vessels table has all columns (migration for partial creates)
+      DO $$ BEGIN ALTER TABLE vessels ADD COLUMN color TEXT DEFAULT '#1A6B8A'; EXCEPTION WHEN duplicate_column THEN NULL; END $$;
+      DO $$ BEGIN ALTER TABLE vessels ADD COLUMN vessel_type TEXT DEFAULT 'boat'; EXCEPTION WHEN duplicate_column THEN NULL; END $$;
+      DO $$ BEGIN ALTER TABLE vessels ADD COLUMN active BOOLEAN DEFAULT TRUE; EXCEPTION WHEN duplicate_column THEN NULL; END $$;
+      DO $$ BEGIN ALTER TABLE vessels ADD COLUMN display_order INTEGER DEFAULT 0; EXCEPTION WHEN duplicate_column THEN NULL; END $$;
+
+      -- Seed default vessels (idempotent)
+      INSERT INTO vessels (id, name, slug, color, vessel_type, display_order) VALUES
+        ('v-squid', 'SQUID', 'squid', '#1A6B8A', 'boat', 10),
+        ('v-bluq', 'Blu Q', 'blu-q', '#0D5470', 'boat', 20),
+        ('v-cowfish', 'Cowfish', 'cowfish', '#2E86AB', 'boat', 30),
+        ('v-scout', 'Scout', 'scout', '#3A7CA5', 'boat', 40),
+        ('v-javacat', 'Java Cat', 'java-cat', '#4A90A4', 'boat', 50),
+        ('v-shore', 'Shore / Office', 'shore', '#8E8E93', 'shore', 100),
+        ('v-yard', 'Yard', 'yard', '#8E8E93', 'yard', 110)
+      ON CONFLICT (slug) DO NOTHING;
+
       -- Indexes for maintenance tracker
       CREATE INDEX IF NOT EXISTS idx_tasks_parent ON assigned_tasks(parent_task_id);
       CREATE INDEX IF NOT EXISTS idx_tasks_category ON assigned_tasks(category);

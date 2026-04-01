@@ -124,6 +124,31 @@ export interface CrewRow {
   role: 'captain' | 'deckhand';
   vessel: string | null;
   active: boolean;
+  email: string | null;
+  phone: string | null;
+  skills: string[];
+  notes: string | null;
+  created_at: Date;
+}
+
+export interface VesselRow {
+  id: string;
+  name: string;
+  slug: string;
+  color: string;
+  vessel_type: 'boat' | 'shore' | 'yard' | 'office';
+  active: boolean;
+  display_order: number;
+  created_at: Date;
+}
+
+export interface CrewScheduleRow {
+  id: string;
+  crew_id: string;
+  schedule_date: string;
+  vessel_slug: string | null;
+  shift: 'am' | 'pm' | 'full' | 'off';
+  notes: string | null;
   created_at: Date;
 }
 
