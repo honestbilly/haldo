@@ -433,6 +433,15 @@ export function reportLayout(activeTab: string, content: string): string {
     </main>
   </div>
   <script>
+    // Close HTMX dropdowns on outside click
+    document.addEventListener('click', function(e) {
+      document.querySelectorAll('.htmx-dropdown').forEach(function(dd) {
+        if (!dd.contains(e.target) && !dd.parentElement.contains(e.target)) {
+          dd.remove();
+        }
+      });
+    });
+
     // Client-side search (instant filter across all fields)
     var searchInput = document.getElementById('report-search');
     if (searchInput) {

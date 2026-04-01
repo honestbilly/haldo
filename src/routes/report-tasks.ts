@@ -175,7 +175,7 @@ app.get('/report/tasks', async (c) => {
 
         <!-- Top row: status (clickable) + more menu -->
         <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
-          <div id="status-${t.id}" style="position:relative;cursor:pointer" hx-get="/report/tasks/${t.id}/status-dropdown" hx-target="#status-${t.id}" hx-swap="beforeend" onclick="event.stopPropagation()">
+          <div id="status-${t.id}" style="position:relative;cursor:pointer" onclick="event.stopPropagation();if(!this.querySelector('.htmx-dropdown')){htmx.ajax('GET','/report/tasks/${t.id}/status-dropdown',{target:'#status-${t.id}',swap:'beforeend'})}else{this.querySelector('.htmx-dropdown').remove()}">
             ${statusBadge(t.status, !!t.assigned_to)}
           </div>
           <a href="/report/tasks/${t.id}" style="color:#c7c7cc;text-decoration:none" title="Edit task">
@@ -191,7 +191,7 @@ app.get('/report/tasks', async (c) => {
 
         <!-- Bottom row: assignee (clickable) + due date -->
         <div style="display:flex;align-items:center;justify-content:space-between;margin-top:auto">
-          <div id="assignee-${t.id}" style="position:relative;cursor:pointer;display:flex;align-items:center;gap:6px" hx-get="/report/tasks/${t.id}/assign-dropdown" hx-target="#assignee-${t.id}" hx-swap="beforeend" onclick="event.stopPropagation()">
+          <div id="assignee-${t.id}" style="position:relative;cursor:pointer;display:flex;align-items:center;gap:6px" onclick="event.stopPropagation();if(!this.querySelector('.htmx-dropdown')){htmx.ajax('GET','/report/tasks/${t.id}/assign-dropdown',{target:'#assignee-${t.id}',swap:'beforeend'})}else{this.querySelector('.htmx-dropdown').remove()}">
             ${assignee ? `<div style="width:24px;height:24px;border-radius:50%;background:#1A6B8A;color:white;display:flex;align-items:center;justify-content:center;font-size:0.5625rem;font-weight:700">${assignee.charAt(0)}</div>` : '<span style="font-size:0.6875rem;color:#c7c7cc">Unassigned</span>'}
             ${childCount > 0 ? `<span style="font-size:0.5625rem;color:#8E8E93">${childCount} subtasks</span>` : ''}
           </div>
@@ -687,12 +687,13 @@ app.get('/report/tasks/:id/assign-dropdown', async (c) => {
   const currentAssignee = task.rows[0]?.assigned_to || '';
 
   const options = crewList.rows.map((cr: any) =>
-    `<button hx-patch="/report/tasks/${taskId}/assign" hx-vals='{"crew_id":"${cr.id}"}' hx-target="#assignee-${taskId}" hx-swap="innerHTML" style="display:block;width:100%;text-align:left;padding:8px 12px;border:none;background:${cr.id === currentAssignee ? 'rgba(26,107,138,0.08)' : 'transparent'};font-size:0.8125rem;font-weight:${cr.id === currentAssignee ? '700' : '400'};color:#1a1c1e;cursor:pointer;border-bottom:1px solid #F0F0F0" onmouseenter="this.style.background='#F8F9FA'" onmouseleave="this.style.background='${cr.id === currentAssignee ? 'rgba(26,107,138,0.08)' : 'transparent'}'">${escapeHtml(cr.name)} <span style="font-size:0.6875rem;color:#8E8E93">(${cr.role})</span></button>`
+    `<button type="button" onclick="event.stopPropagation();htmx.ajax('PATCH','/report/tasks/${taskId}/assign',{target:'#assignee-${taskId}',swap:'innerHTML',values:{crew_id:'${cr.id}'}});this.closest('.htmx-dropdown').remove()" style="display:block;width:100%;text-align:left;padding:10px 14px;border:none;background:${cr.id === currentAssignee ? 'rgba(26,107,138,0.08)' : 'transparent'};font-size:0.8125rem;font-weight:${cr.id === currentAssignee ? '700' : '400'};color:#1a1c1e;cursor:pointer;border-bottom:1px solid #F0F0F0" onmouseenter="this.style.background='#F8F9FA'" onmouseleave="this.style.background='transparent'">${escapeHtml(cr.name)} <span style="font-size:0.6875rem;color:#8E8E93">(${cr.role})</span></button>`
   ).join('');
 
   return c.html(`
-    <div style="position:absolute;top:100%;left:0;z-index:100;background:white;border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,0.12);border:1px solid #E5E5EA;min-width:180px;max-height:240px;overflow-y:auto">
-      <button hx-patch="/report/tasks/${taskId}/assign" hx-vals='{"crew_id":""}' hx-target="#assignee-${taskId}" hx-swap="innerHTML" style="display:block;width:100%;text-align:left;padding:8px 12px;border:none;background:transparent;font-size:0.8125rem;color:#8E8E93;cursor:pointer;border-bottom:1px solid #F0F0F0;font-style:italic">Unassigned</button>
+    <div class="htmx-dropdown" style="position:absolute;top:100%;left:0;z-index:100;background:white;border-radius:10px;box-shadow:0 8px 32px rgba(0,0,0,0.15);border:1px solid #E5E5EA;min-width:200px;max-height:280px;overflow-y:auto;margin-top:4px" onclick="event.stopPropagation()">
+      <div style="padding:8px 14px;font-size:0.625rem;font-weight:700;color:#8E8E93;text-transform:uppercase;letter-spacing:0.1em;border-bottom:1px solid #F0F0F0">Assign To</div>
+      <button type="button" onclick="event.stopPropagation();htmx.ajax('PATCH','/report/tasks/${taskId}/assign',{target:'#assignee-${taskId}',swap:'innerHTML',values:{crew_id:''}});this.closest('.htmx-dropdown').remove()" style="display:block;width:100%;text-align:left;padding:10px 14px;border:none;background:transparent;font-size:0.8125rem;color:#8E8E93;cursor:pointer;border-bottom:1px solid #F0F0F0;font-style:italic">Unassigned</button>
       ${options}
     </div>
   `);
@@ -710,11 +711,12 @@ app.get('/report/tasks/:id/status-dropdown', async (c) => {
   ];
 
   const buttons = statuses.map(s =>
-    `<button hx-patch="/report/tasks/${taskId}/status" hx-vals='{"status":"${s.value}"}' hx-target="#status-${taskId}" hx-swap="innerHTML" style="display:block;width:100%;text-align:left;padding:8px 12px;border:none;background:transparent;font-size:0.8125rem;color:${s.color};font-weight:600;cursor:pointer;border-bottom:1px solid #F0F0F0" onmouseenter="this.style.background='#F8F9FA'" onmouseleave="this.style.background='transparent'">${s.label}</button>`
+    `<button type="button" onclick="event.stopPropagation();htmx.ajax('PATCH','/report/tasks/${taskId}/status',{target:'#status-${taskId}',swap:'innerHTML',values:{status:'${s.value}'}});this.closest('.htmx-dropdown').remove()" style="display:block;width:100%;text-align:left;padding:10px 14px;border:none;background:transparent;font-size:0.8125rem;color:${s.color};font-weight:600;cursor:pointer;border-bottom:1px solid #F0F0F0" onmouseenter="this.style.background='#F8F9FA'" onmouseleave="this.style.background='transparent'">${s.label}</button>`
   ).join('');
 
   return c.html(`
-    <div style="position:absolute;top:100%;right:0;z-index:100;background:white;border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,0.12);border:1px solid #E5E5EA;min-width:160px">
+    <div class="htmx-dropdown" style="position:absolute;top:100%;left:0;z-index:100;background:white;border-radius:10px;box-shadow:0 8px 32px rgba(0,0,0,0.15);border:1px solid #E5E5EA;min-width:160px;margin-top:4px" onclick="event.stopPropagation()">
+      <div style="padding:8px 14px;font-size:0.625rem;font-weight:700;color:#8E8E93;text-transform:uppercase;letter-spacing:0.1em;border-bottom:1px solid #F0F0F0">Status</div>
       ${buttons}
     </div>
   `);
