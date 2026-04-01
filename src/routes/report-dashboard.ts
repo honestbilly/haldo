@@ -158,63 +158,75 @@ app.get('/report', async (c) => {
         All clear — no alerts.
       </div>`;
 
-  // -- Vessel-Grouped Timeline --
-  const vesselSections = VESSELS
-    .filter(v => byVessel.has(v))
-    .map(v => {
-      const items = byVessel.get(v)!;
-      const checklists = items.filter(co => co.template_type === 'checklist');
-      const logbooks = items.filter(co => co.template_type === 'logbook');
-      const freeFormLogs = items.filter(co => co.template_type === 'log');
+  // -- Activity Table (Stitch pattern: Time | Vessel | Crew | Type | Template | Status) --
+  const allRows = completions.rows.sort((a: any, b: any) =>
+    new Date(b.completed_at || b.created_at).getTime() - new Date(a.completed_at || a.created_at).getTime()
+  );
 
-      // Checklists with alerts or notes get full cards
-      const checklistsWithDetail = checklists.filter(co => {
-        const hasAlerts = co.alerts_json && (co.alerts_json as any[]).length > 0;
-        const hasNotes = co.notes && co.notes.trim();
-        const vals = co.values_json || {};
-        let hasInlineNotes = false;
-        for (const [key, val] of Object.entries(vals)) {
-          if (key.startsWith('note_') && val && String(val).trim()) { hasInlineNotes = true; break; }
-        }
-        return hasAlerts || hasNotes || hasInlineNotes;
-      });
+  const typeLabels: Record<string, { label: string; bg: string; color: string }> = {
+    'checklist': { label: 'Checklist', bg: '#E5E8F0', color: '#5b5f67' },
+    'logbook': { label: 'Logbook', bg: 'rgba(26,107,138,0.1)', color: '#1A6B8A' },
+    'log': { label: 'Log Entry', bg: 'rgba(112,208,235,0.15)', color: '#0C7DA0' },
+  };
 
-      const symbolRow = renderChecklistSymbols(checklists);
-      const logbookCards = logbooks.map(renderCompletionCard).join('');
-      const detailCards = checklistsWithDetail.map(renderCompletionCard).join('');
+  const tableRows = allRows.map((co: any) => {
+    const time = co.completed_at
+      ? new Date(co.completed_at).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })
+      : '';
+    const vessel = (co.vessel || '').toUpperCase();
+    const crew = co.crew_name || '';
+    const typeInfo = typeLabels[co.template_type] || typeLabels['checklist'];
+    const templateName = co.template_id.replace(/-/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase());
+    const hasAlerts = co.alerts_json && (co.alerts_json as any[]).length > 0;
+    const vals = co.values_json || {};
+    const itemCount = Object.keys(vals).filter(k => !k.startsWith('note_')).length;
+    const totalItems = co.template_type === 'checklist' ? (vals._total || itemCount) : itemCount;
+    const checkedCount = Object.values(vals).filter(v => v === true || v === 'on').length;
 
-      // Free-form log entries — inline in timeline
-      const freeFormHtml = freeFormLogs.map(co => {
-        const vals = co.values_json || {};
-        const title = vals.title || 'Log Entry';
-        const category = vals.category || 'general';
-        const details = vals.details || co.notes || '';
-        const logTime = co.completed_at
-          ? new Date(co.completed_at).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })
-          : '';
-        const catIcons: Record<string, string> = { maintenance: '🔧', safety: '⚠️', equipment: '⚙️', operational: '🚢', general: '📝' };
-        const icon = catIcons[category] || '📝';
-        return `
-          <div class="completion-card" data-searchable="${escapeHtml(JSON.stringify(vals).toLowerCase() + ' ' + (co.crew_name || ''))}" data-vessel="${co.vessel || ''}"
-            style="background:#FFFFFF;border-radius:10px;padding:12px 16px;margin-bottom:8px;border-left:4px solid #70D0EB">
-            <div style="display:flex;justify-content:space-between;align-items:flex-start">
-              <div style="font-weight:600;font-size:0.875rem">${icon} ${escapeHtml(String(title))}</div>
-              <div style="font-size:0.75rem;color:#6e7a74;flex-shrink:0">${logTime} · ${escapeHtml(co.crew_name || '')}</div>
-            </div>
-            ${details ? `<p style="font-size:0.8125rem;color:#1a1c1c;margin-top:4px;line-height:1.5">${escapeHtml(String(details))}</p>` : ''}
-          </div>`;
-      }).join('');
-      const count = items.length;
+    // Extract key details for preview
+    const pax = vals['t1-pax'] || vals['guest-count'] || '';
+    const notes = vals['t1-notes'] || vals['trip-highlights'] || co.notes || '';
+    const previewText = pax ? `Pax: ${pax}` : (notes ? String(notes).substring(0, 50) : '');
 
-      return `
-        <div class="vessel-group" data-vessel-group="${v}">
-          <h3 style="font-family:'Manrope',-apple-system,sans-serif;font-size:1rem;font-weight:700;color:#1A6B8A;padding:8px 0;border-bottom:2px solid #1A6B8A;margin-bottom:8px;display:flex;align-items:center;gap:8px">${VESSEL_LABELS[v] || v.toUpperCase()} <span style="font-size:0.75rem;font-weight:500;background:rgba(22,142,110,0.1);color:#1A6B8A;padding:2px 8px;border-radius:12px">${count}</span></h3>
-          ${symbolRow}
-          ${logbookCards}
-          ${freeFormHtml}
-          ${detailCards}
-        </div>`;
-    }).join('');
+    return `
+      <tr class="log-row completion-card" data-searchable="${escapeHtml(JSON.stringify(vals).toLowerCase() + ' ' + crew)}" data-vessel="${co.vessel || ''}" style="cursor:pointer;border-bottom:1px solid #F0F0F0">
+        <td style="padding:16px 20px;font-size:0.8125rem;font-weight:500;color:#8E8E93;white-space:nowrap;vertical-align:top">${time}</td>
+        <td style="padding:16px 12px;font-weight:700;font-size:0.875rem;vertical-align:top">${vessel}</td>
+        <td style="padding:16px 12px;font-size:0.875rem;font-weight:500;vertical-align:top">${escapeHtml(crew)}</td>
+        <td style="padding:16px 12px;vertical-align:top">
+          <span style="font-size:0.6875rem;font-weight:700;background:${typeInfo.bg};color:${typeInfo.color};padding:3px 8px;border-radius:999px">${typeInfo.label}</span>
+        </td>
+        <td style="padding:16px 12px;font-size:0.875rem;vertical-align:top">
+          <div>${escapeHtml(templateName.replace(/\s+Captain|\s+Deckhand|\s+Mate/i, ''))}</div>
+          ${previewText ? `<div style="font-size:0.75rem;color:#8E8E93;margin-top:2px">${escapeHtml(previewText)}</div>` : ''}
+        </td>
+        <td style="padding:16px 12px;vertical-align:top">
+          <div style="display:flex;align-items:center;gap:6px;font-size:0.75rem;font-weight:700;color:${hasAlerts ? '#F36D4F' : '#34C759'}">
+            <span class="material-symbols-outlined" style="font-size:16px;font-variation-settings:'FILL' 1">${hasAlerts ? 'warning' : 'check_circle'}</span>
+            ${hasAlerts ? 'Flagged' : 'Complete'}
+          </div>
+        </td>
+      </tr>`;
+  }).join('');
+
+  const vesselSections = allRows.length > 0 ? `
+    <div style="background:white;border-radius:12px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.04)">
+      <table style="width:100%;border-collapse:collapse">
+        <thead>
+          <tr style="background:#F3F4F3">
+            <th style="padding:12px 20px;text-align:left;font-size:0.625rem;font-weight:800;text-transform:uppercase;letter-spacing:0.15em;color:#8E8E93">Time</th>
+            <th style="padding:12px;text-align:left;font-size:0.625rem;font-weight:800;text-transform:uppercase;letter-spacing:0.15em;color:#8E8E93">Vessel</th>
+            <th style="padding:12px;text-align:left;font-size:0.625rem;font-weight:800;text-transform:uppercase;letter-spacing:0.15em;color:#8E8E93">Crew</th>
+            <th style="padding:12px;text-align:left;font-size:0.625rem;font-weight:800;text-transform:uppercase;letter-spacing:0.15em;color:#8E8E93">Type</th>
+            <th style="padding:12px;text-align:left;font-size:0.625rem;font-weight:800;text-transform:uppercase;letter-spacing:0.15em;color:#8E8E93">Template</th>
+            <th style="padding:12px;text-align:left;font-size:0.625rem;font-weight:800;text-transform:uppercase;letter-spacing:0.15em;color:#8E8E93">Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${tableRows}
+        </tbody>
+      </table>
+    </div>` : '';
 
   const emptyState = completions.rows.length === 0
     ? `<p style="text-align:center;color:#6e7a74;padding:24px">No completions${isRange ? ' in this range' : ' for this day'} yet.</p>`

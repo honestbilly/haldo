@@ -178,6 +178,33 @@ export async function initDatabase(): Promise<void> {
       EXCEPTION WHEN duplicate_column THEN NULL;
       END $$;
 
+      -- Migration: Maintenance tracker schema upgrades
+      DO $$ BEGIN ALTER TABLE assigned_tasks ADD COLUMN tags TEXT[] DEFAULT '{}'; EXCEPTION WHEN duplicate_column THEN NULL; END $$;
+      DO $$ BEGIN ALTER TABLE assigned_tasks ADD COLUMN parent_task_id TEXT REFERENCES assigned_tasks(id); EXCEPTION WHEN duplicate_column THEN NULL; END $$;
+      DO $$ BEGIN ALTER TABLE assigned_tasks ADD COLUMN category TEXT DEFAULT 'general'; EXCEPTION WHEN duplicate_column THEN NULL; END $$;
+      DO $$ BEGIN ALTER TABLE assigned_tasks ADD COLUMN location TEXT; EXCEPTION WHEN duplicate_column THEN NULL; END $$;
+      DO $$ BEGIN ALTER TABLE assigned_tasks ADD COLUMN skill_level TEXT DEFAULT 'any'; EXCEPTION WHEN duplicate_column THEN NULL; END $$;
+      DO $$ BEGIN ALTER TABLE assigned_tasks ADD COLUMN actual_minutes INTEGER; EXCEPTION WHEN duplicate_column THEN NULL; END $$;
+      DO $$ BEGIN ALTER TABLE assigned_tasks ADD COLUMN started_at TIMESTAMPTZ; EXCEPTION WHEN duplicate_column THEN NULL; END $$;
+      DO $$ BEGIN ALTER TABLE assigned_tasks ADD COLUMN source_type TEXT DEFAULT 'manual'; EXCEPTION WHEN duplicate_column THEN NULL; END $$;
+      DO $$ BEGIN ALTER TABLE assigned_tasks ADD COLUMN source_id TEXT; EXCEPTION WHEN duplicate_column THEN NULL; END $$;
+      DO $$ BEGIN ALTER TABLE assigned_tasks ADD COLUMN merged_into_id TEXT REFERENCES assigned_tasks(id); EXCEPTION WHEN duplicate_column THEN NULL; END $$;
+
+      -- Task comments table
+      CREATE TABLE IF NOT EXISTS task_comments (
+        id TEXT PRIMARY KEY,
+        task_id TEXT NOT NULL REFERENCES assigned_tasks(id),
+        crew_id TEXT REFERENCES crew(id),
+        author_name TEXT NOT NULL,
+        comment TEXT NOT NULL,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
+
+      -- Indexes for maintenance tracker
+      CREATE INDEX IF NOT EXISTS idx_tasks_parent ON assigned_tasks(parent_task_id);
+      CREATE INDEX IF NOT EXISTS idx_tasks_category ON assigned_tasks(category);
+      CREATE INDEX IF NOT EXISTS idx_task_comments_task ON task_comments(task_id);
+
       -- Indexes for new tables
       CREATE INDEX IF NOT EXISTS idx_submissions_vessel ON submissions(vessel);
       CREATE INDEX IF NOT EXISTS idx_submissions_status ON submissions(status);

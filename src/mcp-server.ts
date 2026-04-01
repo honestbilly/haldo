@@ -216,6 +216,162 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
         required: ['query'],
       },
     },
+    // ── MAINTENANCE TRACKER MCP TOOLS ──
+    {
+      name: 'query_tasks',
+      description: 'Query maintenance tasks/work orders. Filter by status, vessel, category, tags, assignee, priority, parent. Returns tasks with assignee names.',
+      inputSchema: {
+        type: 'object' as const,
+        properties: {
+          status: { type: 'string', description: 'Filter: pending, in-progress, completed, cancelled, blocked, snoozed' },
+          vessel: { type: 'string', description: 'Filter by vessel slug' },
+          category: { type: 'string', description: 'Filter: maintenance, repair, inspection, cleaning, safety, regulatory, upgrade, cosmetic, general' },
+          tag: { type: 'string', description: 'Filter by tag (exact match in tags array)' },
+          assigned_to: { type: 'string', description: 'Filter by crew ID assigned to' },
+          priority: { type: 'string', description: 'Filter: low, medium, high, urgent' },
+          parent_task_id: { type: 'string', description: 'Get children of a parent task' },
+          include_completed: { type: 'boolean', description: 'Include completed/cancelled tasks (default: false)' },
+          limit: { type: 'number', description: 'Max results (default 50)' },
+        },
+      },
+    },
+    {
+      name: 'get_task',
+      description: 'Get a single task with full details, children, and comments.',
+      inputSchema: {
+        type: 'object' as const,
+        properties: {
+          task_id: { type: 'string', description: 'Task ID' },
+        },
+        required: ['task_id'],
+      },
+    },
+    {
+      name: 'create_task',
+      description: 'Create a new maintenance task/work order with all fields.',
+      inputSchema: {
+        type: 'object' as const,
+        properties: {
+          title: { type: 'string', description: 'Task title (required)' },
+          description: { type: 'string', description: 'Detailed description' },
+          vessel: { type: 'string', description: 'Vessel slug or "shore"/"yard"/"office"' },
+          assigned_to: { type: 'string', description: 'Crew ID to assign to' },
+          priority: { type: 'string', description: 'low, medium, high, urgent' },
+          category: { type: 'string', description: 'maintenance, repair, inspection, etc.' },
+          tags: { type: 'array', items: { type: 'string' }, description: 'Tags array' },
+          due_date: { type: 'string', description: 'Due date (ISO)' },
+          estimated_minutes: { type: 'number', description: 'Estimated time in minutes' },
+          notes: { type: 'string', description: 'Notes (warranty, vendor, instructions)' },
+          parent_task_id: { type: 'string', description: 'Parent task ID for subtasks' },
+          skill_level: { type: 'string', description: 'any, deckhand, captain, mechanic, specialist' },
+          location: { type: 'string', description: 'Specific location (engine room, dock, etc.)' },
+          source_type: { type: 'string', description: 'manual, submission, logbook, checklist, ai, recurring, telegram' },
+          source_id: { type: 'string', description: 'Source record ID' },
+        },
+        required: ['title'],
+      },
+    },
+    {
+      name: 'update_task',
+      description: 'Update any field on a task. Only provide the fields you want to change.',
+      inputSchema: {
+        type: 'object' as const,
+        properties: {
+          task_id: { type: 'string', description: 'Task ID (required)' },
+          title: { type: 'string' }, description: { type: 'string' },
+          status: { type: 'string' }, priority: { type: 'string' },
+          vessel: { type: 'string' }, assigned_to: { type: 'string' },
+          category: { type: 'string' }, tags: { type: 'array', items: { type: 'string' } },
+          due_date: { type: 'string' }, notes: { type: 'string' },
+          estimated_minutes: { type: 'number' }, actual_minutes: { type: 'number' },
+          skill_level: { type: 'string' }, location: { type: 'string' },
+          snoozed_until: { type: 'string' },
+        },
+        required: ['task_id'],
+      },
+    },
+    {
+      name: 'add_task_comment',
+      description: 'Add a comment/note to a task thread.',
+      inputSchema: {
+        type: 'object' as const,
+        properties: {
+          task_id: { type: 'string', description: 'Task ID' },
+          comment: { type: 'string', description: 'Comment text' },
+          author_name: { type: 'string', description: 'Who is commenting (default: "AI")' },
+        },
+        required: ['task_id', 'comment'],
+      },
+    },
+    {
+      name: 'create_subtask',
+      description: 'Create a child task under a parent task.',
+      inputSchema: {
+        type: 'object' as const,
+        properties: {
+          parent_task_id: { type: 'string', description: 'Parent task ID' },
+          title: { type: 'string', description: 'Subtask title' },
+          description: { type: 'string' },
+          assigned_to: { type: 'string' },
+          priority: { type: 'string' },
+          estimated_minutes: { type: 'number' },
+        },
+        required: ['parent_task_id', 'title'],
+      },
+    },
+    {
+      name: 'merge_tasks',
+      description: 'Merge task B into task A. A absorbs B notes/comments. B is cancelled with merged_into_id = A.',
+      inputSchema: {
+        type: 'object' as const,
+        properties: {
+          primary_task_id: { type: 'string', description: 'Task A — the one that stays' },
+          secondary_task_id: { type: 'string', description: 'Task B — merged into A, then cancelled' },
+        },
+        required: ['primary_task_id', 'secondary_task_id'],
+      },
+    },
+    {
+      name: 'query_submissions',
+      description: 'Query crew-submitted issues/feedback. Filter by status, category, vessel.',
+      inputSchema: {
+        type: 'object' as const,
+        properties: {
+          status: { type: 'string', description: 'new, reviewed, in-progress, resolved' },
+          category: { type: 'string', description: 'maintenance, suggestion, safety, etc.' },
+          vessel: { type: 'string' },
+          limit: { type: 'number' },
+        },
+      },
+    },
+    {
+      name: 'convert_submission',
+      description: 'Convert a crew submission into a maintenance task.',
+      inputSchema: {
+        type: 'object' as const,
+        properties: {
+          submission_id: { type: 'string', description: 'Submission ID to convert' },
+          priority: { type: 'string', description: 'Task priority (default: medium)' },
+          category: { type: 'string', description: 'Task category' },
+          tags: { type: 'array', items: { type: 'string' } },
+          assigned_to: { type: 'string' },
+          notes: { type: 'string', description: 'Additional manager notes' },
+        },
+        required: ['submission_id'],
+      },
+    },
+    {
+      name: 'get_task_stats',
+      description: 'Get task statistics: completion rate, overdue count, avg time, by vessel, crew leaderboard.',
+      inputSchema: {
+        type: 'object' as const,
+        properties: {
+          from_date: { type: 'string', description: 'Start date for stats period' },
+          to_date: { type: 'string', description: 'End date for stats period' },
+          vessel: { type: 'string', description: 'Filter by vessel' },
+        },
+      },
+    },
   ],
 }));
 
@@ -480,6 +636,175 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         }
 
         return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };
+      }
+
+      // ── MAINTENANCE TRACKER HANDLERS ──
+
+      case 'query_tasks': {
+        let q = `SELECT t.*, ca.name as assignee_name, cb.name as completed_by_name,
+          (SELECT COUNT(*) FROM assigned_tasks c WHERE c.parent_task_id = t.id) as child_count
+          FROM assigned_tasks t
+          LEFT JOIN crew ca ON t.assigned_to = ca.id
+          LEFT JOIN crew cb ON t.completed_by = cb.id WHERE 1=1`;
+        const p: any[] = []; let pi = 1;
+        if (args?.status) { q += ` AND t.status = $${pi++}`; p.push(args.status); }
+        else if (!args?.include_completed) { q += ` AND t.status NOT IN ('completed','cancelled')`; }
+        if (args?.vessel) { q += ` AND t.vessel = $${pi++}`; p.push(args.vessel); }
+        if (args?.category) { q += ` AND t.category = $${pi++}`; p.push(args.category); }
+        if (args?.tag) { q += ` AND $${pi++} = ANY(t.tags)`; p.push(args.tag); }
+        if (args?.assigned_to) { q += ` AND t.assigned_to = $${pi++}`; p.push(args.assigned_to); }
+        if (args?.priority) { q += ` AND t.priority = $${pi++}`; p.push(args.priority); }
+        if (args?.parent_task_id) { q += ` AND t.parent_task_id = $${pi++}`; p.push(args.parent_task_id); }
+        q += ` ORDER BY CASE t.priority WHEN 'urgent' THEN 0 WHEN 'high' THEN 1 WHEN 'medium' THEN 2 ELSE 3 END, t.created_at DESC`;
+        q += ` LIMIT ${Math.min(Number(args?.limit) || 50, 500)}`;
+        const tasks = await pool.query(q, p);
+        return { content: [{ type: 'text', text: JSON.stringify(tasks.rows, null, 2) }] };
+      }
+
+      case 'get_task': {
+        const task = await pool.query(
+          `SELECT t.*, ca.name as assignee_name FROM assigned_tasks t LEFT JOIN crew ca ON t.assigned_to = ca.id WHERE t.id = $1`,
+          [args?.task_id]
+        );
+        if (task.rows.length === 0) return { content: [{ type: 'text', text: 'Task not found' }] };
+        const children = await pool.query(`SELECT id, title, status, priority FROM assigned_tasks WHERE parent_task_id = $1`, [args?.task_id]);
+        const comments = await pool.query(`SELECT * FROM task_comments WHERE task_id = $1 ORDER BY created_at ASC`, [args?.task_id]);
+        const merged = await pool.query(`SELECT id, title FROM assigned_tasks WHERE merged_into_id = $1`, [args?.task_id]);
+        return { content: [{ type: 'text', text: JSON.stringify({ ...task.rows[0], children: children.rows, comments: comments.rows, merged_from: merged.rows }, null, 2) }] };
+      }
+
+      case 'create_task': {
+        const id = nanoid();
+        const tags = args?.tags || [];
+        await pool.query(
+          `INSERT INTO assigned_tasks (id, title, description, vessel, assigned_to, assigned_by, priority, category, tags, due_date, estimated_minutes, notes, parent_task_id, skill_level, location, source_type, source_id, status)
+           VALUES ($1,$2,$3,$4,$5,'ai',$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,'pending')`,
+          [id, args?.title, args?.description||null, args?.vessel||null, args?.assigned_to||null,
+           args?.priority||'medium', args?.category||'general', tags,
+           args?.due_date||null, args?.estimated_minutes||null, args?.notes||null,
+           args?.parent_task_id||null, args?.skill_level||'any', args?.location||null,
+           args?.source_type||'ai', args?.source_id||null]
+        );
+        return { content: [{ type: 'text', text: JSON.stringify({ id, title: args?.title, status: 'pending' }) }] };
+      }
+
+      case 'update_task': {
+        const fields: string[] = []; const vals: any[] = []; let idx = 1;
+        const updatable = ['title','description','status','priority','vessel','assigned_to','category','due_date','notes','estimated_minutes','actual_minutes','skill_level','location','snoozed_until'];
+        for (const f of updatable) {
+          if (args?.[f] !== undefined) { fields.push(`${f} = $${idx++}`); vals.push(args[f]); }
+        }
+        if (args?.tags) { fields.push(`tags = $${idx++}`); vals.push(args.tags); }
+        if (args?.status === 'completed') { fields.push(`completed_at = NOW()`); }
+        if (args?.status === 'in-progress' && !args?.started_at) { fields.push(`started_at = NOW()`); }
+        fields.push('updated_at = NOW()');
+        vals.push(args?.task_id);
+        await pool.query(`UPDATE assigned_tasks SET ${fields.join(', ')} WHERE id = $${idx}`, vals);
+        return { content: [{ type: 'text', text: `Task ${args?.task_id} updated` }] };
+      }
+
+      case 'add_task_comment': {
+        const cid = nanoid();
+        await pool.query(
+          `INSERT INTO task_comments (id, task_id, author_name, comment) VALUES ($1,$2,$3,$4)`,
+          [cid, args?.task_id, args?.author_name || 'AI', args?.comment]
+        );
+        return { content: [{ type: 'text', text: JSON.stringify({ id: cid, task_id: args?.task_id }) }] };
+      }
+
+      case 'create_subtask': {
+        const sid = nanoid();
+        await pool.query(
+          `INSERT INTO assigned_tasks (id, title, description, parent_task_id, assigned_to, priority, estimated_minutes, status, source_type, assigned_by)
+           VALUES ($1,$2,$3,$4,$5,$6,$7,'pending','ai','ai')`,
+          [sid, args?.title, args?.description||null, args?.parent_task_id, args?.assigned_to||null, args?.priority||'medium', args?.estimated_minutes||null]
+        );
+        // Copy vessel/category/tags from parent
+        await pool.query(
+          `UPDATE assigned_tasks SET vessel = p.vessel, category = p.category, tags = p.tags
+           FROM assigned_tasks p WHERE assigned_tasks.id = $1 AND p.id = $2`,
+          [sid, args?.parent_task_id]
+        );
+        return { content: [{ type: 'text', text: JSON.stringify({ id: sid, parent_task_id: args?.parent_task_id }) }] };
+      }
+
+      case 'merge_tasks': {
+        const primary = args?.primary_task_id;
+        const secondary = args?.secondary_task_id;
+        // Append secondary notes to primary
+        const secTask = await pool.query('SELECT title, notes FROM assigned_tasks WHERE id = $1', [secondary]);
+        if (secTask.rows[0]?.notes) {
+          await pool.query(`UPDATE assigned_tasks SET notes = COALESCE(notes,'') || E'\n\n--- Merged from: ' || $2 || E' ---\n' || $3, updated_at = NOW() WHERE id = $1`,
+            [primary, secTask.rows[0].title, secTask.rows[0].notes]);
+        }
+        // Move comments from secondary to primary
+        await pool.query('UPDATE task_comments SET task_id = $1 WHERE task_id = $2', [primary, secondary]);
+        // Mark secondary as merged
+        await pool.query(`UPDATE assigned_tasks SET status = 'cancelled', merged_into_id = $1, updated_at = NOW() WHERE id = $2`, [primary, secondary]);
+        return { content: [{ type: 'text', text: `Merged ${secondary} into ${primary}` }] };
+      }
+
+      case 'query_submissions': {
+        let sq = `SELECT s.*, cr.name as crew_name FROM submissions s JOIN crew cr ON s.crew_id = cr.id WHERE 1=1`;
+        const sp: any[] = []; let spi = 1;
+        if (args?.status) { sq += ` AND s.status = $${spi++}`; sp.push(args.status); }
+        if (args?.category) { sq += ` AND s.category = $${spi++}`; sp.push(args.category); }
+        if (args?.vessel) { sq += ` AND s.vessel = $${spi++}`; sp.push(args.vessel); }
+        sq += ` ORDER BY s.created_at DESC LIMIT ${Math.min(Number(args?.limit) || 50, 500)}`;
+        const subs = await pool.query(sq, sp);
+        return { content: [{ type: 'text', text: JSON.stringify(subs.rows, null, 2) }] };
+      }
+
+      case 'convert_submission': {
+        const sub = await pool.query('SELECT * FROM submissions WHERE id = $1', [args?.submission_id]);
+        if (sub.rows.length === 0) return { content: [{ type: 'text', text: 'Submission not found' }] };
+        const s = sub.rows[0];
+        const tid = nanoid();
+        await pool.query(
+          `INSERT INTO assigned_tasks (id, title, description, vessel, priority, category, tags, source_type, source_id, source_submission_id, notes, assigned_to, assigned_by, status)
+           VALUES ($1,$2,$3,$4,$5,$6,$7,'submission',$8,$8,$9,$10,'ai','pending')`,
+          [tid, s.title, s.details, s.vessel, args?.priority||'medium', args?.category||s.category||'maintenance',
+           args?.tags||[], args?.submission_id, args?.notes||null, args?.assigned_to||null]
+        );
+        await pool.query(`UPDATE submissions SET status = 'in-progress', updated_at = NOW() WHERE id = $1`, [args?.submission_id]);
+        return { content: [{ type: 'text', text: JSON.stringify({ task_id: tid, submission_id: args?.submission_id }) }] };
+      }
+
+      case 'get_task_stats': {
+        const from = args?.from_date || new Date(Date.now() - 30*24*60*60*1000).toISOString().split('T')[0];
+        const to = args?.to_date || new Date().toISOString().split('T')[0];
+        let vesselFilter = '';
+        const statsParams: any[] = [from, to];
+        if (args?.vessel) { vesselFilter = ' AND vessel = $3'; statsParams.push(args.vessel); }
+
+        const total = await pool.query(`SELECT COUNT(*) FROM assigned_tasks WHERE created_at >= $1 AND created_at <= $2${vesselFilter}`, statsParams);
+        const completed = await pool.query(`SELECT COUNT(*) FROM assigned_tasks WHERE status = 'completed' AND completed_at >= $1 AND completed_at <= $2${vesselFilter}`, statsParams);
+        const overdue = await pool.query(`SELECT COUNT(*) FROM assigned_tasks WHERE due_date < CURRENT_DATE AND status NOT IN ('completed','cancelled','snoozed')${vesselFilter ? ' AND vessel = $1' : ''}`, args?.vessel ? [args.vessel] : []);
+        const avgTime = await pool.query(`SELECT AVG(actual_minutes) as avg_minutes FROM assigned_tasks WHERE status = 'completed' AND actual_minutes IS NOT NULL AND completed_at >= $1 AND completed_at <= $2${vesselFilter}`, statsParams);
+
+        // Crew leaderboard
+        const leaderboard = await pool.query(
+          `SELECT cr.name, COUNT(*) as tasks_completed, SUM(t.actual_minutes) as total_minutes
+           FROM assigned_tasks t JOIN crew cr ON t.completed_by = cr.id
+           WHERE t.status = 'completed' AND t.completed_at >= $1 AND t.completed_at <= $2${vesselFilter}
+           GROUP BY cr.name ORDER BY tasks_completed DESC LIMIT 10`, statsParams
+        );
+
+        // By vessel
+        const byVessel = await pool.query(
+          `SELECT vessel, status, COUNT(*) as count FROM assigned_tasks WHERE created_at >= $1 AND created_at <= $2 GROUP BY vessel, status ORDER BY vessel`, [from, to]
+        );
+
+        return { content: [{ type: 'text', text: JSON.stringify({
+          period: { from, to },
+          total: parseInt(total.rows[0].count),
+          completed: parseInt(completed.rows[0].count),
+          overdue: parseInt(overdue.rows[0].count),
+          avg_minutes: avgTime.rows[0]?.avg_minutes ? Math.round(parseFloat(avgTime.rows[0].avg_minutes)) : null,
+          completion_rate: total.rows[0].count > 0 ? Math.round(completed.rows[0].count / total.rows[0].count * 100) : 0,
+          leaderboard: leaderboard.rows,
+          by_vessel: byVessel.rows,
+        }, null, 2) }] };
       }
 
       case 'run_sql': {

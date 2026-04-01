@@ -180,8 +180,28 @@ export interface AssignedTaskRow {
   completed_at: Date | null;
   completed_by: string | null;
   notes: string | null;
+  // Maintenance tracker additions
+  tags: string[];
+  parent_task_id: string | null;
+  category: 'maintenance' | 'repair' | 'inspection' | 'cleaning' | 'safety' | 'regulatory' | 'upgrade' | 'cosmetic' | 'general';
+  location: string | null;
+  skill_level: 'any' | 'deckhand' | 'captain' | 'mechanic' | 'specialist';
+  actual_minutes: number | null;
+  started_at: Date | null;
+  source_type: 'manual' | 'submission' | 'logbook' | 'checklist' | 'ai' | 'recurring' | 'telegram';
+  source_id: string | null;
+  merged_into_id: string | null;
   created_at: Date;
   updated_at: Date;
+}
+
+export interface TaskCommentRow {
+  id: string;
+  task_id: string;
+  crew_id: string | null;
+  author_name: string;
+  comment: string;
+  created_at: Date;
 }
 
 // ============================================================
