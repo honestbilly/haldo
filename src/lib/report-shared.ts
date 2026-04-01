@@ -327,7 +327,7 @@ export function reportLayout(activeTab: string, content: string): string {
   const opsItems = [
     { id: 'Activity', label: 'Activity', icon: 'dashboard', href: '/report' },
     { id: 'Inbox', label: 'Inbox', icon: 'inbox', href: '/report/inbox' },
-    { id: 'Tasks', label: 'Tasks', icon: 'checklist', href: '/report/tasks' },
+    { id: 'Tasks', label: 'Tasks', icon: 'build', href: '/report/tasks' },
   ];
 
   const peopleItems = [
@@ -345,7 +345,9 @@ export function reportLayout(activeTab: string, content: string): string {
 
   const renderSidebarSection = (label: string, items: typeof opsItems) => {
     const links = items.map(item => {
-      const isActive = activeTab === item.id || (item.id === 'Activity' && (activeTab === 'Today' || activeTab === 'History'));
+      const isActive = activeTab === item.id
+        || (item.id === 'Activity' && (activeTab === 'Today' || activeTab === 'History'))
+        || (item.id === 'Inbox' && activeTab === 'Inbox');
       return `<a href="${item.href}" style="display:flex;align-items:center;gap:12px;padding:10px 16px;border-radius:8px;text-decoration:none;font-size:0.875rem;font-weight:${isActive ? '700' : '500'};color:${isActive ? '#1A6B8A' : 'rgba(26,28,30,0.6)'};background:${isActive ? 'white' : 'transparent'};${isActive ? 'box-shadow:0 1px 3px rgba(0,0,0,0.06)' : ''};transition:all 0.15s">
         <span class="material-symbols-outlined" style="font-size:20px;${isActive ? "font-variation-settings:'FILL' 1" : ''}">${item.icon}</span>
         ${item.label}

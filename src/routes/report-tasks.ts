@@ -93,18 +93,25 @@ app.get('/report/tasks', async (c) => {
     schedByDate.get(dk)!.push({ name: row.name, role: row.role });
   }
 
+  // Stitch crew strip — pills with (C) for captains, horizontal scroll
   const crewStrip = `
-    <div style="display:flex;gap:2px;margin-bottom:20px;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:4px">
+    <div style="display:flex;border-bottom:1px solid rgba(0,0,0,0.06);overflow-x:auto;-webkit-overflow-scrolling:touch;margin-bottom:0">
       ${days.map((d, i) => {
         const crew = schedByDate.get(d) || [];
         const isToday = i === 0;
+        const crewPills = crew.length > 0
+          ? crew.map(c => {
+              const isCaptain = c.role === 'captain';
+              return `<span style="display:inline-block;padding:2px 6px;background:white;font-size:0.5625rem;font-weight:${isCaptain ? '700' : '500'};color:${isCaptain ? '#1A6B8A' : '#5b5f67'};border-radius:4px;${isCaptain ? 'border:1px solid rgba(26,107,138,0.2)' : ''};white-space:nowrap">${escapeHtml(c.name)}${isCaptain ? ' (C)' : ''}</span>`;
+            }).join('')
+          : '<span style="font-size:0.5625rem;color:#8E8E93;font-style:italic">No Crew</span>';
+
         return `
-          <div style="flex:0 0 auto;min-width:100px;padding:8px 10px;background:${isToday ? 'white' : '#F8F9FA'};border-radius:8px;${isToday ? 'box-shadow:0 1px 4px rgba(0,0,0,0.08);border:1px solid rgba(26,107,138,0.15)' : ''}">
-            <div style="font-size:0.5625rem;font-weight:700;color:${isToday ? '#1A6B8A' : '#8E8E93'};text-transform:uppercase;letter-spacing:0.1em;margin-bottom:6px">${dayLabels[i]}</div>
-            ${crew.length > 0
-              ? crew.map(c => `<div style="font-size:0.625rem;font-weight:${c.role === 'captain' ? '700' : '500'};color:${c.role === 'captain' ? '#1a1c1e' : '#5b5f67'};line-height:1.6;white-space:nowrap">${escapeHtml(c.name)}</div>`).join('')
-              : '<div style="font-size:0.625rem;color:#c7c7cc;font-style:italic">—</div>'
-            }
+          <div style="flex:0 0 auto;min-width:120px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px;${isToday ? 'background:rgba(26,107,138,0.06);border-left:1px solid rgba(26,107,138,0.1);border-right:1px solid rgba(26,107,138,0.1)' : 'border-right:1px solid rgba(0,0,0,0.04)'}">
+            <div style="font-size:0.5625rem;font-weight:${isToday ? '800' : '600'};color:${isToday ? '#1A6B8A' : '#8E8E93'};text-transform:uppercase;letter-spacing:0.15em;margin-bottom:6px">${dayLabels[i]}</div>
+            <div style="display:flex;flex-wrap:wrap;justify-content:center;gap:3px">
+              ${crewPills}
+            </div>
           </div>`;
       }).join('')}
     </div>`;
