@@ -645,10 +645,12 @@ app.get('/report/tasks/:id', async (c) => {
 
 // ─── HTMX PARTIAL ENDPOINTS (inline editing) ────────────────
 
-// Inline status change — returns just the updated card
+// Inline status change — returns just the updated badge
 app.patch('/report/tasks/:id/status', async (c) => {
   const taskId = c.req.param('id');
-  const body = await c.req.json().catch(() => ({}));
+  // Accept both JSON and form-encoded
+  let body: any = {};
+  try { body = await c.req.json(); } catch { body = await c.req.parseBody().catch(() => ({})); }
   const newStatus = String(body.status || 'pending');
 
   const completedAt = newStatus === 'completed' ? 'NOW()' : 'completed_at';
@@ -665,7 +667,9 @@ app.patch('/report/tasks/:id/status', async (c) => {
 // Inline assignment — returns updated assignee display
 app.patch('/report/tasks/:id/assign', async (c) => {
   const taskId = c.req.param('id');
-  const body = await c.req.json().catch(() => ({}));
+  // Accept both JSON and form-encoded
+  let body: any = {};
+  try { body = await c.req.json(); } catch { body = await c.req.parseBody().catch(() => ({})); }
   const crewId = String(body.crew_id || '');
 
   if (crewId) {
@@ -687,13 +691,13 @@ app.get('/report/tasks/:id/assign-dropdown', async (c) => {
   const currentAssignee = task.rows[0]?.assigned_to || '';
 
   const options = crewList.rows.map((cr: any) =>
-    `<button type="button" onclick="event.stopPropagation();htmx.ajax('PATCH','/report/tasks/${taskId}/assign',{target:'#assignee-${taskId}',swap:'innerHTML',values:{crew_id:'${cr.id}'}});this.closest('.htmx-dropdown').remove()" style="display:block;width:100%;text-align:left;padding:10px 14px;border:none;background:${cr.id === currentAssignee ? 'rgba(26,107,138,0.08)' : 'transparent'};font-size:0.8125rem;font-weight:${cr.id === currentAssignee ? '700' : '400'};color:#1a1c1e;cursor:pointer;border-bottom:1px solid #F0F0F0" onmouseenter="this.style.background='#F8F9FA'" onmouseleave="this.style.background='transparent'">${escapeHtml(cr.name)} <span style="font-size:0.6875rem;color:#8E8E93">(${cr.role})</span></button>`
+    `<button type="button" onclick="event.stopPropagation();fetch('/report/tasks/${taskId}/assign',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({crew_id:'${cr.id}'})}).then(r=>r.text()).then(h=>{document.getElementById('assignee-${taskId}').innerHTML=h});this.closest('.htmx-dropdown').remove()" style="display:block;width:100%;text-align:left;padding:10px 14px;border:none;background:${cr.id === currentAssignee ? 'rgba(26,107,138,0.08)' : 'transparent'};font-size:0.8125rem;font-weight:${cr.id === currentAssignee ? '700' : '400'};color:#1a1c1e;cursor:pointer;border-bottom:1px solid #F0F0F0" onmouseenter="this.style.background='#F8F9FA'" onmouseleave="this.style.background='transparent'">${escapeHtml(cr.name)} <span style="font-size:0.6875rem;color:#8E8E93">(${cr.role})</span></button>`
   ).join('');
 
   return c.html(`
     <div class="htmx-dropdown" style="position:absolute;top:100%;left:0;z-index:100;background:white;border-radius:10px;box-shadow:0 8px 32px rgba(0,0,0,0.15);border:1px solid #E5E5EA;min-width:200px;max-height:280px;overflow-y:auto;margin-top:4px" onclick="event.stopPropagation()">
       <div style="padding:8px 14px;font-size:0.625rem;font-weight:700;color:#8E8E93;text-transform:uppercase;letter-spacing:0.1em;border-bottom:1px solid #F0F0F0">Assign To</div>
-      <button type="button" onclick="event.stopPropagation();htmx.ajax('PATCH','/report/tasks/${taskId}/assign',{target:'#assignee-${taskId}',swap:'innerHTML',values:{crew_id:''}});this.closest('.htmx-dropdown').remove()" style="display:block;width:100%;text-align:left;padding:10px 14px;border:none;background:transparent;font-size:0.8125rem;color:#8E8E93;cursor:pointer;border-bottom:1px solid #F0F0F0;font-style:italic">Unassigned</button>
+      <button type="button" onclick="event.stopPropagation();fetch('/report/tasks/${taskId}/assign',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({crew_id:''})}).then(r=>r.text()).then(h=>{document.getElementById('assignee-${taskId}').innerHTML=h});this.closest('.htmx-dropdown').remove()" style="display:block;width:100%;text-align:left;padding:10px 14px;border:none;background:transparent;font-size:0.8125rem;color:#8E8E93;cursor:pointer;border-bottom:1px solid #F0F0F0;font-style:italic">Unassigned</button>
       ${options}
     </div>
   `);
@@ -711,7 +715,7 @@ app.get('/report/tasks/:id/status-dropdown', async (c) => {
   ];
 
   const buttons = statuses.map(s =>
-    `<button type="button" onclick="event.stopPropagation();htmx.ajax('PATCH','/report/tasks/${taskId}/status',{target:'#status-${taskId}',swap:'innerHTML',values:{status:'${s.value}'}});this.closest('.htmx-dropdown').remove()" style="display:block;width:100%;text-align:left;padding:10px 14px;border:none;background:transparent;font-size:0.8125rem;color:${s.color};font-weight:600;cursor:pointer;border-bottom:1px solid #F0F0F0" onmouseenter="this.style.background='#F8F9FA'" onmouseleave="this.style.background='transparent'">${s.label}</button>`
+    `<button type="button" onclick="event.stopPropagation();fetch('/report/tasks/${taskId}/status',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({status:'${s.value}'})}).then(r=>r.text()).then(h=>{document.getElementById('status-${taskId}').innerHTML=h});this.closest('.htmx-dropdown').remove()" style="display:block;width:100%;text-align:left;padding:10px 14px;border:none;background:transparent;font-size:0.8125rem;color:${s.color};font-weight:600;cursor:pointer;border-bottom:1px solid #F0F0F0" onmouseenter="this.style.background='#F8F9FA'" onmouseleave="this.style.background='transparent'">${s.label}</button>`
   ).join('');
 
   return c.html(`
