@@ -113,7 +113,9 @@ app.get('/report/library', async (c) => {
     ${subNav('library')}
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
       <h2 style="font-family:'Manrope',-apple-system,sans-serif;font-size:1.125rem;font-weight:700">Repeated Task Library</h2>
-      <a href="/report/library/build" style="display:flex;align-items:center;justify-content:center;padding:10px 16px;background:#1A6B8A;color:white;border-radius:8px;text-decoration:none;font-weight:600;font-size:0.875rem;min-height:44px">+ Build New</a>
+      <a href="/report/library/build" style="display:flex;align-items:center;justify-content:center;gap:6px;padding:10px 24px;background:linear-gradient(135deg,#1A6B8A,#0D5470);color:white;border-radius:8px;text-decoration:none;font-weight:700;font-size:0.875rem;min-height:44px;box-shadow:0 2px 8px rgba(26,107,138,0.2)">
+        <span class="material-symbols-outlined" style="font-size:18px">add</span> Build New
+      </a>
     </div>
     ${groupsHtml}
   `));
@@ -139,12 +141,13 @@ app.get('/report/library/build', async (c) => {
     <div style="margin-bottom:16px">
       <a href="/report/library" style="color:#1A6B8A;text-decoration:none;font-size:0.875rem">← Back to library</a>
     </div>
-    <h2 style="font-family:'Manrope',-apple-system,sans-serif;font-size:1.125rem;font-weight:700;margin-bottom:16px">${prefill ? 'Clone: ' + escapeHtml(prefill.name) : 'Build New Repeated Task'}</h2>
+    <h1 style="font-family:'Manrope',sans-serif;font-size:1.75rem;font-weight:800;color:#1a1c1e;margin-bottom:4px">${prefill ? 'Clone: ' + escapeHtml(prefill.name) : 'Build New Task'}</h1>
+    <p style="font-size:0.875rem;color:#8E8E93;margin-bottom:24px">Create a task with optional checklist steps and scheduling.</p>
 
     <form action="/report/library/build" method="POST" id="builder-form">
-      <!-- Step 1: Basics -->
-      <div style="background:#FFFFFF;border-radius:8px;padding:16px;margin-bottom:16px">
-        <h3 style="font-size:0.875rem;font-weight:600;margin-bottom:12px">Basics</h3>
+      <!-- Section 1: Task Info -->
+      <section style="background:white;border-radius:12px;padding:32px;margin-bottom:24px;box-shadow:0 1px 3px rgba(0,0,0,0.04);border:1px solid rgba(0,0,0,0.04)">
+        <h2 style="font-family:'Manrope',sans-serif;font-size:1.25rem;font-weight:700;margin-bottom:20px">Task Info</h2>
 
         <div style="margin-bottom:12px">
           <label style="display:block;font-size:0.8125rem;font-weight:500;color:#6e7a74;margin-bottom:4px">Name *</label>
@@ -174,7 +177,7 @@ app.get('/report/library/build', async (c) => {
         </div>
 
         <div style="margin-bottom:12px">
-          <label style="display:block;font-size:0.8125rem;font-weight:500;color:#6e7a74;margin-bottom:4px">Trigger Type *</label>
+          <label style="display:block;font-size:0.8125rem;font-weight:600;color:#1a1c1e;margin-bottom:4px">Schedule (optional)</label>
           <select name="trigger_type" id="trigger-type" style="${dropdownStyle}" onchange="updateTriggerFields()">
             <option value="daily-rotation">Daily Rotation (DMT) — one task per day</option>
             <option value="weekly">Weekly — runs on a specific day</option>
@@ -215,9 +218,9 @@ app.get('/report/library/build', async (c) => {
         </div>
       </div>
 
-      <!-- Step 2: DMT Day Tasks (only for daily-rotation) -->
+      <!-- Section 2: DMT Day Tasks (only for daily-rotation) -->
       <div id="dmt-days" style="background:#FFFFFF;border-radius:8px;padding:16px;margin-bottom:16px;display:none">
-        <h3 style="font-size:0.875rem;font-weight:600;margin-bottom:12px">Daily Tasks (one per day)</h3>
+        <h2 style="font-family:'Manrope',sans-serif;font-size:1.25rem;font-weight:700;margin-bottom:12px">DMT Day Tasks</h2>
         <p style="font-size:0.75rem;color:#6e7a74;margin-bottom:12px">Name each day's task. Checklist items go in the next section.</p>
         ${DAYS.map((d, i) => `
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
@@ -226,9 +229,9 @@ app.get('/report/library/build', async (c) => {
           </div>`).join('')}
       </div>
 
-      <!-- Step 3: Checklist Items -->
+      <!-- Section 3: Checklist Steps (optional) -->
       <div style="background:#FFFFFF;border-radius:8px;padding:16px;margin-bottom:16px">
-        <h3 style="font-size:0.875rem;font-weight:600;margin-bottom:4px">Checklist Items</h3>
+        <h2 style="font-family:'Manrope',sans-serif;font-size:1.25rem;font-weight:700;margin-bottom:4px">Checklist Steps</h2>
         <p style="font-size:0.75rem;color:#6e7a74;margin-bottom:12px" id="items-hint">Add the items crew will check off. For DMTs, these items appear on every day's task.</p>
 
         <div id="items-container">
@@ -287,7 +290,9 @@ app.get('/report/library/build', async (c) => {
         </div>
       </details>
 
-      <button type="submit" style="width:100%;padding:14px;background:#1A6B8A;color:white;border:none;border-radius:8px;font-size:0.9375rem;font-weight:600;cursor:pointer;min-height:48px">Save to Library</button>
+      <button type="submit" style="width:100%;padding:16px;background:linear-gradient(135deg,#1A6B8A,#0D5470);color:white;border:none;border-radius:12px;font-family:'Manrope',sans-serif;font-size:1rem;font-weight:700;cursor:pointer;min-height:54px;box-shadow:0 4px 12px rgba(26,107,138,0.2);display:flex;align-items:center;justify-content:center;gap:8px">
+        <span class="material-symbols-outlined" style="font-size:20px">save</span> Save to Library
+      </button>
     </form>
 
     <script>
