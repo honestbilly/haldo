@@ -48,6 +48,7 @@ export function htmlHead(title: string): string {
   <title>${title} — Haldo</title>
   <link rel="stylesheet" href="/public/style.css">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap">
+  <script src="/public/htmx.min.js" defer></script>
   <link rel="manifest" href="/public/manifest.json">
   <meta name="theme-color" content="#1A6B8A">
   <meta name="apple-mobile-web-app-capable" content="yes">

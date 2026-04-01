@@ -159,7 +159,7 @@ app.get('/report/tasks', async (c) => {
     'safety': 'shield', 'regulatory': 'gavel', 'upgrade': 'upgrade', 'cosmetic': 'palette', 'general': 'task',
   };
 
-  // Stitch bento card for task
+  // Stitch bento card with HTMX inline editing
   const renderTaskRow = (t: any) => {
     const catIcon = CATEGORY_ICONS[t.category] || 'task';
     const dueStr = t.due_date ? new Date(t.due_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '';
@@ -170,16 +170,28 @@ app.get('/report/tasks', async (c) => {
     const notePreview = t.notes ? String(t.notes).substring(0, 80) + (t.notes.length > 80 ? '...' : '') : '';
 
     return `
-      <a href="/report/tasks/${t.id}" style="background:white;padding:20px;border-radius:12px;border:1px solid transparent;text-decoration:none;color:#1a1c1e;display:flex;flex-direction:column;position:relative;overflow:hidden;transition:all 0.2s;cursor:pointer" onmouseenter="this.style.borderColor='rgba(26,107,138,0.15)';this.style.boxShadow='0 4px 12px rgba(0,0,0,0.06)'" onmouseleave="this.style.borderColor='transparent';this.style.boxShadow='none'">
-        ${t.status === 'blocked' ? '<div style="position:absolute;top:0;right:0;width:96px;height:96px;margin-right:-32px;margin-top:-32px;background:rgba(255,59,48,0.04);border-radius:50%;filter:blur(20px)"></div>' : ''}
+      <div style="background:white;padding:20px;border-radius:12px;border:1px solid transparent;color:#1a1c1e;display:flex;flex-direction:column;position:relative;overflow:visible;transition:all 0.2s" onmouseenter="this.style.borderColor='rgba(26,107,138,0.15)';this.style.boxShadow='0 4px 12px rgba(0,0,0,0.06)'" onmouseleave="this.style.borderColor='transparent';this.style.boxShadow='none'">
+        ${t.status === 'blocked' ? '<div style="position:absolute;top:0;right:0;width:96px;height:96px;margin-right:-32px;margin-top:-32px;background:rgba(255,59,48,0.04);border-radius:50%;filter:blur(20px);pointer-events:none"></div>' : ''}
+
+        <!-- Top row: status (clickable) + more menu -->
         <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
-          ${statusBadge(t.status, !!t.assigned_to)}
-          <span class="material-symbols-outlined" style="font-size:18px;color:#c7c7cc">more_horiz</span>
+          <div id="status-${t.id}" style="position:relative;cursor:pointer" hx-get="/report/tasks/${t.id}/status-dropdown" hx-target="#status-${t.id}" hx-swap="beforeend" onclick="event.stopPropagation()">
+            ${statusBadge(t.status, !!t.assigned_to)}
+          </div>
+          <a href="/report/tasks/${t.id}" style="color:#c7c7cc;text-decoration:none" title="Edit task">
+            <span class="material-symbols-outlined" style="font-size:18px">more_horiz</span>
+          </a>
         </div>
-        <h3 style="font-family:'Manrope',sans-serif;font-weight:700;font-size:0.9375rem;color:#1a1c1e;margin-bottom:4px">${escapeHtml(t.title)}</h3>
+
+        <!-- Title (links to detail) -->
+        <a href="/report/tasks/${t.id}" style="text-decoration:none;color:#1a1c1e">
+          <h3 style="font-family:'Manrope',sans-serif;font-weight:700;font-size:0.9375rem;margin-bottom:4px">${escapeHtml(t.title)}</h3>
+        </a>
         ${notePreview ? `<p style="font-size:0.8125rem;color:#8E8E93;line-height:1.4;margin-bottom:12px">${escapeHtml(notePreview)}</p>` : '<div style="margin-bottom:12px"></div>'}
+
+        <!-- Bottom row: assignee (clickable) + due date -->
         <div style="display:flex;align-items:center;justify-content:space-between;margin-top:auto">
-          <div style="display:flex;align-items:center;gap:6px">
+          <div id="assignee-${t.id}" style="position:relative;cursor:pointer;display:flex;align-items:center;gap:6px" hx-get="/report/tasks/${t.id}/assign-dropdown" hx-target="#assignee-${t.id}" hx-swap="beforeend" onclick="event.stopPropagation()">
             ${assignee ? `<div style="width:24px;height:24px;border-radius:50%;background:#1A6B8A;color:white;display:flex;align-items:center;justify-content:center;font-size:0.5625rem;font-weight:700">${assignee.charAt(0)}</div>` : '<span style="font-size:0.6875rem;color:#c7c7cc">Unassigned</span>'}
             ${childCount > 0 ? `<span style="font-size:0.5625rem;color:#8E8E93">${childCount} subtasks</span>` : ''}
           </div>
@@ -187,7 +199,7 @@ app.get('/report/tasks', async (c) => {
             ${dueStr ? `<span class="material-symbols-outlined" style="font-size:12px">schedule</span> ${isOverdue ? 'Overdue' : dueStr}` : ''}
           </span>
         </div>
-      </a>`;
+      </div>`;
   };
 
   // Keep old card renderer for backward compat (used nowhere now)
@@ -630,6 +642,85 @@ app.get('/report/tasks/:id', async (c) => {
     <div style="margin-top:4px;font-size:0.6875rem;color:#9ca3af">Created ${new Date(task.created_at).toLocaleString()}</div>
   `));
 });
+
+// ─── HTMX PARTIAL ENDPOINTS (inline editing) ────────────────
+
+// Inline status change — returns just the updated card
+app.patch('/report/tasks/:id/status', async (c) => {
+  const taskId = c.req.param('id');
+  const body = await c.req.json().catch(() => ({}));
+  const newStatus = String(body.status || 'pending');
+
+  const completedAt = newStatus === 'completed' ? 'NOW()' : 'completed_at';
+  const startedAt = newStatus === 'in-progress' ? 'COALESCE(started_at, NOW())' : 'started_at';
+
+  await pool.query(
+    `UPDATE assigned_tasks SET status = $1, completed_at = ${completedAt}, started_at = ${startedAt}, updated_at = NOW() WHERE id = $2`,
+    [newStatus, taskId]
+  );
+
+  return c.html(statusBadge(newStatus, true));
+});
+
+// Inline assignment — returns updated assignee display
+app.patch('/report/tasks/:id/assign', async (c) => {
+  const taskId = c.req.param('id');
+  const body = await c.req.json().catch(() => ({}));
+  const crewId = String(body.crew_id || '');
+
+  if (crewId) {
+    await pool.query('UPDATE assigned_tasks SET assigned_to = $1, updated_at = NOW() WHERE id = $2', [crewId, taskId]);
+    const crew = await pool.query('SELECT name FROM crew WHERE id = $1', [crewId]);
+    const name = crew.rows[0]?.name || 'Unknown';
+    return c.html(`<div style="width:24px;height:24px;border-radius:50%;background:#1A6B8A;color:white;display:flex;align-items:center;justify-content:center;font-size:0.5625rem;font-weight:700">${name.charAt(0)}</div>`);
+  } else {
+    await pool.query('UPDATE assigned_tasks SET assigned_to = NULL, updated_at = NOW() WHERE id = $1', [taskId]);
+    return c.html('<span style="font-size:0.6875rem;color:#c7c7cc">Unassigned</span>');
+  }
+});
+
+// Get crew dropdown for inline assignment
+app.get('/report/tasks/:id/assign-dropdown', async (c) => {
+  const taskId = c.req.param('id');
+  const crewList = await pool.query('SELECT id, name, role FROM crew WHERE active = TRUE ORDER BY role, name');
+  const task = await pool.query('SELECT assigned_to FROM assigned_tasks WHERE id = $1', [taskId]);
+  const currentAssignee = task.rows[0]?.assigned_to || '';
+
+  const options = crewList.rows.map((cr: any) =>
+    `<button hx-patch="/report/tasks/${taskId}/assign" hx-vals='{"crew_id":"${cr.id}"}' hx-target="#assignee-${taskId}" hx-swap="innerHTML" style="display:block;width:100%;text-align:left;padding:8px 12px;border:none;background:${cr.id === currentAssignee ? 'rgba(26,107,138,0.08)' : 'transparent'};font-size:0.8125rem;font-weight:${cr.id === currentAssignee ? '700' : '400'};color:#1a1c1e;cursor:pointer;border-bottom:1px solid #F0F0F0" onmouseenter="this.style.background='#F8F9FA'" onmouseleave="this.style.background='${cr.id === currentAssignee ? 'rgba(26,107,138,0.08)' : 'transparent'}'">${escapeHtml(cr.name)} <span style="font-size:0.6875rem;color:#8E8E93">(${cr.role})</span></button>`
+  ).join('');
+
+  return c.html(`
+    <div style="position:absolute;top:100%;left:0;z-index:100;background:white;border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,0.12);border:1px solid #E5E5EA;min-width:180px;max-height:240px;overflow-y:auto">
+      <button hx-patch="/report/tasks/${taskId}/assign" hx-vals='{"crew_id":""}' hx-target="#assignee-${taskId}" hx-swap="innerHTML" style="display:block;width:100%;text-align:left;padding:8px 12px;border:none;background:transparent;font-size:0.8125rem;color:#8E8E93;cursor:pointer;border-bottom:1px solid #F0F0F0;font-style:italic">Unassigned</button>
+      ${options}
+    </div>
+  `);
+});
+
+// Get status dropdown for inline change
+app.get('/report/tasks/:id/status-dropdown', async (c) => {
+  const taskId = c.req.param('id');
+  const statuses = [
+    { value: 'pending', label: 'In Queue', color: '#8E8E93' },
+    { value: 'in-progress', label: 'In Progress', color: '#1A6B8A' },
+    { value: 'blocked', label: 'Blocked', color: '#FF3B30' },
+    { value: 'completed', label: 'Completed', color: '#34C759' },
+    { value: 'snoozed', label: 'Snoozed', color: '#8E8E93' },
+  ];
+
+  const buttons = statuses.map(s =>
+    `<button hx-patch="/report/tasks/${taskId}/status" hx-vals='{"status":"${s.value}"}' hx-target="#status-${taskId}" hx-swap="innerHTML" style="display:block;width:100%;text-align:left;padding:8px 12px;border:none;background:transparent;font-size:0.8125rem;color:${s.color};font-weight:600;cursor:pointer;border-bottom:1px solid #F0F0F0" onmouseenter="this.style.background='#F8F9FA'" onmouseleave="this.style.background='transparent'">${s.label}</button>`
+  ).join('');
+
+  return c.html(`
+    <div style="position:absolute;top:100%;right:0;z-index:100;background:white;border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,0.12);border:1px solid #E5E5EA;min-width:160px">
+      ${buttons}
+    </div>
+  `);
+});
+
+// ─── Full form POST (existing) ──────────────────────────────
 
 app.post('/report/tasks/:id', async (c) => {
   const taskId = c.req.param('id');
