@@ -51,21 +51,21 @@ function renderSubmitPage(session: SessionData): string {
 
   return `${htmlHead('Submit')}
 <body style="background:#F2F2F7">
-  <!-- Header -->
-  <header style="position:fixed;top:0;left:0;right:0;z-index:50;background:rgba(255,255,255,0.8);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);box-shadow:0 1px 3px rgba(0,0,0,0.06);display:flex;justify-content:space-between;align-items:center;padding:0 24px;height:64px">
-    <a href="/today" style="color:#1A6B8A;text-decoration:none;font-weight:600;font-size:0.875rem;display:flex;align-items:center;gap:4px">
-      <span class="material-symbols-outlined" style="font-size:18px">arrow_back</span> Home
+  <!-- Header — Stitch iOS compact pattern -->
+  <header style="position:fixed;top:0;left:0;right:0;z-index:50;background:rgba(255,255,255,0.85);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);display:flex;justify-content:space-between;align-items:center;padding:0 16px;height:44px">
+    <a href="/today" style="color:#1A6B8A;text-decoration:none;font-weight:600;font-size:0.9375rem;display:flex;align-items:center;gap:2px">
+      <span class="material-symbols-outlined" style="font-size:20px">arrow_back_ios</span> Home
     </a>
-    <span style="font-family:'Inter',sans-serif;font-weight:600;font-size:0.9375rem;color:#1a1c1e">${session.vessel.toUpperCase()} — ${session.crew_name.toUpperCase()}</span>
-    <div style="width:32px;height:32px;border-radius:50%;background:#1A6B8A;color:white;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.875rem">${session.crew_name.charAt(0)}</div>
+    <span style="font-family:'Inter',sans-serif;font-weight:500;font-size:0.8125rem;color:#8E8E93;text-transform:uppercase;letter-spacing:0.05em">${session.vessel.toUpperCase()} — ${session.crew_name}</span>
+    <div style="width:28px;height:28px;border-radius:50%;background:#1A6B8A;color:white;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.6875rem">${session.crew_name.charAt(0)}</div>
   </header>
 
-  <main style="padding:96px 24px 120px;max-width:480px;margin:0 auto">
+  <main style="padding:60px 16px 120px;max-width:480px;margin:0 auto">
     <h1 style="font-family:'Manrope',sans-serif;font-size:1.75rem;font-weight:800;color:#1a1c1e;margin-bottom:24px">Submit</h1>
 
     <form action="/submit/feedback" method="POST">
       <!-- Category Selection Card -->
-      <section style="background:white;border-radius:16px;padding:24px;margin-bottom:24px;box-shadow:0 2px 12px rgba(0,0,0,0.06)">
+      <section style="background:white;border-radius:16px;padding:24px;margin-bottom:24px;box-shadow:0 1px 4px rgba(0,0,0,0.04);border:1px solid rgba(0,0,0,0.04)">
         <p style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:#F36D4F;margin-bottom:4px">Categorization</p>
         <h2 style="font-family:'Manrope',sans-serif;font-size:1.25rem;font-weight:700;color:#1a1c1e;margin-bottom:16px">Who is this for?</h2>
 
@@ -97,7 +97,7 @@ function renderSubmitPage(session: SessionData): string {
       </section>
 
       <!-- Details Form Section -->
-      <section style="background:white;border-radius:16px;padding:24px;margin-bottom:24px;box-shadow:0 2px 12px rgba(0,0,0,0.06)">
+      <section style="background:white;border-radius:16px;padding:24px;margin-bottom:24px;box-shadow:0 1px 4px rgba(0,0,0,0.04);border:1px solid rgba(0,0,0,0.04)">
         <p style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:#F36D4F;margin-bottom:4px">Task Information</p>
         <h2 style="font-family:'Manrope',sans-serif;font-size:1.25rem;font-weight:700;color:#1a1c1e;margin-bottom:20px">Issue Details</h2>
 

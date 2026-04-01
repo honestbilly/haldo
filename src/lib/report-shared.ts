@@ -337,7 +337,7 @@ export function reportLayout(activeTab: string, content: string): string {
 
   const buildItems = [
     { id: 'Library', label: 'Library', icon: 'auto_stories', href: '/report/library' },
-    { id: 'Checklists', label: 'Checklists', icon: 'fact_check', href: '/report/templates' },
+    { id: 'Logs', label: 'Completed Logs', icon: 'fact_check', href: '/report/logs' },
     { id: 'Vessels', label: 'Vessels', icon: 'directions_boat', href: '/report/vessels' },
   ];
 

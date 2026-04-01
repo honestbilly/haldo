@@ -46,78 +46,165 @@ function inferTriggerType(t: any): string {
   return 'on-demand';
 }
 
-// ─── LIBRARY VIEW ───────────────────────────────────────────
+// ─── LIBRARY VIEW (with vessel/role filters, checklist/log separation) ───
 
 app.get('/report/library', async (c) => {
   const templates = getAllTemplates();
+  const qVessel = c.req.query('vessel') || 'all';
+  const qRole = c.req.query('role') || 'all';
+  const qSearch = c.req.query('q') || '';
 
-  // Group by trigger type
+  // Filter templates
+  let filtered = templates.filter(t => {
+    if (qVessel !== 'all' && t.vessel !== 'all' && t.vessel !== qVessel) return false;
+    if (qRole !== 'all' && t.role !== 'all' && t.role !== qRole) return false;
+    if (qSearch) {
+      const s = qSearch.toLowerCase();
+      if (!t.name.toLowerCase().includes(s) && !t.id.toLowerCase().includes(s)) return false;
+    }
+    return true;
+  });
+
+  // Separate checklists and vessel logs
+  const checklists = filtered.filter(t => t.type === 'checklist');
+  const logs = filtered.filter(t => t.type === 'logbook');
+
+  // Group checklists by trigger type
   const groups = new Map<string, any[]>();
-  for (const t of templates) {
+  for (const t of checklists) {
     const trigger = inferTriggerType(t);
     if (!groups.has(trigger)) groups.set(trigger, []);
     groups.get(trigger)!.push(t);
   }
 
-  const groupOrder = ['daily-rotation', 'weekly', 'monthly', 'calendar-date', 'engine-hours', 'condition', 'on-demand', 'per-trip'];
+  const groupOrder = ['daily-rotation', 'weekly', 'monthly', 'calendar-date', 'engine-hours', 'condition', 'on-demand'];
 
-  const groupsHtml = groupOrder
+  // Vessel filter pills
+  const vesselPills = [
+    { slug: 'all', label: 'All' },
+    ...VESSELS.map(v => ({ slug: v, label: VESSEL_LABELS[v] || v })),
+  ].map(v => {
+    const active = v.slug === qVessel;
+    const params = new URLSearchParams();
+    params.set('vessel', v.slug);
+    if (qRole !== 'all') params.set('role', qRole);
+    if (qSearch) params.set('q', qSearch);
+    return `<a href="/report/library?${params}" style="padding:6px 16px;border-radius:999px;font-size:0.75rem;font-weight:${active ? '700' : '500'};text-decoration:none;transition:all 0.15s;${active ? 'background:#1A6B8A;color:white' : 'background:white;color:#5b5f67;border:1px solid #E5E5EA'}">${v.label}</a>`;
+  }).join('');
+
+  // Role filter pills
+  const rolePills = ['all', 'captain', 'deckhand'].map(r => {
+    const active = r === qRole;
+    const label = r === 'all' ? 'All Roles' : r.charAt(0).toUpperCase() + r.slice(1);
+    const params = new URLSearchParams();
+    if (qVessel !== 'all') params.set('vessel', qVessel);
+    params.set('role', r);
+    if (qSearch) params.set('q', qSearch);
+    return `<a href="/report/library?${params}" style="padding:6px 14px;border-radius:999px;font-size:0.75rem;font-weight:${active ? '700' : '500'};text-decoration:none;transition:all 0.15s;${active ? 'background:#0D5470;color:white' : 'background:white;color:#5b5f67;border:1px solid #E5E5EA'}">${label}</a>`;
+  }).join('');
+
+  // Card renderer
+  const renderCard = (t: any, accentColor: string = '#1A6B8A') => {
+    const vesselLabel = VESSEL_LABELS[t.vessel] || t.vessel || 'All';
+    const roleLabel = t.role === 'all' ? 'All' : t.role.charAt(0).toUpperCase() + t.role.slice(1);
+    const est = t.estimated_minutes ? `${t.estimated_minutes} min` : '';
+    const itemCount = t.type === 'checklist'
+      ? (t.sections?.reduce((sum: number, s: any) => sum + (s.items?.length || 0), 0) || 0)
+      : (t.steps?.reduce((sum: number, s: any) => sum + (s.items?.length || 0), 0) || 0);
+    const trigger = inferTriggerType(t);
+    const triggerLabel = TRIGGER_TYPES[trigger]?.label || '';
+
+    return `
+      <a href="/report/library/${encodeURIComponent(t.id)}" style="background:white;padding:16px 20px;border-radius:12px;border:1px solid rgba(0,0,0,0.04);box-shadow:0 1px 3px rgba(0,0,0,0.03);text-decoration:none;color:#1a1c1e;display:block;transition:box-shadow 0.2s;position:relative;overflow:hidden" onmouseenter="this.style.boxShadow='0 4px 12px rgba(0,0,0,0.08)'" onmouseleave="this.style.boxShadow='0 1px 3px rgba(0,0,0,0.03)'">
+        <div style="position:absolute;left:0;top:0;bottom:0;width:4px;background:${accentColor}"></div>
+        <div style="display:flex;justify-content:space-between;align-items:flex-start">
+          <h3 style="font-family:'Manrope',sans-serif;font-weight:700;font-size:0.9375rem;color:#1a1c1e;margin-bottom:8px;line-height:1.3">${escapeHtml(t.name.replace(/\s*—\s*(Captain|Deckhand|Mate)$/i, ''))}</h3>
+          <span class="material-symbols-outlined" style="font-size:18px;color:#c7c7cc;flex-shrink:0">chevron_right</span>
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px">
+          <span style="font-size:0.625rem;font-weight:600;padding:2px 8px;border-radius:999px;background:rgba(26,107,138,0.08);color:#1A6B8A">${vesselLabel}</span>
+          <span style="font-size:0.625rem;font-weight:600;padding:2px 8px;border-radius:999px;background:rgba(110,122,116,0.08);color:#5b5f67">${roleLabel}</span>
+          ${triggerLabel ? `<span style="font-size:0.625rem;font-weight:500;padding:2px 8px;border-radius:999px;background:rgba(112,208,235,0.1);color:#0C7DA0">${triggerLabel}</span>` : ''}
+        </div>
+        <div style="display:flex;gap:12px;font-size:0.6875rem;color:#8E8E93;font-weight:500">
+          ${est ? `<span><span class="material-symbols-outlined" style="font-size:12px;vertical-align:middle">schedule</span> ${est}</span>` : ''}
+          ${itemCount > 0 ? `<span><span class="material-symbols-outlined" style="font-size:12px;vertical-align:middle">checklist</span> ${itemCount} items</span>` : ''}
+        </div>
+      </a>`;
+  };
+
+  // Checklist groups HTML
+  const checklistGroupsHtml = groupOrder
     .filter(key => groups.has(key))
     .map(key => {
       const info = TRIGGER_TYPES[key];
       const items = groups.get(key)!;
-
-      // Stitch card grid pattern
-      const cards = items.map((t: any) => {
-        const vesselLabel = VESSEL_LABELS[t.vessel] || t.vessel || 'All Vessels';
-        const roleLabel = t.role === 'all' ? 'All Roles' : t.role.charAt(0).toUpperCase() + t.role.slice(1);
-        const est = t.estimated_minutes ? `${t.estimated_minutes} min` : '';
-        const itemCount = t.type === 'checklist'
-          ? (t.sections?.reduce((sum: number, s: any) => sum + (s.items?.length || 0), 0) || 0)
-          : (t.steps?.reduce((sum: number, s: any) => sum + (s.items?.length || 0), 0) || 0);
-
-        // Stitch: trigger_day for weekly items
-        const ct = t as any;
-        const triggerDay = ct.trigger_day ? ct.trigger_day.charAt(0).toUpperCase() + ct.trigger_day.slice(1) : '';
-
-        return `
-          <a href="/report/library/${encodeURIComponent(t.id)}" style="background:white;padding:20px;border-radius:12px;box-shadow:0 1px 3px rgba(0,0,0,0.04);text-decoration:none;color:#1a1c1e;display:flex;justify-content:space-between;align-items:flex-start;transition:box-shadow 0.2s;cursor:pointer" onmouseenter="this.style.boxShadow='0 4px 12px rgba(0,0,0,0.08)'" onmouseleave="this.style.boxShadow='0 1px 3px rgba(0,0,0,0.04)'">
-            <div>
-              <h3 style="font-family:'Manrope',sans-serif;font-weight:700;font-size:1.0625rem;color:#1a1c1e;margin-bottom:8px">${escapeHtml(t.name.replace(/\s*—\s*(Captain|Deckhand|Mate)$/i, ''))}</h3>
-              <div style="display:flex;flex-wrap:wrap;gap:12px;font-size:0.75rem;color:#8E8E93;font-weight:500">
-                ${triggerDay ? `<span style="font-weight:700;color:#1A6B8A">${triggerDay}</span>` : ''}
-                <span style="display:flex;align-items:center;gap:4px"><span class="material-symbols-outlined" style="font-size:14px">directions_boat</span> ${vesselLabel}</span>
-                <span style="display:flex;align-items:center;gap:4px"><span class="material-symbols-outlined" style="font-size:14px">person</span> ${roleLabel}</span>
-                ${est ? `<span style="display:flex;align-items:center;gap:4px"><span class="material-symbols-outlined" style="font-size:14px">schedule</span> ${est}</span>` : ''}
-                ${itemCount > 0 ? `<span style="display:flex;align-items:center;gap:4px"><span class="material-symbols-outlined" style="font-size:14px">checklist</span> ${itemCount} items</span>` : ''}
-              </div>
-            </div>
-            <span class="material-symbols-outlined" style="font-size:20px;color:#c7c7cc;flex-shrink:0;margin-top:2px">chevron_right</span>
-          </a>`;
-      }).join('');
-
       return `
-        <section style="margin-bottom:40px">
-          <div style="display:flex;align-items:baseline;gap:12px;margin-bottom:8px">
-            <h2 style="font-size:0.8125rem;font-weight:900;color:#5b5f67;text-transform:uppercase;letter-spacing:0.15em">${info.label}</h2>
-            <span style="background:rgba(26,107,138,0.1);color:#1A6B8A;font-size:0.6875rem;font-weight:700;padding:2px 8px;border-radius:999px">${items.length} items</span>
+        <div style="margin-bottom:28px">
+          <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:4px">
+            <h3 style="font-size:0.6875rem;font-weight:800;color:#5b5f67;text-transform:uppercase;letter-spacing:0.12em">${info.label}</h3>
+            <span style="font-size:0.625rem;font-weight:600;color:#1A6B8A">${items.length}</span>
           </div>
-          <p style="font-size:0.875rem;color:#8E8E93;margin-bottom:16px;max-width:600px">${info.desc}</p>
-          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px">
-            ${cards}
+          <p style="font-size:0.75rem;color:#8E8E93;margin-bottom:12px">${info.desc}</p>
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px">
+            ${items.map((t: any) => renderCard(t, '#1A6B8A')).join('')}
           </div>
-        </section>`;
+        </div>`;
     }).join('');
+
+  // Vessel logs HTML
+  const logsHtml = logs.length > 0 ? `
+    <div style="margin-bottom:28px">
+      <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:4px">
+        <h3 style="font-size:0.6875rem;font-weight:800;color:#5b5f67;text-transform:uppercase;letter-spacing:0.12em">Vessel Logs</h3>
+        <span style="font-size:0.625rem;font-weight:600;color:#70D0EB">${logs.length}</span>
+      </div>
+      <p style="font-size:0.75rem;color:#8E8E93;margin-bottom:12px">Daily vessel records — trips, engine hours, fuel, conditions.</p>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px">
+        ${logs.map((t: any) => renderCard(t, '#70D0EB')).join('')}
+      </div>
+    </div>` : '';
 
   return c.html(reportLayout('Library', `
     ${subNav('library')}
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
-      <h2 style="font-family:'Manrope',-apple-system,sans-serif;font-size:1.125rem;font-weight:700">Repeated Task Library</h2>
-      <a href="/report/library/build" style="display:flex;align-items:center;justify-content:center;gap:6px;padding:10px 24px;background:linear-gradient(135deg,#1A6B8A,#0D5470);color:white;border-radius:8px;text-decoration:none;font-weight:700;font-size:0.875rem;min-height:44px;box-shadow:0 2px 8px rgba(26,107,138,0.2)">
-        <span class="material-symbols-outlined" style="font-size:18px">add</span> Build New
-      </a>
+      <h1 style="font-family:'Manrope',sans-serif;font-size:1.5rem;font-weight:800;color:#1a1c1e;letter-spacing:-0.02em">Template Library</h1>
+      <div style="display:flex;gap:8px">
+        <a href="/report/library/build" style="display:flex;align-items:center;gap:6px;padding:8px 20px;background:#1A6B8A;color:white;border-radius:8px;text-decoration:none;font-weight:700;font-size:0.8125rem;min-height:40px;box-shadow:0 2px 8px rgba(26,107,138,0.2)">
+          <span class="material-symbols-outlined" style="font-size:16px">add</span> New Checklist
+        </a>
+      </div>
     </div>
-    ${groupsHtml}
+
+    <!-- Filter bar -->
+    <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:20px">
+      <div style="display:flex;gap:4px">${vesselPills}</div>
+      <div style="width:1px;height:20px;background:#E5E5EA;margin:0 4px"></div>
+      <div style="display:flex;gap:4px">${rolePills}</div>
+      <div style="flex:1"></div>
+      <form action="/report/library" method="GET" style="display:flex;gap:4px">
+        ${qVessel !== 'all' ? `<input type="hidden" name="vessel" value="${qVessel}">` : ''}
+        ${qRole !== 'all' ? `<input type="hidden" name="role" value="${qRole}">` : ''}
+        <input type="search" name="q" value="${escapeHtml(qSearch)}" placeholder="Search templates..." style="padding:6px 12px;border:1px solid #E5E5EA;border-radius:8px;font-size:0.75rem;width:180px;font-family:'Inter',sans-serif">
+      </form>
+    </div>
+
+    <!-- Checklists -->
+    ${checklists.length > 0 ? `
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;padding-bottom:8px;border-bottom:1px solid #E5E5EA">
+        <span class="material-symbols-outlined" style="font-size:20px;color:#1A6B8A">checklist</span>
+        <h2 style="font-family:'Manrope',sans-serif;font-size:1.0625rem;font-weight:700;color:#1a1c1e">Checklists</h2>
+        <span style="font-size:0.6875rem;font-weight:700;background:rgba(26,107,138,0.08);color:#1A6B8A;padding:2px 8px;border-radius:999px">${checklists.length}</span>
+      </div>
+      ${checklistGroupsHtml}` : '<p style="color:#8E8E93;text-align:center;padding:24px">No checklists match these filters.</p>'}
+
+    <!-- Vessel Logs -->
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;padding-bottom:8px;border-bottom:1px solid #E5E5EA">
+      <span class="material-symbols-outlined" style="font-size:20px;color:#70D0EB">menu_book</span>
+      <h2 style="font-family:'Manrope',sans-serif;font-size:1.0625rem;font-weight:700;color:#1a1c1e">Vessel Logs</h2>
+      <span style="font-size:0.6875rem;font-weight:700;background:rgba(112,208,235,0.1);color:#0C7DA0;padding:2px 8px;border-radius:999px">${logs.length}</span>
+    </div>
+    ${logsHtml || '<p style="color:#8E8E93;text-align:center;padding:24px">No vessel logs match these filters.</p>'}
   `));
 });
 
@@ -499,7 +586,16 @@ app.post('/report/library/build', async (c) => {
   }
 });
 
-// ─── EDIT EXISTING TEMPLATE (form view) ─────────────────────
+// ─── TEMPLATE DETAIL (visual view — no JSON) ────────────────
+
+const ITEM_TYPE_ICONS: Record<string, { icon: string; label: string; color: string }> = {
+  checkbox: { icon: 'check_box', label: 'Checkbox', color: '#34C759' },
+  number: { icon: 'tag', label: 'Number', color: '#5856D6' },
+  select: { icon: 'list', label: 'Select', color: '#FF9500' },
+  multi_select: { icon: 'checklist', label: 'Multi-Select', color: '#FF9500' },
+  text: { icon: 'notes', label: 'Text', color: '#1A6B8A' },
+  photo: { icon: 'photo_camera', label: 'Photo', color: '#70D0EB' },
+};
 
 app.get('/report/library/:templateId', async (c) => {
   const templateId = c.req.param('templateId');
@@ -515,57 +611,121 @@ app.get('/report/library/:templateId', async (c) => {
   }
 
   const saved = c.req.query('saved') === '1';
-  const jsonStr = JSON.stringify(template, null, 2);
-
   const triggerType = inferTriggerType(template);
   const triggerInfo = TRIGGER_TYPES[triggerType] || TRIGGER_TYPES['on-demand'];
   const vesselLabel = VESSEL_LABELS[template.vessel] || template.vessel || 'All';
   const roleLabel = template.role === 'all' ? 'All' : template.role.charAt(0).toUpperCase() + template.role.slice(1);
+  const isLogbook = template.type === 'logbook';
 
-  const ct = template as ChecklistTemplate;
-  const itemCount = ct.sections?.reduce((sum, s) => sum + (s.items?.length || 0), 0) || 0;
-  const sectionCount = ct.sections?.length || 0;
+  const ct = template as any;
+  const sections = ct.sections || ct.steps || [];
+  const totalItems = sections.reduce((sum: number, s: any) => sum + ((s.items?.length || 0)), 0);
+
+  // Render an item row visually
+  const renderItemRow = (item: any) => {
+    const typeInfo = ITEM_TYPE_ICONS[item.type] || ITEM_TYPE_ICONS.checkbox;
+    const helpPreview = item.help?.body ? escapeHtml(item.help.body.substring(0, 60)) + (item.help.body.length > 60 ? '...' : '') : '';
+    const constraintStr = item.type === 'number'
+      ? [item.min != null ? `min: ${item.min}` : '', item.max != null ? `max: ${item.max}` : '', item.unit || ''].filter(Boolean).join(', ')
+      : item.type === 'select' || item.type === 'multi_select'
+        ? (item.options || []).join(' · ')
+        : '';
+
+    return `
+      <div style="display:flex;align-items:flex-start;gap:12px;padding:10px 0;border-bottom:1px solid #F2F2F7">
+        <div style="width:28px;height:28px;border-radius:6px;background:${typeInfo.color}12;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+          <span class="material-symbols-outlined" style="font-size:16px;color:${typeInfo.color}">${typeInfo.icon}</span>
+        </div>
+        <div style="flex:1;min-width:0">
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+            <span style="font-size:0.875rem;font-weight:600;color:#1a1c1e">${escapeHtml(item.label)}</span>
+            <span style="font-size:0.625rem;color:#8E8E93;font-weight:500">${typeInfo.label}</span>
+            ${item.required ? '<span style="font-size:0.5625rem;font-weight:700;padding:1px 6px;border-radius:999px;background:rgba(243,109,79,0.1);color:#F36D4F">Required</span>' : ''}
+          </div>
+          ${constraintStr ? `<div style="font-size:0.6875rem;color:#8E8E93;margin-top:2px">${escapeHtml(constraintStr)}</div>` : ''}
+          ${helpPreview ? `<div style="font-size:0.6875rem;color:#70D0EB;margin-top:2px;display:flex;align-items:center;gap:4px"><span class="material-symbols-outlined" style="font-size:12px">help</span> ${helpPreview}</div>` : ''}
+        </div>
+      </div>`;
+  };
+
+  // Render sections as collapsible cards
+  const sectionsHtml = sections.map((section: any, idx: number) => {
+    const items = section.items || [];
+    const sectionTitle = section.title || `Section ${idx + 1}`;
+    const isFirst = idx === 0;
+
+    return `
+      <details style="background:white;border-radius:12px;border:1px solid rgba(0,0,0,0.04);box-shadow:0 1px 3px rgba(0,0,0,0.03);margin-bottom:12px;overflow:hidden" ${isFirst ? 'open' : ''}>
+        <summary style="padding:16px 20px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;font-family:'Manrope',sans-serif;font-weight:700;font-size:0.9375rem;color:#1a1c1e;list-style:none;-webkit-appearance:none">
+          <span>${escapeHtml(sectionTitle)}</span>
+          <div style="display:flex;align-items:center;gap:8px">
+            <span style="font-size:0.6875rem;font-weight:600;color:#8E8E93">${items.length} items</span>
+            <span class="material-symbols-outlined" style="font-size:18px;color:#c7c7cc">expand_more</span>
+          </div>
+        </summary>
+        <div style="padding:0 20px 16px;border-top:1px solid #F2F2F7">
+          ${items.length > 0 ? items.map(renderItemRow).join('') : '<p style="font-size:0.8125rem;color:#8E8E93;padding:12px 0">No items in this section.</p>'}
+        </div>
+      </details>`;
+  }).join('');
 
   return c.html(reportLayout('Library', `
     ${subNav('library')}
     <div style="margin-bottom:16px">
-      <a href="/report/library" style="color:#1A6B8A;text-decoration:none;font-size:0.875rem">← Back to library</a>
+      <a href="/report/library" style="color:#1A6B8A;text-decoration:none;font-size:0.875rem;display:flex;align-items:center;gap:4px;font-weight:600">
+        <span class="material-symbols-outlined" style="font-size:18px">arrow_back</span> Back to Library
+      </a>
     </div>
 
-    ${saved ? '<div style="padding:10px 16px;background:rgba(26,107,138,0.08);border-radius:8px;margin-bottom:12px;font-size:0.875rem;color:#1A6B8A;text-align:center">✓ Template saved</div>' : ''}
+    ${saved ? '<div style="padding:10px 16px;background:rgba(52,199,89,0.08);border-radius:8px;margin-bottom:12px;font-size:0.875rem;color:#34C759;text-align:center;font-weight:600;display:flex;align-items:center;justify-content:center;gap:6px"><span class="material-symbols-outlined" style="font-size:18px">check_circle</span> Template saved</div>' : ''}
 
-    <div style="background:#FFFFFF;border-radius:8px;padding:16px;margin-bottom:16px">
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
+    <!-- Header card -->
+    <div style="background:white;border-radius:12px;padding:24px;border:1px solid rgba(0,0,0,0.04);box-shadow:0 1px 3px rgba(0,0,0,0.03);margin-bottom:20px">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px">
         <div>
-          <h2 style="font-family:'Manrope',-apple-system,sans-serif;font-size:1.125rem;font-weight:700">${escapeHtml(template.name)}</h2>
-          <div style="font-size:0.8125rem;color:#6e7a74;margin-top:4px">${vesselLabel} · ${roleLabel} · ${triggerInfo.label}</div>
+          <h1 style="font-family:'Manrope',sans-serif;font-size:1.5rem;font-weight:800;color:#1a1c1e;letter-spacing:-0.02em;margin-bottom:8px">${escapeHtml(template.name)}</h1>
+          <div style="display:flex;flex-wrap:wrap;gap:6px">
+            <span style="font-size:0.6875rem;font-weight:600;padding:3px 10px;border-radius:999px;background:rgba(26,107,138,0.08);color:#1A6B8A">${vesselLabel}</span>
+            <span style="font-size:0.6875rem;font-weight:600;padding:3px 10px;border-radius:999px;background:rgba(110,122,116,0.08);color:#5b5f67">${roleLabel}</span>
+            <span style="font-size:0.6875rem;font-weight:600;padding:3px 10px;border-radius:999px;background:rgba(112,208,235,0.1);color:#0C7DA0">${triggerInfo.label}</span>
+            <span style="font-size:0.6875rem;font-weight:600;padding:3px 10px;border-radius:999px;background:rgba(142,142,147,0.08);color:#8E8E93">${totalItems} items · ${sections.length} sections</span>
+          </div>
         </div>
-        <span style="font-size:0.6875rem;padding:2px 8px;border-radius:12px;background:rgba(26,107,138,0.1);color:#1A6B8A">${itemCount} items · ${sectionCount} sections</span>
+        <div style="display:flex;gap:8px">
+          <a href="/report/library/build?from=${encodeURIComponent(templateId)}" style="display:flex;align-items:center;gap:4px;padding:8px 16px;background:#1A6B8A;color:white;border-radius:8px;text-decoration:none;font-weight:600;font-size:0.8125rem;min-height:36px">
+            <span class="material-symbols-outlined" style="font-size:16px">edit</span> Edit
+          </a>
+          <a href="/report/library/build?from=${encodeURIComponent(templateId)}" style="display:flex;align-items:center;gap:4px;padding:8px 16px;background:white;border:1px solid #E5E5EA;color:#5b5f67;border-radius:8px;text-decoration:none;font-weight:600;font-size:0.8125rem;min-height:36px">
+            <span class="material-symbols-outlined" style="font-size:16px">content_copy</span> Clone
+          </a>
+        </div>
       </div>
 
-      ${ct.estimated_minutes ? `<div style="font-size:0.8125rem;color:#6e7a74">Estimated: ~${ct.estimated_minutes} min</div>` : ''}
-      ${ct.supersedes?.length ? `<div style="font-size:0.8125rem;color:#6e7a74;margin-top:4px">Supersedes: ${ct.supersedes.join(', ')}</div>` : ''}
+      ${ct.estimated_minutes ? `<div style="font-size:0.8125rem;color:#8E8E93;display:flex;align-items:center;gap:6px"><span class="material-symbols-outlined" style="font-size:16px">schedule</span> Estimated: ~${ct.estimated_minutes} min</div>` : ''}
+      ${ct.intro ? `<p style="font-size:0.875rem;color:#5b5f67;margin-top:8px;line-height:1.5">${escapeHtml(ct.intro)}</p>` : ''}
+      ${ct.supersedes?.length ? `<div style="font-size:0.75rem;color:#8E8E93;margin-top:8px;display:flex;align-items:center;gap:4px"><span class="material-symbols-outlined" style="font-size:14px">swap_horiz</span> Supersedes: ${ct.supersedes.map((s: string) => escapeHtml(s)).join(', ')}</div>` : ''}
     </div>
 
-    <form action="/report/library/${encodeURIComponent(templateId)}" method="POST">
-      <textarea name="json" style="width:100%;min-height:400px;padding:16px;border:2px solid #bdc9c2;border-radius:8px;font-family:'Menlo','Monaco','Consolas',monospace;font-size:13px;line-height:1.5;background:#FFFFFF;color:#1a1c1c;resize:vertical;tab-size:2;white-space:pre" spellcheck="false">${escapeHtml(jsonStr)}</textarea>
+    <!-- Sections -->
+    <div style="margin-bottom:24px">
+      <h2 style="font-size:0.75rem;font-weight:800;color:#5b5f67;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:12px;padding:0 4px">${isLogbook ? 'Log Structure' : 'Checklist Sections'}</h2>
+      ${sectionsHtml}
+    </div>
 
-      <div style="display:flex;gap:8px;margin-top:12px">
-        <button type="submit" style="flex:1;padding:14px;background:#1A6B8A;color:white;border:none;border-radius:8px;font-size:0.9375rem;font-weight:600;cursor:pointer;min-height:48px">Save Changes</button>
-        <a href="/report/library/build?from=${encodeURIComponent(templateId)}" style="display:flex;align-items:center;justify-content:center;padding:14px 20px;background:#FFFFFF;border:2px solid #bdc9c2;border-radius:8px;font-size:0.875rem;font-weight:500;text-decoration:none;color:#1a1c1c;min-height:48px">Clone</a>
-      </div>
-    </form>
+    <!-- Metadata footer -->
+    <div style="font-size:0.6875rem;color:#c7c7cc;text-align:center;padding:16px">
+      ${ct.version ? `Version: ${ct.version}` : ''} ${ct.source ? `· Source: ${escapeHtml(ct.source)}` : ''}
+    </div>
 
-    <details style="margin-top:16px">
-      <summary style="font-size:0.8125rem;color:#6e7a74;cursor:pointer;font-weight:500">Template JSON Reference</summary>
-      <div style="margin-top:8px;padding:12px;background:#FFFFFF;border-radius:8px;font-size:0.75rem;color:#6e7a74;line-height:1.6">
-        <p><strong>Item types:</strong> checkbox, number, select, multi_select, text, photo</p>
-        <p><strong>Number fields:</strong> min, max, unit, alert_below_min</p>
-        <p><strong>Help boxes:</strong> "help": { "title": "...", "body": "..." }</p>
-        <p><strong>Conditional:</strong> "requires": "other-item-id"</p>
-        <p><strong>Recurrence:</strong> daily, weekly, monthly, per-trip, on-demand</p>
-        <p><strong>Scheduling:</strong> trigger_day (Mon-Sun), trigger_dates ([1,15])</p>
-      </div>
+    <!-- JSON editor (collapsed, power user) -->
+    <details style="margin-top:8px">
+      <summary style="font-size:0.75rem;color:#8E8E93;cursor:pointer;font-weight:600;display:flex;align-items:center;gap:4px">
+        <span class="material-symbols-outlined" style="font-size:14px">code</span> Advanced: Edit JSON
+      </summary>
+      <form action="/report/library/${encodeURIComponent(templateId)}" method="POST" style="margin-top:8px">
+        <textarea name="json" style="width:100%;min-height:300px;padding:12px;border:1px solid #E5E5EA;border-radius:8px;font-family:'Menlo','Monaco','Consolas',monospace;font-size:12px;line-height:1.5;background:white;color:#1a1c1e;resize:vertical;tab-size:2;white-space:pre" spellcheck="false">${escapeHtml(JSON.stringify(template, null, 2))}</textarea>
+        <button type="submit" style="margin-top:8px;padding:10px 20px;background:#5b5f67;color:white;border:none;border-radius:8px;font-size:0.8125rem;font-weight:600;cursor:pointer">Save JSON</button>
+      </form>
     </details>
   `));
 });

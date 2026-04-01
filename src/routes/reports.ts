@@ -9,6 +9,7 @@ import taskRoutes from './report-tasks.js';
 import libraryRoutes from './report-library.js';
 import vesselRoutes from './report-vessels.js';
 import scheduleRoutes from './report-schedule.js';
+import logRoutes from './report-logs.js';
 
 const app = new Hono();
 
@@ -74,5 +75,8 @@ app.route('/', vesselRoutes);
 
 // Mount crew schedule
 app.route('/', scheduleRoutes);
+
+// Mount completed logs viewer
+app.route('/', logRoutes);
 
 export default app;

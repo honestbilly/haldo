@@ -1,0 +1,15 @@
+{
+  "cookies": [
+    {
+      "name": "haldo_session",
+      "value": "eyJ2ZXNzZWwiOiJzcXVpZCIsInJvbGUiOiJjYXB0YWluIiwiY3Jld19pZCI6Il9kcVRfUFMyR2FwcDkxUDlXNG5JSSIsImNyZXdfbmFtZSI6IkFsZXhhIiwidHJpcF9kYXRlIjoiMjAyNi0wNC0wMSIsInRyaXBfc2xvdCI6IkFNIiwiYXV0aF9yb2xlIjoiY3JldyJ9",
+      "domain": "localhost",
+      "path": "/",
+      "expires": 1775625529.581599,
+      "httpOnly": true,
+      "secure": false,
+      "sameSite": "Lax"
+    }
+  ],
+  "origins": []
+}

@@ -39,11 +39,11 @@ app.get('/', async (c) => {
 
   return c.html(`${htmlHead('More')}
 <body style="background:#F2F2F7">
-  <header style="position:fixed;top:0;left:0;right:0;z-index:50;background:rgba(255,255,255,0.8);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);box-shadow:0 1px 3px rgba(0,0,0,0.06);display:flex;justify-content:center;align-items:center;height:64px">
-    <span style="font-family:'Manrope',sans-serif;font-weight:700;font-size:1.125rem;color:#1a1c1e">More</span>
+  <header style="position:fixed;top:0;left:0;right:0;z-index:50;background:rgba(255,255,255,0.85);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);display:flex;justify-content:center;align-items:center;height:44px">
+    <span style="font-family:'Inter',sans-serif;font-weight:600;font-size:1.0625rem;color:#1a1c1e;letter-spacing:-0.01em">More</span>
   </header>
 
-  <main style="max-width:480px;margin:0 auto;padding:80px 16px 120px">
+  <main style="max-width:480px;margin:0 auto;padding:60px 16px 120px">
     <!-- Profile -->
     <section style="display:flex;flex-direction:column;align-items:center;padding-top:8px;margin-bottom:32px">
       <div style="width:56px;height:56px;border-radius:50%;background:#1A6B8A;display:flex;align-items:center;justify-content:center;color:white;font-family:'Manrope',sans-serif;font-weight:700;font-size:1.5rem;box-shadow:0 2px 8px rgba(0,0,0,0.1)">
@@ -54,7 +54,7 @@ app.get('/', async (c) => {
     </section>
 
     <!-- Section 1: Crew Stats -->
-    <div style="background:white;border-radius:12px;overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,0.05);margin-bottom:16px">
+    <div style="background:white;border-radius:12px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.04);border:1px solid rgba(0,0,0,0.04);margin-bottom:16px">
       ${row('assignment_turned_in', 'My Completions Today', '/today',
         `<span style="background:rgba(26,107,138,0.1);color:#1A6B8A;padding:2px 10px;border-radius:999px;font-size:0.75rem;font-weight:700;margin-right:8px">${todayCount}</span><span class="material-symbols-outlined" style="font-size:20px;color:#c7c7cc">chevron_right</span>`
       )}
@@ -63,12 +63,12 @@ app.get('/', async (c) => {
     </div>
 
     <!-- Section 2: Management -->
-    <div style="background:white;border-radius:12px;overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,0.05);margin-bottom:16px">
+    <div style="background:white;border-radius:12px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.04);border:1px solid rgba(0,0,0,0.04);margin-bottom:16px">
       ${row('analytics', 'MGMT Dashboard', '/report', undefined, 'Manager access')}
     </div>
 
     <!-- Section 3: Operations -->
-    <div style="background:white;border-radius:12px;overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,0.05);margin-bottom:32px">
+    <div style="background:white;border-radius:12px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.04);border:1px solid rgba(0,0,0,0.04);margin-bottom:32px">
       ${row('directions_boat', 'Switch Vessel / Trip', '/')}
     </div>
 
