@@ -94,24 +94,19 @@ app.get('/report/tasks', async (c) => {
   }
 
   // Stitch crew strip — pills with (C) for captains, horizontal scroll
+  // Compact crew strip — plain text names, captains bold
   const crewStrip = `
-    <div style="display:flex;border-bottom:1px solid rgba(0,0,0,0.06);overflow-x:auto;-webkit-overflow-scrolling:touch;margin-bottom:0">
+    <div style="display:flex;border-bottom:1px solid #E5E5EA;overflow-x:auto;-webkit-overflow-scrolling:touch;background:#FAFBFC">
       ${days.map((d, i) => {
         const crew = schedByDate.get(d) || [];
         const isToday = i === 0;
-        const crewPills = crew.length > 0
-          ? crew.map(c => {
-              const isCaptain = c.role === 'captain';
-              return `<span style="display:inline-block;padding:2px 6px;background:white;font-size:0.5625rem;font-weight:${isCaptain ? '700' : '500'};color:${isCaptain ? '#1A6B8A' : '#5b5f67'};border-radius:4px;${isCaptain ? 'border:1px solid rgba(26,107,138,0.2)' : ''};white-space:nowrap">${escapeHtml(c.name)}${isCaptain ? ' (C)' : ''}</span>`;
-            }).join('')
-          : '<span style="font-size:0.5625rem;color:#8E8E93;font-style:italic">No Crew</span>';
-
+        const names = crew.length > 0
+          ? crew.map(c => `<div style="font-size:0.6875rem;font-weight:${c.role === 'captain' ? '700' : '400'};color:${c.role === 'captain' ? '#1a1c1e' : '#5b5f67'};line-height:1.5">${escapeHtml(c.name)}</div>`).join('')
+          : '<div style="font-size:0.6875rem;color:#c7c7cc">—</div>';
         return `
-          <div style="flex:0 0 auto;min-width:120px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px;${isToday ? 'background:rgba(26,107,138,0.06);border-left:1px solid rgba(26,107,138,0.1);border-right:1px solid rgba(26,107,138,0.1)' : 'border-right:1px solid rgba(0,0,0,0.04)'}">
-            <div style="font-size:0.5625rem;font-weight:${isToday ? '800' : '600'};color:${isToday ? '#1A6B8A' : '#8E8E93'};text-transform:uppercase;letter-spacing:0.15em;margin-bottom:6px">${dayLabels[i]}</div>
-            <div style="display:flex;flex-wrap:wrap;justify-content:center;gap:3px">
-              ${crewPills}
-            </div>
+          <div style="flex:0 0 auto;min-width:100px;padding:10px 12px;${isToday ? 'background:white;box-shadow:0 1px 3px rgba(0,0,0,0.06)' : ''}">
+            <div style="font-size:0.5625rem;font-weight:700;color:${isToday ? '#1A6B8A' : '#8E8E93'};text-transform:uppercase;letter-spacing:0.1em;margin-bottom:4px">${dayLabels[i]}</div>
+            ${names}
           </div>`;
       }).join('')}
     </div>`;
@@ -164,6 +159,29 @@ app.get('/report/tasks', async (c) => {
     'safety': 'shield', 'regulatory': 'gavel', 'upgrade': 'upgrade', 'cosmetic': 'palette', 'general': 'task',
   };
 
+  // Compact table row for task (Linear/Asana style)
+  const renderTaskRow = (t: any) => {
+    const borderColor = t.status === 'blocked' ? '#FF3B30' : t.priority === 'urgent' ? '#FF3B30' : t.priority === 'high' ? '#FF9500' : 'transparent';
+    const catIcon = CATEGORY_ICONS[t.category] || 'task';
+    const dueStr = t.due_date ? new Date(t.due_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '';
+    const assignee = t.assignee_name || '';
+    const tags = (t.tags || []) as string[];
+
+    return `
+      <a href="/report/tasks/${t.id}" class="task-card" style="display:grid;grid-template-columns:24px 1fr 80px 90px 70px 60px;gap:8px;align-items:center;padding:10px 16px;text-decoration:none;color:#1a1c1e;border-left:3px solid ${borderColor};border-bottom:1px solid #F0F0F0;min-height:44px;transition:background 0.1s" onmouseenter="this.style.background='#F8F9FA'" onmouseleave="this.style.background='transparent'">
+        <span class="material-symbols-outlined" style="font-size:16px;color:#8E8E93">${catIcon}</span>
+        <div style="min-width:0">
+          <div style="font-weight:600;font-size:0.8125rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${priorityBadge(t.priority)} ${escapeHtml(t.title)}</div>
+          ${tags.length > 0 ? `<div style="font-size:0.5625rem;color:#8E8E93;margin-top:1px">${tags.slice(0,2).map(tag => escapeHtml(tag)).join(' · ')}</div>` : ''}
+        </div>
+        <span style="font-size:0.6875rem;color:${assignee ? '#1a1c1e' : '#c7c7cc'};font-weight:${assignee ? '500' : '400'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${assignee || 'Unassigned'}</span>
+        ${statusBadge(t.status, !!t.assigned_to)}
+        <span style="font-size:0.6875rem;color:#8E8E93;white-space:nowrap">${dueStr}</span>
+        <span class="material-symbols-outlined" style="font-size:16px;color:#c7c7cc">chevron_right</span>
+      </a>`;
+  };
+
+  // Keep old card renderer for backward compat (used nowhere now)
   const renderTaskCard = (t: any) => {
     const borderColor = t.status === 'blocked' ? '#FF3B30' : t.priority === 'urgent' ? '#FF3B30' : t.priority === 'high' ? '#FF9500' : '#1A6B8A';
     const catIcon = CATEGORY_ICONS[t.category] || 'task';
@@ -203,22 +221,32 @@ app.get('/report/tasks', async (c) => {
   const vesselSections = VESSELS.filter(v => byVessel.has(v)).map(v => {
     const vTasks = byVessel.get(v)!;
     return `
-      <div style="margin-bottom:32px">
-        <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;padding:0 4px">
-          <h2 style="font-family:'Manrope',-apple-system,sans-serif;font-size:1.125rem;font-weight:800;color:#1A6B8A;letter-spacing:-0.01em">${VESSEL_LABELS[v] || v}</h2>
-          <span style="padding:2px 8px;background:rgba(26,107,138,0.1);color:#1A6B8A;font-size:0.625rem;font-weight:900;border-radius:999px">${vTasks.length}</span>
+      <div style="margin-bottom:24px">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px;padding:0 4px">
+          <h2 style="font-family:'Manrope',-apple-system,sans-serif;font-size:0.875rem;font-weight:800;color:#1A6B8A;letter-spacing:-0.01em">${VESSEL_LABELS[v] || v}</h2>
+          <span style="padding:2px 8px;background:rgba(26,107,138,0.1);color:#1A6B8A;font-size:0.5625rem;font-weight:900;border-radius:999px">${vTasks.length}</span>
           <div style="flex:1;height:1px;background:#E5E5EA"></div>
         </div>
-        <div style="display:flex;flex-direction:column;gap:8px">
-          ${vTasks.map(renderTaskCard).join('')}
+        <div style="background:white;border-radius:8px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.04)">
+          <!-- Table header -->
+          <div style="display:grid;grid-template-columns:24px 1fr 80px 90px 70px 60px;gap:8px;align-items:center;padding:8px 16px;background:#F8F9FA;font-size:0.5625rem;font-weight:700;color:#8E8E93;text-transform:uppercase;letter-spacing:0.1em">
+            <span></span><span>Task</span><span>Assignee</span><span>Status</span><span>Due</span><span></span>
+          </div>
+          ${vTasks.map(renderTaskRow).join('')}
         </div>
       </div>`;
   }).join('');
 
   const unassignedSection = noVessel.length > 0 ? `
-    <div style="margin-bottom:20px">
-      <h3 style="font-family:'Manrope',-apple-system,sans-serif;font-size:0.8125rem;font-weight:700;color:#6e7a74;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px">No Vessel Assigned <span style="background:rgba(110,122,116,0.1);color:#6e7a74;padding:2px 6px;border-radius:10px;font-size:0.6875rem">${noVessel.length}</span></h3>
-      ${noVessel.map(renderTaskCard).join('')}
+    <div style="margin-bottom:24px">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px;padding:0 4px">
+        <h2 style="font-family:'Manrope',-apple-system,sans-serif;font-size:0.875rem;font-weight:800;color:#8E8E93">No Vessel</h2>
+        <span style="padding:2px 8px;background:rgba(142,142,147,0.1);color:#8E8E93;font-size:0.5625rem;font-weight:900;border-radius:999px">${noVessel.length}</span>
+        <div style="flex:1;height:1px;background:#E5E5EA"></div>
+      </div>
+      <div style="background:white;border-radius:8px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.04)">
+        ${noVessel.map(renderTaskRow).join('')}
+      </div>
     </div>` : '';
 
   const filterBtnStyle = `display:flex;align-items:center;gap:6px;padding:8px 16px;background:#E5E8F0;color:#1a1c1e;border-radius:8px;font-size:0.75rem;font-weight:500;border:none;text-decoration:none;cursor:pointer;transition:background 0.15s`;
@@ -720,7 +748,7 @@ app.get('/report/inbox', async (c) => {
 
   const newCount = submissions.filter((s: any) => s.status === 'new').length;
 
-  return c.html(reportLayout('Tasks', `
+  return c.html(reportLayout('Inbox', `
     ${subNav('inbox')}
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
       <h2 style="font-family:'Manrope',-apple-system,sans-serif;font-size:1.125rem;font-weight:700">Crew Submissions</h2>
@@ -738,14 +766,14 @@ app.get('/report/inbox/:id', async (c) => {
     [subId]
   );
   const sub = result.rows[0];
-  if (!sub) return c.html(reportLayout('Tasks', '<p style="color:#F36D4F">Submission not found.</p><a href="/report/inbox" style="color:#1A6B8A">← Back</a>'));
+  if (!sub) return c.html(reportLayout('Inbox', '<p style="color:#F36D4F">Submission not found.</p><a href="/report/inbox" style="color:#1A6B8A">← Back</a>'));
 
   const saved = c.req.query('saved') === '1';
   const icon = CATEGORY_ICONS[sub.category] || '💬';
   const catLabel = sub.category.replace('-', ' ').replace(/\b\w/g, (ch: string) => ch.toUpperCase());
   const time = new Date(sub.created_at).toLocaleString();
 
-  return c.html(reportLayout('Tasks', `
+  return c.html(reportLayout('Inbox', `
     ${subNav('inbox')}
     <div style="margin-bottom:16px">
       <a href="/report/inbox" style="color:#1A6B8A;text-decoration:none;font-size:0.875rem">← Back to inbox</a>
@@ -904,7 +932,7 @@ app.get('/report/schedule', async (c) => {
 
   const weekLabel = `${new Date(days[0]).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} — ${new Date(days[6]).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
 
-  return c.html(reportLayout('Tasks', `
+  return c.html(reportLayout('Schedule', `
     ${subNav('schedule')}
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
       <a href="/report/schedule?week=${weekOffset - 1}" style="padding:8px 12px;background:#FFFFFF;border:1px solid #bdc9c2;border-radius:6px;text-decoration:none;color:#1A6B8A;font-size:0.875rem;min-height:36px;display:flex;align-items:center">← Prev</a>

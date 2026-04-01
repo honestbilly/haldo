@@ -93,7 +93,7 @@ app.get('/report/library', async (c) => {
         </div>`;
     }).join('');
 
-  return c.html(reportLayout('Tasks', `
+  return c.html(reportLayout('Library', `
     ${subNav('library')}
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
       <h2 style="font-family:'Manrope',-apple-system,sans-serif;font-size:1.125rem;font-weight:700">Repeated Task Library</h2>
@@ -118,7 +118,7 @@ app.get('/report/library/build', async (c) => {
 
   const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
-  return c.html(reportLayout('Tasks', `
+  return c.html(reportLayout('Library', `
     ${subNav('library')}
     <div style="margin-bottom:16px">
       <a href="/report/library" style="color:#1A6B8A;text-decoration:none;font-size:0.875rem">← Back to library</a>
@@ -486,7 +486,7 @@ app.get('/report/library/:templateId', async (c) => {
   const template = templates.find(t => t.id === templateId);
 
   if (!template) {
-    return c.html(reportLayout('Tasks', `
+    return c.html(reportLayout('Library', `
       ${subNav('library')}
       <p style="color:#F36D4F">Template "${escapeHtml(templateId)}" not found.</p>
       <a href="/report/library" style="color:#1A6B8A">← Back to library</a>
@@ -505,7 +505,7 @@ app.get('/report/library/:templateId', async (c) => {
   const itemCount = ct.sections?.reduce((sum, s) => sum + (s.items?.length || 0), 0) || 0;
   const sectionCount = ct.sections?.length || 0;
 
-  return c.html(reportLayout('Tasks', `
+  return c.html(reportLayout('Library', `
     ${subNav('library')}
     <div style="margin-bottom:16px">
       <a href="/report/library" style="color:#1A6B8A;text-decoration:none;font-size:0.875rem">← Back to library</a>
