@@ -159,25 +159,34 @@ app.get('/report/tasks', async (c) => {
     'safety': 'shield', 'regulatory': 'gavel', 'upgrade': 'upgrade', 'cosmetic': 'palette', 'general': 'task',
   };
 
-  // Compact table row for task (Linear/Asana style)
+  // Stitch bento card for task
   const renderTaskRow = (t: any) => {
-    const borderColor = t.status === 'blocked' ? '#FF3B30' : t.priority === 'urgent' ? '#FF3B30' : t.priority === 'high' ? '#FF9500' : 'transparent';
     const catIcon = CATEGORY_ICONS[t.category] || 'task';
     const dueStr = t.due_date ? new Date(t.due_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '';
     const assignee = t.assignee_name || '';
     const tags = (t.tags || []) as string[];
+    const isOverdue = t.due_date && new Date(t.due_date) < new Date() && t.status !== 'completed';
+    const childCount = t.child_count ? parseInt(t.child_count) : 0;
+    const notePreview = t.notes ? String(t.notes).substring(0, 80) + (t.notes.length > 80 ? '...' : '') : '';
 
     return `
-      <a href="/report/tasks/${t.id}" class="task-card" style="display:grid;grid-template-columns:24px 1fr 80px 90px 70px 60px;gap:8px;align-items:center;padding:10px 16px;text-decoration:none;color:#1a1c1e;border-left:3px solid ${borderColor};border-bottom:1px solid #F0F0F0;min-height:44px;transition:background 0.1s" onmouseenter="this.style.background='#F8F9FA'" onmouseleave="this.style.background='transparent'">
-        <span class="material-symbols-outlined" style="font-size:16px;color:#8E8E93">${catIcon}</span>
-        <div style="min-width:0">
-          <div style="font-weight:600;font-size:0.8125rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${priorityBadge(t.priority)} ${escapeHtml(t.title)}</div>
-          ${tags.length > 0 ? `<div style="font-size:0.5625rem;color:#8E8E93;margin-top:1px">${tags.slice(0,2).map(tag => escapeHtml(tag)).join(' · ')}</div>` : ''}
+      <a href="/report/tasks/${t.id}" style="background:white;padding:20px;border-radius:12px;border:1px solid transparent;text-decoration:none;color:#1a1c1e;display:flex;flex-direction:column;position:relative;overflow:hidden;transition:all 0.2s;cursor:pointer" onmouseenter="this.style.borderColor='rgba(26,107,138,0.15)';this.style.boxShadow='0 4px 12px rgba(0,0,0,0.06)'" onmouseleave="this.style.borderColor='transparent';this.style.boxShadow='none'">
+        ${t.status === 'blocked' ? '<div style="position:absolute;top:0;right:0;width:96px;height:96px;margin-right:-32px;margin-top:-32px;background:rgba(255,59,48,0.04);border-radius:50%;filter:blur(20px)"></div>' : ''}
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
+          ${statusBadge(t.status, !!t.assigned_to)}
+          <span class="material-symbols-outlined" style="font-size:18px;color:#c7c7cc">more_horiz</span>
         </div>
-        <span style="font-size:0.6875rem;color:${assignee ? '#1a1c1e' : '#c7c7cc'};font-weight:${assignee ? '500' : '400'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${assignee || 'Unassigned'}</span>
-        ${statusBadge(t.status, !!t.assigned_to)}
-        <span style="font-size:0.6875rem;color:#8E8E93;white-space:nowrap">${dueStr}</span>
-        <span class="material-symbols-outlined" style="font-size:16px;color:#c7c7cc">chevron_right</span>
+        <h3 style="font-family:'Manrope',sans-serif;font-weight:700;font-size:0.9375rem;color:#1a1c1e;margin-bottom:4px">${escapeHtml(t.title)}</h3>
+        ${notePreview ? `<p style="font-size:0.8125rem;color:#8E8E93;line-height:1.4;margin-bottom:12px">${escapeHtml(notePreview)}</p>` : '<div style="margin-bottom:12px"></div>'}
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-top:auto">
+          <div style="display:flex;align-items:center;gap:6px">
+            ${assignee ? `<div style="width:24px;height:24px;border-radius:50%;background:#1A6B8A;color:white;display:flex;align-items:center;justify-content:center;font-size:0.5625rem;font-weight:700">${assignee.charAt(0)}</div>` : '<span style="font-size:0.6875rem;color:#c7c7cc">Unassigned</span>'}
+            ${childCount > 0 ? `<span style="font-size:0.5625rem;color:#8E8E93">${childCount} subtasks</span>` : ''}
+          </div>
+          <span style="font-size:0.625rem;font-weight:700;color:${isOverdue ? '#FF3B30' : '#8E8E93'};display:flex;align-items:center;gap:4px">
+            ${dueStr ? `<span class="material-symbols-outlined" style="font-size:12px">schedule</span> ${isOverdue ? 'Overdue' : dueStr}` : ''}
+          </span>
+        </div>
       </a>`;
   };
 
@@ -221,33 +230,29 @@ app.get('/report/tasks', async (c) => {
   const vesselSections = VESSELS.filter(v => byVessel.has(v)).map(v => {
     const vTasks = byVessel.get(v)!;
     return `
-      <div style="margin-bottom:24px">
-        <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px;padding:0 4px">
-          <h2 style="font-family:'Manrope',-apple-system,sans-serif;font-size:0.875rem;font-weight:800;color:#1A6B8A;letter-spacing:-0.01em">${VESSEL_LABELS[v] || v}</h2>
-          <span style="padding:2px 8px;background:rgba(26,107,138,0.1);color:#1A6B8A;font-size:0.5625rem;font-weight:900;border-radius:999px">${vTasks.length}</span>
-          <div style="flex:1;height:1px;background:#E5E5EA"></div>
+      <section style="margin-bottom:32px">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+          <h2 style="font-family:'Manrope',-apple-system,sans-serif;font-size:1.0625rem;font-weight:800;color:#00526d;text-transform:uppercase;letter-spacing:0.05em">${VESSEL_LABELS[v] || v}</h2>
+          <div style="flex:1;height:1px;background:linear-gradient(to right,#E5E5EA,transparent)"></div>
+          <span style="font-size:0.625rem;font-weight:700;color:#8E8E93">${vTasks.length} ACTIVE TASK${vTasks.length !== 1 ? 'S' : ''}</span>
         </div>
-        <div style="background:white;border-radius:8px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.04)">
-          <!-- Table header -->
-          <div style="display:grid;grid-template-columns:24px 1fr 80px 90px 70px 60px;gap:8px;align-items:center;padding:8px 16px;background:#F8F9FA;font-size:0.5625rem;font-weight:700;color:#8E8E93;text-transform:uppercase;letter-spacing:0.1em">
-            <span></span><span>Task</span><span>Assignee</span><span>Status</span><span>Due</span><span></span>
-          </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px">
           ${vTasks.map(renderTaskRow).join('')}
         </div>
-      </div>`;
+      </section>`;
   }).join('');
 
   const unassignedSection = noVessel.length > 0 ? `
-    <div style="margin-bottom:24px">
-      <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px;padding:0 4px">
-        <h2 style="font-family:'Manrope',-apple-system,sans-serif;font-size:0.875rem;font-weight:800;color:#8E8E93">No Vessel</h2>
-        <span style="padding:2px 8px;background:rgba(142,142,147,0.1);color:#8E8E93;font-size:0.5625rem;font-weight:900;border-radius:999px">${noVessel.length}</span>
-        <div style="flex:1;height:1px;background:#E5E5EA"></div>
+    <section style="margin-bottom:32px">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+        <h2 style="font-family:'Manrope',-apple-system,sans-serif;font-size:1.0625rem;font-weight:800;color:#8E8E93;text-transform:uppercase;letter-spacing:0.05em">No Vessel</h2>
+        <div style="flex:1;height:1px;background:linear-gradient(to right,#E5E5EA,transparent)"></div>
+        <span style="font-size:0.625rem;font-weight:700;color:#8E8E93">${noVessel.length} TASK${noVessel.length !== 1 ? 'S' : ''}</span>
       </div>
-      <div style="background:white;border-radius:8px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.04)">
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px">
         ${noVessel.map(renderTaskRow).join('')}
       </div>
-    </div>` : '';
+    </section>` : '';
 
   const filterBtnStyle = `display:flex;align-items:center;gap:6px;padding:8px 16px;background:#E5E8F0;color:#1a1c1e;border-radius:8px;font-size:0.75rem;font-weight:500;border:none;text-decoration:none;cursor:pointer;transition:background 0.15s`;
 

@@ -67,30 +67,46 @@ app.get('/report/library', async (c) => {
       const info = TRIGGER_TYPES[key];
       const items = groups.get(key)!;
 
+      // Stitch card grid pattern
       const cards = items.map((t: any) => {
-        const vesselLabel = VESSEL_LABELS[t.vessel] || t.vessel || 'All';
-        const roleLabel = t.role === 'all' ? 'All' : t.role.charAt(0).toUpperCase() + t.role.slice(1);
-        const est = t.estimated_minutes ? `~${t.estimated_minutes} min` : '';
+        const vesselLabel = VESSEL_LABELS[t.vessel] || t.vessel || 'All Vessels';
+        const roleLabel = t.role === 'all' ? 'All Roles' : t.role.charAt(0).toUpperCase() + t.role.slice(1);
+        const est = t.estimated_minutes ? `${t.estimated_minutes} min` : '';
         const itemCount = t.type === 'checklist'
           ? (t.sections?.reduce((sum: number, s: any) => sum + (s.items?.length || 0), 0) || 0)
           : (t.steps?.reduce((sum: number, s: any) => sum + (s.items?.length || 0), 0) || 0);
 
+        // Stitch: trigger_day for weekly items
+        const ct = t as any;
+        const triggerDay = ct.trigger_day ? ct.trigger_day.charAt(0).toUpperCase() + ct.trigger_day.slice(1) : '';
+
         return `
-          <a href="/report/library/${encodeURIComponent(t.id)}" style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;background:#FFFFFF;border-radius:8px;margin-bottom:6px;text-decoration:none;color:#1a1c1c;min-height:48px">
+          <a href="/report/library/${encodeURIComponent(t.id)}" style="background:white;padding:20px;border-radius:12px;box-shadow:0 1px 3px rgba(0,0,0,0.04);text-decoration:none;color:#1a1c1e;display:flex;justify-content:space-between;align-items:flex-start;transition:box-shadow 0.2s;cursor:pointer" onmouseenter="this.style.boxShadow='0 4px 12px rgba(0,0,0,0.08)'" onmouseleave="this.style.boxShadow='0 1px 3px rgba(0,0,0,0.04)'">
             <div>
-              <div style="font-weight:600;font-size:0.875rem">${escapeHtml(t.name)}</div>
-              <div style="font-size:0.75rem;color:#6e7a74">${vesselLabel} · ${roleLabel}${est ? ' · ' + est : ''} · ${itemCount} items</div>
+              <h3 style="font-family:'Manrope',sans-serif;font-weight:700;font-size:1.0625rem;color:#1a1c1e;margin-bottom:8px">${escapeHtml(t.name.replace(/\s*—\s*(Captain|Deckhand|Mate)$/i, ''))}</h3>
+              <div style="display:flex;flex-wrap:wrap;gap:12px;font-size:0.75rem;color:#8E8E93;font-weight:500">
+                ${triggerDay ? `<span style="font-weight:700;color:#1A6B8A">${triggerDay}</span>` : ''}
+                <span style="display:flex;align-items:center;gap:4px"><span class="material-symbols-outlined" style="font-size:14px">directions_boat</span> ${vesselLabel}</span>
+                <span style="display:flex;align-items:center;gap:4px"><span class="material-symbols-outlined" style="font-size:14px">person</span> ${roleLabel}</span>
+                ${est ? `<span style="display:flex;align-items:center;gap:4px"><span class="material-symbols-outlined" style="font-size:14px">schedule</span> ${est}</span>` : ''}
+                ${itemCount > 0 ? `<span style="display:flex;align-items:center;gap:4px"><span class="material-symbols-outlined" style="font-size:14px">checklist</span> ${itemCount} items</span>` : ''}
+              </div>
             </div>
-            <span style="color:#6e7a74;font-size:0.875rem">→</span>
+            <span class="material-symbols-outlined" style="font-size:20px;color:#c7c7cc;flex-shrink:0;margin-top:2px">chevron_right</span>
           </a>`;
       }).join('');
 
       return `
-        <div style="margin-bottom:24px">
-          <h3 style="font-family:'Manrope',-apple-system,sans-serif;font-size:0.8125rem;font-weight:700;color:#1A6B8A;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px">${info.label} <span style="background:rgba(26,107,138,0.1);color:#1A6B8A;padding:2px 6px;border-radius:10px;font-size:0.6875rem">${items.length}</span></h3>
-          <p style="font-size:0.75rem;color:#6e7a74;margin-bottom:8px">${info.desc}</p>
-          ${cards}
-        </div>`;
+        <section style="margin-bottom:40px">
+          <div style="display:flex;align-items:baseline;gap:12px;margin-bottom:8px">
+            <h2 style="font-size:0.8125rem;font-weight:900;color:#5b5f67;text-transform:uppercase;letter-spacing:0.15em">${info.label}</h2>
+            <span style="background:rgba(26,107,138,0.1);color:#1A6B8A;font-size:0.6875rem;font-weight:700;padding:2px 8px;border-radius:999px">${items.length} items</span>
+          </div>
+          <p style="font-size:0.875rem;color:#8E8E93;margin-bottom:16px;max-width:600px">${info.desc}</p>
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px">
+            ${cards}
+          </div>
+        </section>`;
     }).join('');
 
   return c.html(reportLayout('Library', `
