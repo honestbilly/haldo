@@ -82,7 +82,8 @@ app.get('/report/tasks', async (c) => {
   }
 
   const result = await pool.query(
-    `SELECT t.*, ca.name as assignee_name
+    `SELECT t.*, ca.name as assignee_name,
+       (SELECT COUNT(*) FROM assigned_tasks c WHERE c.parent_task_id = t.id) as child_count
      FROM assigned_tasks t
      LEFT JOIN crew ca ON t.assigned_to = ca.id
      ${where}
@@ -108,27 +109,38 @@ app.get('/report/tasks', async (c) => {
     }
   }
 
+  const CATEGORY_ICONS: Record<string, string> = {
+    'maintenance': 'build', 'repair': 'handyman', 'inspection': 'search', 'cleaning': 'cleaning_services',
+    'safety': 'shield', 'regulatory': 'gavel', 'upgrade': 'upgrade', 'cosmetic': 'palette', 'general': 'task',
+  };
+
   const renderTaskCard = (t: any) => {
     const borderColor = t.status === 'blocked' ? '#FF3B30' : t.priority === 'urgent' ? '#FF3B30' : t.priority === 'high' ? '#FF9500' : '#1A6B8A';
+    const catIcon = CATEGORY_ICONS[t.category] || 'task';
     const iconBg = t.status === 'blocked' ? 'rgba(255,59,48,0.08)' : t.priority === 'urgent' ? 'rgba(255,59,48,0.08)' : t.priority === 'high' ? 'rgba(255,149,0,0.08)' : 'rgba(26,107,138,0.05)';
     const iconColor = t.status === 'blocked' ? '#FF3B30' : t.priority === 'urgent' ? '#FF3B30' : t.priority === 'high' ? '#FF9500' : '#1A6B8A';
     const dueStr = t.due_date ? new Date(t.due_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '';
     const assigneeStr = t.assignee_name || (t.assigned_to ? 'Unknown' : '<span style="font-style:italic;opacity:0.6">Unassigned</span>');
+    const tags = (t.tags || []) as string[];
+    const tagPills = tags.slice(0, 3).map((tag: string) => `<span style="font-size:0.5625rem;font-weight:600;padding:1px 6px;border-radius:999px;background:rgba(26,107,138,0.08);color:#1A6B8A">${escapeHtml(tag)}</span>`).join('');
+    const childCount = t.child_count ? parseInt(t.child_count) : 0;
 
     return `
-      <a href="/report/tasks/${t.id}" style="display:flex;align-items:center;justify-content:space-between;text-decoration:none;color:#1a1c1e;background:white;border-radius:8px;padding:16px;margin-bottom:8px;border-left:4px solid ${borderColor};box-shadow:0 4px 12px rgba(0,0,0,0.02);transition:box-shadow 0.2s;cursor:pointer" onmouseenter="this.style.boxShadow='0 8px 20px rgba(0,0,0,0.06)'" onmouseleave="this.style.boxShadow='0 4px 12px rgba(0,0,0,0.02)'">
+      <a href="/report/tasks/${t.id}" class="task-card" style="display:flex;align-items:center;justify-content:space-between;text-decoration:none;color:#1a1c1e;background:white;border-radius:8px;padding:16px;margin-bottom:8px;border-left:4px solid ${borderColor};box-shadow:0 4px 12px rgba(0,0,0,0.02);cursor:pointer">
         <div style="display:flex;align-items:center;gap:16px;flex:1;min-width:0">
           <div style="width:40px;height:40px;border-radius:50%;background:${iconBg};display:flex;align-items:center;justify-content:center;flex-shrink:0">
-            <span class="material-symbols-outlined" style="font-size:20px;color:${iconColor}">${t.status === 'blocked' ? 'block' : 'build'}</span>
+            <span class="material-symbols-outlined" style="font-size:20px;color:${iconColor}">${t.status === 'blocked' ? 'block' : catIcon}</span>
           </div>
           <div style="min-width:0">
-            <div style="display:flex;align-items:center;gap:6px">
+            <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
               ${priorityBadge(t.priority)}
               <h3 style="font-weight:700;font-size:0.875rem">${escapeHtml(t.title)}</h3>
+              ${childCount > 0 ? `<span style="font-size:0.5625rem;color:#8E8E93;font-weight:600">${childCount} subtask${childCount > 1 ? 's' : ''}</span>` : ''}
             </div>
             <p style="font-size:0.6875rem;color:#5b5f67;margin-top:2px;font-weight:500">
               ${assigneeStr}${dueStr ? ` · <span style="color:${t.status === 'blocked' ? '#FF3B30' : '#5b5f67'}">Due ${dueStr}</span>` : ''}${t.notes ? ' · <span class="material-symbols-outlined" style="font-size:12px;vertical-align:middle">note</span>' : ''}
             </p>
+            ${tagPills ? `<div style="display:flex;gap:4px;margin-top:4px;flex-wrap:wrap">${tagPills}${tags.length > 3 ? `<span style="font-size:0.5625rem;color:#8E8E93">+${tags.length - 3}</span>` : ''}</div>` : ''}
           </div>
         </div>
         <div style="display:flex;align-items:center;gap:12px;flex-shrink:0">
@@ -230,10 +242,12 @@ app.get('/report/tasks/create', async (c) => {
 
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
         <div>
-          <label style="display:block;font-size:0.8125rem;font-weight:500;color:#6e7a74;margin-bottom:4px">Vessel</label>
+          <label style="display:block;font-size:0.8125rem;font-weight:500;color:#6e7a74;margin-bottom:4px">Vessel / Location</label>
           <select name="vessel" style="${dropdownStyle}">
             <option value="">Any / All</option>
             ${VESSELS.map(v => `<option value="${v}" ${prefill.vessel === v ? 'selected' : ''}>${VESSEL_LABELS[v]}</option>`).join('')}
+            <option value="shore">Shore / Office</option>
+            <option value="yard">Yard</option>
           </select>
         </div>
         <div>
@@ -243,6 +257,43 @@ app.get('/report/tasks/create', async (c) => {
             ${crewList.rows.map((cr: any) => `<option value="${cr.id}">${escapeHtml(cr.name)} (${cr.role})</option>`).join('')}
           </select>
         </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+        <div>
+          <label style="display:block;font-size:0.8125rem;font-weight:500;color:#6e7a74;margin-bottom:4px">Category</label>
+          <select name="category" style="${dropdownStyle}">
+            <option value="general">General</option>
+            <option value="maintenance">Maintenance</option>
+            <option value="repair">Repair</option>
+            <option value="inspection">Inspection</option>
+            <option value="cleaning">Cleaning</option>
+            <option value="safety">Safety</option>
+            <option value="regulatory">Regulatory</option>
+            <option value="upgrade">Upgrade</option>
+            <option value="cosmetic">Cosmetic</option>
+          </select>
+        </div>
+        <div>
+          <label style="display:block;font-size:0.8125rem;font-weight:500;color:#6e7a74;margin-bottom:4px">Skill Level</label>
+          <select name="skill_level" style="${dropdownStyle}">
+            <option value="any">Any</option>
+            <option value="deckhand">Deckhand</option>
+            <option value="captain">Captain</option>
+            <option value="mechanic">Mechanic</option>
+            <option value="specialist">Specialist</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="margin-bottom:12px">
+        <label style="display:block;font-size:0.8125rem;font-weight:500;color:#6e7a74;margin-bottom:4px">Tags (comma-separated)</label>
+        <input type="text" name="tags" style="${inputStyle}" placeholder="e.g. engine, warranty, hull, electrical">
+      </div>
+
+      <div style="margin-bottom:12px">
+        <label style="display:block;font-size:0.8125rem;font-weight:500;color:#6e7a74;margin-bottom:4px">Location (specific area)</label>
+        <input type="text" name="location" style="${inputStyle}" placeholder="e.g. engine room, port hull, forward deck">
       </div>
 
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:12px">
@@ -280,9 +331,13 @@ app.post('/report/tasks/create', async (c) => {
   const id = nanoid();
 
   const estMin = parseInt(String(body.estimated_minutes || ''), 10);
+  const tagsStr = String(body.tags || '').trim();
+  const tagsArray = tagsStr ? tagsStr.split(',').map((t: string) => t.trim().toLowerCase()).filter(Boolean) : [];
+  const sourceType = String(body.source_submission_id || '') ? 'submission' : 'manual';
+
   await pool.query(
-    `INSERT INTO assigned_tasks (id, title, description, vessel, assigned_to, assigned_by, priority, due_date, notes, source_submission_id, estimated_minutes, status)
-     VALUES ($1, $2, $3, $4, $5, 'manager', $6, $7, $8, $9, $10, 'pending')`,
+    `INSERT INTO assigned_tasks (id, title, description, vessel, assigned_to, assigned_by, priority, due_date, notes, source_submission_id, estimated_minutes, category, tags, skill_level, location, source_type, source_id, status)
+     VALUES ($1, $2, $3, $4, $5, 'manager', $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $9, 'pending')`,
     [
       id,
       String(body.title || '').trim(),
@@ -294,6 +349,11 @@ app.post('/report/tasks/create', async (c) => {
       String(body.notes || '').trim() || null,
       String(body.source_submission_id || '') || null,
       isNaN(estMin) ? null : estMin,
+      String(body.category || 'general'),
+      tagsArray,
+      String(body.skill_level || 'any'),
+      String(body.location || '').trim() || null,
+      sourceType,
     ]
   );
 
