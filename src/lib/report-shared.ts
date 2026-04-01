@@ -15,9 +15,16 @@ export async function loadVessels(): Promise<void> {
   try {
     const result = await pool.query('SELECT slug, name, color, vessel_type FROM vessels WHERE active = TRUE ORDER BY display_order');
     if (result.rows.length > 0) {
-      VESSELS = result.rows.filter(v => v.vessel_type === 'boat').map(v => v.slug);
-      VESSEL_LABELS = Object.fromEntries(result.rows.map(v => [v.slug, v.name]));
-      VESSEL_COLORS = Object.fromEntries(result.rows.map(v => [v.slug, v.color]));
+      // Mutate in place so ES module live bindings update
+      VESSELS.length = 0;
+      result.rows.filter(v => v.vessel_type === 'boat').forEach(v => VESSELS.push(v.slug));
+      // Clear and repopulate objects
+      for (const k of Object.keys(VESSEL_LABELS)) delete VESSEL_LABELS[k];
+      for (const k of Object.keys(VESSEL_COLORS)) delete VESSEL_COLORS[k];
+      for (const v of result.rows) {
+        VESSEL_LABELS[v.slug] = v.name;
+        VESSEL_COLORS[v.slug] = v.color;
+      }
     }
   } catch (e) {
     // DB not ready yet — use fallbacks

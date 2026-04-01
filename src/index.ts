@@ -54,8 +54,9 @@ async function start() {
   await loadTemplates();
 
   // Load vessels from DB
-  const { loadVessels } = await import('./lib/report-shared.js');
-  await loadVessels();
+  const reportShared = await import('./lib/report-shared.js');
+  await reportShared.loadVessels();
+  console.log(`[haldo] Loaded ${reportShared.VESSELS.length} vessels from DB`);
 
   // Pre-fetch weather data (fire-and-forget)
   refreshWeather().catch(err => console.error('[haldo] Weather pre-fetch failed:', err));

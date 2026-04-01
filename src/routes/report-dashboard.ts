@@ -109,7 +109,7 @@ app.get('/report', async (c) => {
   const filterBarHtml = `
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
       <select id="vessel-filter" onchange="applyFilters()" style="${dropdownStyle}">
-        <option value="">All vessels (${completions.rows.length})</option>
+        <option value="">All vessels (${VESSELS.length})</option>
         ${vesselOptions}
       </select>
       <select id="crew-filter" onchange="applyFilters()" style="${dropdownStyle}">
