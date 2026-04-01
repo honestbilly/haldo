@@ -36,7 +36,11 @@ app.get('/report/crew-schedule', async (c) => {
   const schedMap = new Map<string, Map<string, any>>();
   for (const row of schedResult.rows) {
     if (!schedMap.has(row.crew_id)) schedMap.set(row.crew_id, new Map());
-    schedMap.get(row.crew_id)!.set(row.schedule_date?.split('T')[0] || row.schedule_date, row);
+    // schedule_date can be a Date object or string — normalize to YYYY-MM-DD
+    const dateKey = row.schedule_date instanceof Date
+      ? row.schedule_date.toISOString().split('T')[0]
+      : String(row.schedule_date).split('T')[0];
+    schedMap.get(row.crew_id)!.set(dateKey, row);
   }
 
   // Get task counts per crew (open tasks assigned)
@@ -65,11 +69,21 @@ app.get('/report/crew-schedule', async (c) => {
         return `<td style="padding:8px 6px;text-align:center;font-size:0.6875rem;font-weight:600;color:#8E8E93;${isToday ? 'background:rgba(26,107,138,0.03)' : ''}">OFF</td>`;
       }
 
-      const vesselLabel = VESSEL_LABELS[sched.vessel_slug] || sched.vessel_slug || '?';
+      const vesselLabel = sched.vessel_slug ? (VESSEL_LABELS[sched.vessel_slug] || sched.vessel_slug) : null;
       const shiftLabel = sched.shift === 'full' ? '' : sched.shift === 'am' ? ' AM' : ' PM';
-      const color = '#1A6B8A';
+
+      if (vesselLabel) {
+        // Vessel assigned — show vessel pill
+        return `<td style="padding:4px 2px;text-align:center;${isToday ? 'background:rgba(26,107,138,0.03)' : ''}">
+          <div style="background:#1A6B8A;color:white;border-radius:6px;padding:4px 6px;font-size:0.5625rem;font-weight:700;line-height:1.3">${vesselLabel}${shiftLabel}</div>
+        </td>`;
+      }
+      // No vessel yet — just show they're working (green dot)
       return `<td style="padding:4px 2px;text-align:center;${isToday ? 'background:rgba(26,107,138,0.03)' : ''}">
-        <div style="background:${color};color:white;border-radius:6px;padding:4px 6px;font-size:0.5625rem;font-weight:700;line-height:1.3">${vesselLabel}${shiftLabel}</div>
+        <div style="display:flex;align-items:center;justify-content:center;gap:4px">
+          <span style="width:8px;height:8px;border-radius:50%;background:#34C759;display:inline-block"></span>
+          <span style="font-size:0.5625rem;font-weight:600;color:#34C759">${shiftLabel || 'ON'}</span>
+        </div>
       </td>`;
     }).join('');
 
@@ -119,10 +133,11 @@ app.get('/report/crew-schedule', async (c) => {
       </summary>
       <div style="margin-top:16px">
         <p style="font-size:0.8125rem;color:#5b5f67;line-height:1.5;margin-bottom:12px">
-          Upload a CSV with columns: <strong>crew_name, date, vessel, shift</strong><br>
-          Example row: <code>Jess, 2026-04-01, squid, full</code><br>
+          Upload a CSV with columns: <strong>crew_name, date, shift</strong> (vessel optional)<br>
+          Example: <code>Jess, 2026-04-01, full</code><br>
+          With vessel: <code>Jess, 2026-04-01, squid, full</code><br>
           Shift options: <code>am</code>, <code>pm</code>, <code>full</code>, <code>off</code><br>
-          Vessel uses slugs: <code>squid</code>, <code>blu-q</code>, <code>cowfish</code>, <code>scout</code>, <code>java-cat</code>
+          Vessel is optional — crew are usually assigned to a boat the day before.
         </p>
         <form action="/report/crew-schedule/upload" method="POST" enctype="multipart/form-data">
           <input type="file" name="csv" accept=".csv" required style="margin-bottom:12px;font-size:0.875rem">
@@ -155,23 +170,38 @@ app.post('/report/crew-schedule/upload', async (c) => {
   let count = 0;
   for (const line of lines) {
     const parts = line.split(',').map(p => p.trim());
-    if (parts.length < 3) continue;
+    if (parts.length < 2) continue;
 
-    const [crewName, dateStr, vesselSlug, shift = 'full'] = parts;
+    const crewName = parts[0];
+    const dateStr = parts[1];
     const crewId = crewByName.get(crewName.toLowerCase());
     if (!crewId) continue;
 
     // Validate date
     if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) continue;
 
+    // Detect format: 3 cols = name,date,shift | 4 cols = name,date,vessel,shift
     const validShifts = ['am', 'pm', 'full', 'off'];
-    const normalizedShift = validShifts.includes(shift.toLowerCase()) ? shift.toLowerCase() : 'full';
+    let vesselSlug: string | null = null;
+    let shift = 'full';
+
+    if (parts.length === 3) {
+      // Could be name,date,shift OR name,date,vessel
+      if (validShifts.includes(parts[2].toLowerCase())) {
+        shift = parts[2].toLowerCase();
+      } else {
+        vesselSlug = parts[2].toLowerCase() || null;
+      }
+    } else if (parts.length >= 4) {
+      vesselSlug = parts[2].toLowerCase() || null;
+      shift = validShifts.includes(parts[3].toLowerCase()) ? parts[3].toLowerCase() : 'full';
+    }
 
     await pool.query(
       `INSERT INTO crew_schedule (id, crew_id, schedule_date, vessel_slug, shift)
        VALUES ($1, $2, $3, $4, $5)
        ON CONFLICT (crew_id, schedule_date) DO UPDATE SET vessel_slug = $4, shift = $5`,
-      [nanoid(), crewId, dateStr, vesselSlug.toLowerCase() || null, normalizedShift]
+      [nanoid(), crewId, dateStr, vesselSlug, shift]
     );
     count++;
   }
