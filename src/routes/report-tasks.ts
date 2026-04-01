@@ -252,6 +252,20 @@ app.get('/report/tasks', async (c) => {
     ${vesselSections}
     ${unassignedSection}
     ${!showSnoozed && !statusFilter ? `<a href="/report/tasks?show_snoozed=1" style="display:block;text-align:center;font-size:0.75rem;color:#6e7a74;padding:8px">Show snoozed tasks</a>` : ''}
+
+    <!-- CSV Import -->
+    <details style="margin-top:24px;background:white;border-radius:8px;padding:16px;box-shadow:0 1px 3px rgba(0,0,0,0.04)">
+      <summary style="font-size:0.75rem;font-weight:600;color:#1A6B8A;cursor:pointer;display:flex;align-items:center;gap:6px">
+        <span class="material-symbols-outlined" style="font-size:16px">upload_file</span> Import Tasks from CSV
+      </summary>
+      <div style="margin-top:12px">
+        <p style="font-size:0.75rem;color:#5b5f67;margin-bottom:8px">CSV columns: <code>Boat, Issue, Status, Notes</code></p>
+        <form action="/report/tasks/import-csv" method="POST" enctype="multipart/form-data" style="display:flex;gap:8px;align-items:center">
+          <input type="file" name="csv" accept=".csv" required style="font-size:0.75rem">
+          <button type="submit" style="padding:8px 16px;background:#1A6B8A;color:white;border:none;border-radius:8px;font-size:0.75rem;font-weight:600;cursor:pointer;white-space:nowrap">Import</button>
+        </form>
+      </div>
+    </details>
   `));
 });
 
@@ -418,6 +432,61 @@ app.post('/report/tasks/create', async (c) => {
   }
 
   return c.redirect('/report/tasks');
+});
+
+// ─── TASK CSV IMPORT ────────────────────────────────────────
+
+app.post('/report/tasks/import-csv', async (c) => {
+  const body = await c.req.parseBody();
+  const file = body.csv;
+  if (!file || typeof file === 'string') return c.redirect('/report/tasks');
+
+  const text = await (file as File).text();
+  const lines = text.split('\n').map(l => l.trim()).filter(l => l);
+
+  // Skip header
+  const header = lines[0].toLowerCase();
+  const dataLines = header.includes('boat') || header.includes('issue') ? lines.slice(1) : lines;
+
+  const vesselMap: Record<string, string> = {
+    'blu q': 'blu-q', 'squid': 'squid', 'cowfish': 'cowfish',
+    'java': 'java-cat', 'java cat': 'java-cat', 'scout': 'scout', 'shore': 'shore',
+  };
+  const statusMap: Record<string, string> = {
+    'to queue': 'pending', 'completed': 'completed', 'in progress': 'in-progress', 'blocked': 'blocked',
+  };
+
+  let count = 0;
+  for (const line of dataLines) {
+    // Parse CSV (handles quoted fields)
+    const parts: string[] = [];
+    let current = '';
+    let inQuotes = false;
+    for (const ch of line) {
+      if (ch === '"') { inQuotes = !inQuotes; continue; }
+      if (ch === ',' && !inQuotes) { parts.push(current.trim()); current = ''; continue; }
+      current += ch;
+    }
+    parts.push(current.trim());
+
+    const [boat, issue, added, status, assigned, completedBy, completed, budget, notes] = parts;
+    if (!issue) continue;
+
+    const vessel = vesselMap[boat?.toLowerCase()] || boat?.toLowerCase().replace(/\s+/g, '-') || null;
+    const taskStatus = statusMap[status?.toLowerCase()] || 'pending';
+    const estMinutes = budget ? Math.round(parseFloat(budget) * 60) || null : null;
+
+    const id = nanoid();
+    await pool.query(
+      `INSERT INTO assigned_tasks (id, title, vessel, status, notes, estimated_minutes, source_type, category)
+       VALUES ($1, $2, $3, $4, $5, $6, 'manual', 'maintenance')
+       ON CONFLICT DO NOTHING`,
+      [id, issue, vessel, taskStatus, notes || null, estMinutes]
+    );
+    count++;
+  }
+
+  return c.redirect(`/report/tasks?imported=${count}`);
 });
 
 // ─── TASK DETAIL / EDIT ─────────────────────────────────────
