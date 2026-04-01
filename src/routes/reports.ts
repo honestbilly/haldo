@@ -7,6 +7,8 @@ import dashboardRoutes from './report-dashboard.js';
 import mgmtRoutes from './report-mgmt.js';
 import taskRoutes from './report-tasks.js';
 import libraryRoutes from './report-library.js';
+import vesselRoutes from './report-vessels.js';
+import scheduleRoutes from './report-schedule.js';
 
 const app = new Hono();
 
@@ -66,5 +68,11 @@ app.route('/', taskRoutes);
 
 // Mount repeated task library (view, build, edit)
 app.route('/', libraryRoutes);
+
+// Mount vessel management
+app.route('/', vesselRoutes);
+
+// Mount crew schedule
+app.route('/', scheduleRoutes);
 
 export default app;
